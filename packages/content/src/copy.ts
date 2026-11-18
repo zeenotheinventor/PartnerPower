@@ -18,7 +18,26 @@ export const copy = {
     comingSoon: 'Coming soon',
   },
   roundSetup: {
-    status: 'Round setup is on its way.',
+    title: 'Set the round',
     backLabel: 'Back',
+    playerOneLabel: 'Player 1',
+    playerTwoLabel: 'Player 2',
+    levelLabel: 'How bold?',
+    categoriesLabel: 'In this round',
+    lastCategoryHint: 'One category has to stay on.',
+    lengthLabel: 'How long?',
+    lengthTen: '10 cards',
+    lengthTwenty: '20 cards',
+    lengthEndless: 'Endless',
+    surprises: 'Surprises, coming soon',
+    start: 'Start',
+  },
+  // The round screen is a stand-in until the turn screen replaces it.
+  roundPlay: {
+    title: 'Round in progress',
+    turnLabel: 'Whose turn',
+    categoryLabel: 'Category',
+    noCards: 'This round has no cards yet.',
+    backLabel: 'Back to setup',
   },
 };

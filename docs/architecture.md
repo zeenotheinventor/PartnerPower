@@ -249,12 +249,14 @@ apps/mobile/
   components/ui/         the UI kit
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
-  settings/              the settings context
+  settings/              the settings context, including the remembered player names
   fonts/                 the font files the type scale uses
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
   features/hub/          the hub: the first screen, with a tile for each game
-  features/roundSetup/   round setup. A stand-in until the round setup ticket builds it.
+  features/round/        the round context for the dares route group
+  features/roundSetup/   the round setup screen
+  features/roundPlay/    the round screen. A stand-in until the turn screen is built.
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
@@ -263,10 +265,15 @@ apps/mobile/
 ### State
 
 - **Round state** lives in a `useReducer` inside the game's route group layout and is shared through
-  context. It wraps `reduceRound` from `core`. Leaving the route group discards it.
-- **Settings**, such as the entry confirmation and remembered player names, are read from storage
-  once at launch and exposed through a small settings context, `settings`. The provider takes the
-  storage to use as a prop, so tests pass an in-memory one. A failed read or an invalid stored
+  context. It wraps `reduceRound` from `core`. Leaving the route group discards it. The layout
+  renders `RoundProvider` (`features/round`), and `useRound` gives `round` (undefined until a round
+  has started), `startNewRound(setup, deck)`, which calls `startRound` and holds the result, and
+  `dispatch` for a `RoundAction`. Setup builds the `RoundSetup` and the play route reads the round.
+- **Settings**, such as the entry confirmation and the remembered player names, are read from
+  storage once at launch and exposed through a small settings context, `settings`. Saving the names
+  never rejects: a failed write is ignored and the names still count for that session. The
+  provider takes the storage to use as a prop, so tests pass an in-memory one. A failed read or an
+  invalid stored
   value counts as not confirmed. If the write on confirming fails, the player is still let in for
   that session and is asked again at the next launch. Nothing in it logs.
 - There is no global store. If a later milestone needs state shared across games, add it then and
@@ -283,8 +290,9 @@ player to confirm they are 18 or over, and its wording is in `content`.
   only after. A deep link to a closed route, on a cold start or with the app already open, ends at
   `welcome`, and the closed screen never renders.
 - A protected group only covers the routes listed in it, so every new route must be added to the
-  second group in `EntryStack`. A test walks the real route files under `app/` and fails if any of
-  them can be opened before confirming.
+  second group in `EntryStack`. A route group with its own layout, such as `games/dares`, is one
+  screen in that group and its routes sit inside it. A test walks the real route files under
+  `app/` and fails if any of them can be opened before confirming.
 - `welcome` only stores the confirmation. The navigator reacts to the setting, sends the player to
   the first screen, and leaves nothing to go back to.
 - Declining stores nothing. The closing screen is state inside the `welcome` route, not a route of
@@ -302,15 +310,17 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component   | What it is, and its role and name                                                                                                                                                                                                              |
-| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`    | The screen shell: safe area, themed background, padding and optional scrolling. A layout container with no role. A screen's name is its `Header` heading.                                                                                      |
-| `Button`    | Role `button`, named by its label. Primary and secondary variants.                                                                                                                                                                             |
-| `Card`      | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. |
-| `Toggle`    | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                        |
-| `Chip`      | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                                                                                                             |
-| `TextField` | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                 |
-| `Header`    | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                      |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                             |
+| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants.                                                                                                                                                                                                                                                                            |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`.                                                                                                |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                                                                                                                       |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                              |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                                                                                                                                                                                                            |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                     |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
