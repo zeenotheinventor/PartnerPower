@@ -24,7 +24,7 @@ for how. Change it in the same pull request as any change that departs from it.
 
 | Concern | Choice |
 |---|---|
-| Runtime | Node 24, pnpm |
+| Runtime | Node 26, pnpm |
 | App | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode |
 | Navigation | Expo Router, file-based |
 | Styling | NativeWind utilities over design tokens |

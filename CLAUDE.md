@@ -22,4 +22,4 @@ This codebase may be shown publicly as a portfolio piece. Keep it safe for work.
 
 - The plan and tickets are in Linear under the `FRK` team. The ticket is the spec, and it holds the
   names and content detail that this repository leaves out.
-- Node 24 (`.nvmrc`) and pnpm.
+- Node 26 (`.nvmrc`) and pnpm.

@@ -4,7 +4,7 @@ A mobile app of games for couples to connect with each other, played together on
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 24 and pnpm. No backend.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend.
 
 ## Planning
 
