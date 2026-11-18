@@ -1,0 +1,902 @@
+{
+  "id": "starter",
+  "version": 1,
+  "cards": [
+    {
+      "id": "starter-c1-01",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Pay your partner three compliments, each about something different. Make them count.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-02",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Hold your partner's gaze for ten seconds without laughing.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-03",
+      "category": "c1",
+      "kind": "together",
+      "text": "Look into each other's eyes for one full minute. No talking, no giggling.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-04",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner's hand, then the inside of their wrist. Take your time.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-05",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Tell your partner the moment you first realised you fancied them.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-06",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Whisper something sweet in your partner's ear. A smile from them earns you a point.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-07",
+      "category": "c1",
+      "kind": "together",
+      "text": "Take turns giving each other compliments, five rounds each. No repeats.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-08",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Give your partner a slow, lingering kiss on the cheek, then another on the forehead.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-09",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Trace a word on your partner's back with one fingertip. They get three guesses.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-10",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Tell your partner what you noticed first about them, and what you notice most now.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-11",
+      "category": "c1",
+      "kind": "together",
+      "text": "Sway together for one minute, as close as you can get, with no music needed.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-12",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Rub your partner's shoulders for thirty seconds, then ask for a review of your technique.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-13",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Tell your partner your favourite thing about their laugh, then try to set it off.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-14",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Run your fingers through your partner's hair for a full minute.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-15",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Confess the cheekiest thought you had about your partner this week.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-16",
+      "category": "c1",
+      "kind": "together",
+      "text": "Hold hands and each share a favourite memory of the other. One minute each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-17",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner once, just below the ear. Then act completely innocent.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-18",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Stroke your partner's cheek and tell them what you love about their smile.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-19",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Wink at your partner, then hold your best smouldering look for five seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-20",
+      "category": "c1",
+      "kind": "together",
+      "text": "Whisper one thing you secretly love about each other, both at once, on the count of three.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-21",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner softly on each eyelid. Slowly.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-22",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner's nose, chin and forehead, in any order, with a grin.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-23",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Invent a pet name for your partner. They vote on whether it stays.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-24",
+      "category": "c1",
+      "kind": "together",
+      "text": "Share one slow kiss, then each rate it out of ten. Be honest, and kind.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-25",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Give your partner a long, warm hug and say what you're most grateful for. Don't let go first.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-26",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Chat up your partner for thirty seconds using the cheesiest lines you know.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-27",
+      "category": "c1",
+      "kind": "together",
+      "text": "Sit back to back, take three slow breaths together, then turn round and smile.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-28",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Tell your partner your favourite memory of the two of you, holding their hand throughout.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-29",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Tickle your partner's palm with one fingertip for twenty seconds, then kiss it better.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-30",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Blow your partner a kiss across the room, then walk over and deliver the real thing.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-31",
+      "category": "c1",
+      "kind": "together",
+      "text": "Tell each other your first impression of the other. Be honest, be sweet.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c1-32",
+      "category": "c1",
+      "kind": "together",
+      "text": "Cuddle up for two minutes and take turns whispering one thing you want to do together soon.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-01",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Give your partner a two-minute massage of their shoulders and neck. Slow thumbs only.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-02",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss your partner's neck, slowly, from the collarbone up to the ear.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-03",
+      "category": "c2",
+      "kind": "together",
+      "text": "Take turns kissing each other's necks for one minute each. No hands allowed.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-04",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Slowly take off one layer of your partner's clothing. Stop the moment they say so.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-05",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Whisper in your partner's ear one thing you want tonight. Keep it low and keep them guessing.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-06",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Run your fingertips up your partner's arm to the shoulder, then do the other arm. Slowly.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-07",
+      "category": "c2",
+      "kind": "together",
+      "text": "Sit facing each other and trace each other's faces with your fingertips for one minute, eyes closed.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-08",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss a trail up your partner's arm from wrist to shoulder. Take your time.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-09",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Give your partner a two-minute back massage. They tell you when it's perfect.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-10",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Trace your partner's collarbone with a fingertip, then with your lips.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-11",
+      "category": "c2",
+      "kind": "together",
+      "text": "Swap shoulder massages, two minutes each. The one receiving gives the feedback.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-12",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Sit hip to hip and run a hand over your partner's thigh, over their clothes, for thirty seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-13",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Ask your partner where above the waist they most like to be kissed. Do it for thirty seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-14",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Rest a hand on the small of your partner's back and pull them in for a slow kiss.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-15",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss your partner's ear, then whisper what you're thinking. Keep it cheeky.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-16",
+      "category": "c2",
+      "kind": "together",
+      "text": "Take turns whispering what you'd most like to happen tonight. Two rounds each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-17",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Slowly undo one button of your partner's top, then give them a look and stop.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-18",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Lean in for a kiss, stop a breath away, and hold it there for ten seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-19",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss behind your partner's ear, along the jaw, then stop just short of their lips. Smile.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-20",
+      "category": "c2",
+      "kind": "together",
+      "text": "Kiss slowly for one minute, keeping your hands on each other's shoulders only.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-21",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Massage your partner's hands for a minute, one finger at a time.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-22",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Name the spot above the waist you find hardest to resist on your partner, and kiss it.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-23",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Slide your hands slowly up your partner's back, over their clothes, and draw them close.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-24",
+      "category": "c2",
+      "kind": "together",
+      "text": "Lie close, side by side, and trace slow patterns on each other's backs for two minutes.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-25",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Whisper three words for how you feel right now, then show them with a kiss.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-26",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Run your hands slowly down your partner's sides, ribs to hips, over their clothes. Twice.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-27",
+      "category": "c2",
+      "kind": "together",
+      "text": "Take turns removing one layer of each other's clothing, slowly. Either of you can say stop.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-28",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Nibble your partner's earlobe softly, just once, then pretend nothing happened.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-29",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Give your partner a two-minute foot rub, then ask how they plan to say thank you.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-30",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss each of your partner's fingertips, slowly, with your eyes on theirs.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-31",
+      "category": "c2",
+      "kind": "together",
+      "text": "Take turns choosing a spot above the waist for the other to kiss. Three each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c2-32",
+      "category": "c2",
+      "kind": "together",
+      "text": "Kiss for a full minute, pausing only to whisper one thing you'd like next.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-01",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss a slow line from your partner's neck to their collarbone, then back again. Take a full minute.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-02",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's shoulder, then the side of their neck, then behind the ear. Each kiss slower than the last.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-03",
+      "category": "c3",
+      "kind": "together",
+      "text": "Take turns tracing each other's lips with a fingertip, then with a kiss. Two rounds each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-04",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Lift your partner's top a little and kiss their stomach for twenty seconds. Stop if they ask, then look up and grin.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-05",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss slowly from your partner's lips to their ear, then whisper something you'd like to try.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-06",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Tease your partner's lips with yours for thirty seconds without quite kissing them.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-07",
+      "category": "c3",
+      "kind": "together",
+      "text": "Kiss each other's necks at the same time for thirty seconds. See who gives in first.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-08",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's hip over their clothes, then look up and ask what's next.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-09",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's thigh over their clothes, then make your way slowly back up for a proper kiss.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-10",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's neck with soft, lingering lips for thirty seconds, no rushing.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-11",
+      "category": "c3",
+      "kind": "together",
+      "text": "Take turns kissing a spot on the other while they keep their eyes closed and guess where it is.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-12",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss the nape of your partner's neck, then where the shoulder meets it. Linger for twenty seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-13",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's chest, slowly, for thirty seconds, and listen for their heartbeat.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-14",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Hold your partner's face and give them short, soft kisses for sixty seconds, each one a little longer than the last.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-15",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss slowly down the back of your partner's neck and along their spine, as far as their top allows. Stop if they ask.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-16",
+      "category": "c3",
+      "kind": "together",
+      "text": "Kiss for one minute with your hands behind your backs. Lips only, and either of you can end it.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-17",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Ask your partner to point to a spot above the waist where they'd like your lips next, and give it thirty seconds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-18",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's lips, then their jaw, then the hollow of their throat. Eyes closed, no hurry.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-19",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Brush your lips across your partner's shoulders, as lightly as you can, for a minute.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-20",
+      "category": "c3",
+      "kind": "together",
+      "text": "Take turns whispering where above the waist you'd like to be kissed next, then do it for each other. Two rounds each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-21",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner through their clothes, from chest to stomach, for thirty seconds. Let them wonder where you're headed.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-22",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss the inside of your partner's knee, then work up to the thigh and stop there. Ask if they want more.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-23",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Whisper the thing you most enjoy about kissing your partner, then prove it.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-24",
+      "category": "c3",
+      "kind": "together",
+      "text": "Take turns kissing a slow path down each other's chest and stomach. Two minutes each, no rushing.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-25",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's lower lip, then the upper, then the corner of their mouth, until they pull you in.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-26",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss slowly along your partner's jawline from one ear to the other, via the chin.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-27",
+      "category": "c3",
+      "kind": "together",
+      "text": "Trade kisses back and forth, taking turns to start each one. Ten each, getting longer every time.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-28",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Kiss your partner's lips, pause a breath away and whisper what you'd like next. Do it three times.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-29",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Breathe warm air on your partner's neck, then follow it with a kiss.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-30",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Choose a spot on your partner you haven't kissed tonight and linger there for a full minute.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-31",
+      "category": "c3",
+      "kind": "together",
+      "text": "Take turns teasing: lean in, almost kiss, pull back. Three rounds each, then give in.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c3-32",
+      "category": "c3",
+      "kind": "together",
+      "text": "Kiss your way along each other's arms, fingertips to shoulder. One arm each, then swap.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-01",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Take charge for the next five minutes and decide what happens. Check your partner is happy at every step.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-02",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Describe the rest of your evening together in a low voice. Keep it teasing and leave out the details.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-03",
+      "category": "c4",
+      "kind": "together",
+      "text": "Take turns leading for three minutes each. The follower goes along with it, and either of you can say stop.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-04",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Let your partner choose slow or fast for the next three kisses. Say stop whenever you like.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-05",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Tell your partner you plan to be in charge tonight, then back it up with a kiss they'll remember. They can say stop any time.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-06",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Pull your partner in by the waist and kiss them hungrily for one minute, hands roaming over their clothes. Stop if they ask.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-07",
+      "category": "c4",
+      "kind": "together",
+      "text": "Each whisper the one thing you most want the other to do next. Then do both, one after the other.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-08",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Take your partner by the hand and lead them somewhere more comfortable. Pause there and let it build.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-09",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Give your partner three simple instructions for where to put their hands, above the waist. They can follow, or say not tonight.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-10",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Look your partner up and down slowly, then tell them what you'd do with a whole night. Keep it a tease.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-11",
+      "category": "c4",
+      "kind": "together",
+      "text": "Agree on a pace for tonight: slow, steady or wild. Then start as you mean to go on.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-12",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Pull your partner onto your lap and kiss them with intent for one minute. Check they're happy first.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-13",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Whisper which you prefer, a slow build or a sudden rush, and why. Your partner scores your answer.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-14",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Guide your partner's hands to your waist, then kiss them slowly and keep them there for a minute.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-15",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Take off one more layer yourself, slowly, with your eyes on your partner. Then ask what they think.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-16",
+      "category": "c4",
+      "kind": "together",
+      "text": "Dim the lights and hold each other close without speaking for one minute. Then decide what happens next, together.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-17",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Ask your partner to pick a number from one to ten for how bold you'll be next. Then do exactly that.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-18",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Count down from five, kissing your partner on every number, and make the last kiss the longest.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-19",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Whisper a three-word promise for later in your partner's ear, then kiss their neck for thirty seconds. Stop if they ask.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-20",
+      "category": "c4",
+      "kind": "together",
+      "text": "Take turns finishing the sentence \"tonight I'd like you to...\" three times each.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-21",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Tell your partner what you'd wear less of right now, and why it would help.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-22",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Kiss your partner slowly for two minutes, hands roaming over their clothes, and don't speed up until they ask. Stop if they say.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-23",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Trace a path with one fingertip from your partner's neck down to their waist, then stop and smile. Ask if they want more.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-24",
+      "category": "c4",
+      "kind": "together",
+      "text": "Each take off one more layer at the same time, eyes locked. Stop whenever either of you wants.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-25",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Dim the lights and tell your partner you're setting the mood for the next ten minutes. Check they're happy at every step.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-26",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Hint at the bold thing you've been wanting to try without spelling it out. Your partner gets one guess.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-27",
+      "category": "c4",
+      "kind": "together",
+      "text": "Take turns choosing the next thing you both do, with a kiss between every choice. Five rounds.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-28",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Pull your partner flush against you and move together slowly for a minute, hands wherever they're welcome. Stop if either asks.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-29",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Take your partner's hand and slide it slowly down your chest, over your clothes, then hold their eyes. Stop if either of you asks.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-30",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Tell your partner where you'd like the night to end up, then set off in that direction with a kiss.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-31",
+      "category": "c4",
+      "kind": "together",
+      "text": "Pick a word that means stop, then spend five minutes as bold as you both like, over your clothes.",
+      "source": "shipped"
+    },
+    {
+      "id": "starter-c4-32",
+      "category": "c4",
+      "kind": "together",
+      "text": "Whisper your favourite night together to each other, then recreate just the first kiss from it. Stop whenever either of you likes.",
+      "source": "shipped"
+    }
+  ]
+}

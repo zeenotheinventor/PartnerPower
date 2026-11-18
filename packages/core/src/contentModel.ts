@@ -155,3 +155,16 @@ export function parseDeck(input: unknown): ParseDeckResult {
     errors: result.error.issues.map((issue) => `${locate(input, issue.path)}: ${issue.message}`),
   };
 }
+
+/** Card ids must be unique across every deck the app ships, so this lists each repeated id once. */
+export function findDuplicateCardIds(decks: readonly Deck[]): string[] {
+  const seenIds = new Set<string>();
+  const repeatedIds = new Set<string>();
+  for (const deck of decks) {
+    for (const card of deck.cards) {
+      if (seenIds.has(card.id)) repeatedIds.add(card.id);
+      seenIds.add(card.id);
+    }
+  }
+  return [...repeatedIds];
+}

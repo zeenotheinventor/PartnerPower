@@ -132,6 +132,11 @@ an unknown value against the schema and returns every problem as a message that 
 index and id, for example `cards[3] (id "card-4"): unknown category "c9"`. Duplicate card ids in a
 deck fail in the schema, not only in a test. Penalties are 1 to 4 for c1 to c4.
 
+`findDuplicateCardIds` checks that card ids are unique across every deck the app ships. The starter
+deck is a data file, `packages/content/src/decks/starter.json`, and `decks.ts` runs it through
+`parseDeck` at import time, so an invalid deck fails loudly. Tests require at least 30 cards in each
+category, at least 8 of them `together` cards, and card text of 140 characters or fewer.
+
 `content` exports `decks` as data, `categoryNames` and `levelNames`, typed by id so a missing name
 fails typecheck, and `displayNames` for games. A test in `content` validates every deck against the
 schema and checks that card ids are unique across all decks.

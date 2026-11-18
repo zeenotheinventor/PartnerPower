@@ -2,10 +2,12 @@ import {
   categories,
   categoriesForLevel,
   categoryIds,
+  findDuplicateCardIds,
   isCategoryId,
   levelIds,
   levels,
   parseDeck,
+  type Deck,
 } from './contentModel';
 
 const validCard = { id: 'card-1', category: 'c1', kind: 'solo', text: 'Card text one' };
@@ -181,5 +183,44 @@ describe('parseDeck', () => {
         deckWith({ ...validCard, text: '' }, { ...validCard, id: 'card-2', category: 'c9' }),
       ),
     ).toHaveLength(2);
+  });
+});
+
+describe('findDuplicateCardIds', () => {
+  const deckOne: Deck = {
+    id: 'deck-1',
+    version: 1,
+    cards: [
+      { id: 'card-1', category: 'c1', kind: 'solo', text: 'Card text one' },
+      { id: 'card-2', category: 'c1', kind: 'solo', text: 'Card text two' },
+    ],
+  };
+  const deckTwo: Deck = {
+    id: 'deck-2',
+    version: 1,
+    cards: [{ id: 'card-3', category: 'c2', kind: 'together', text: 'Card text three' }],
+  };
+
+  it('should return nothing when every card id is used once', () => {
+    expect(findDuplicateCardIds([deckOne, deckTwo])).toEqual([]);
+  });
+
+  it('should find an id used twice in one deck', () => {
+    const repeatingDeck: Deck = {
+      ...deckOne,
+      cards: [...deckOne.cards, ...deckOne.cards.slice(0, 1)],
+    };
+
+    expect(findDuplicateCardIds([repeatingDeck])).toEqual(['card-1']);
+  });
+
+  it('should find an id used in two decks', () => {
+    const clashingDeck: Deck = { ...deckTwo, cards: deckOne.cards.slice(1) };
+
+    expect(findDuplicateCardIds([deckOne, clashingDeck])).toEqual(['card-2']);
+  });
+
+  it('should list an id once however many times it repeats', () => {
+    expect(findDuplicateCardIds([deckOne, deckOne, deckOne])).toEqual(['card-1', 'card-2']);
   });
 });
