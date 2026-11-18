@@ -1,9 +1,9 @@
 # PartnerPower
 
-A mobile app of adult games for couples, played on one phone. 18+ only. The working code name is Get Freak.
+A mobile app of games for couples to connect with each other, played together on one phone.
 
-- First game: Freak or Drink. A partner draws a dare. They do it, or they drink.
-- Second game: Drink If. A question game for learning about your partner.
+- Freak or Drink: take turns drawing a dare. Do it, or take the forfeit.
+- Drink If: a question game for learning more about your partner.
 
 ## Stack
 
@@ -11,5 +11,5 @@ Expo, React Native, TypeScript, Expo Router and NativeWind. Node 24 and pnpm. No
 
 ## Planning
 
-The plan lives in Linear, in the Freak team (ticket prefix `FRK`), under the Get Freak project.
-Each milestone is built in its own session. The app scaffold is ticket FRK-1.
+The plan lives in Linear under the `FRK` team. Each milestone is built in its own session.
+The app scaffold is ticket FRK-1.
