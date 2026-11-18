@@ -58,7 +58,7 @@ export function radiusUtilities(scale: Record<string, number>): Record<string, s
   );
 }
 
-/** One class per type style, such as type-body-bold, setting family, size and line height. */
+/** One class per type style, such as type-body-bold, setting family, size, line height and any letter spacing. */
 export function typeStyleUtilities(
   scale: Record<string, TypeStyle>,
 ): Record<string, Record<string, string>> {
@@ -69,6 +69,9 @@ export function typeStyleUtilities(
         fontFamily: style.fontFamily,
         fontSize: toPixels(style.fontSize),
         lineHeight: toPixels(style.lineHeight),
+        ...(style.letterSpacing === undefined
+          ? {}
+          : { letterSpacing: toPixels(style.letterSpacing) }),
       },
     ]),
   );

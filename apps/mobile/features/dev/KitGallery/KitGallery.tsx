@@ -1,0 +1,128 @@
+import { useRouter } from 'expo-router';
+import { useState, type ReactNode } from 'react';
+import { Text, View } from 'react-native';
+
+import {
+  Button,
+  Card,
+  Chip,
+  Header,
+  Screen,
+  TextField,
+  Toggle,
+  type CategoryId,
+} from '../../../components/ui';
+
+const categoryIds: CategoryId[] = ['c1', 'c2', 'c3', 'c4'];
+
+function Section({ title, children }: { title: string; children: ReactNode }) {
+  return (
+    <View className="gap-12">
+      <Text className="type-label text-muted">{title}</Text>
+      {children}
+    </View>
+  );
+}
+
+// This screen exists only to look at the kit on a device in development. Player-facing text
+// belongs in the content package, but nothing here ships to players, so the sample labels are
+// literals.
+export function KitGallery() {
+  const router = useRouter();
+  const [soundOn, setSoundOn] = useState(true);
+  const [name, setName] = useState('');
+  const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>(['c1', 'c2']);
+
+  const toggleCategory = (categoryId: CategoryId) =>
+    setSelectedCategories((current) =>
+      current.includes(categoryId)
+        ? current.filter((selectedId) => selectedId !== categoryId)
+        : [...current, categoryId],
+    );
+
+  return (
+    <Screen scroll>
+      <Header
+        title="UI kit"
+        subtitle="Every component in the current theme"
+        backLabel="Go back"
+        onBack={() => router.back()}
+        trailing={
+          <View
+            accessible
+            accessibilityRole="image"
+            accessibilityLabel="Avatar"
+            className="h-48 w-48 rounded-lg border-2 border-border bg-surface"
+          />
+        }
+      />
+
+      <Section title="Buttons">
+        <Button label="Primary" onPress={() => {}} />
+        <Button label="Secondary" variant="secondary" onPress={() => {}} />
+        <Button label="Primary, full width" fullWidth onPress={() => {}} />
+        <Button label="Secondary, full width" variant="secondary" fullWidth onPress={() => {}} />
+        <Button label="Primary, disabled" disabled onPress={() => {}} />
+        <Button label="Secondary, disabled" variant="secondary" disabled onPress={() => {}} />
+      </Section>
+
+      <Section title="Cards">
+        <Card>
+          <Text className="type-heading text-foreground">Plain card</Text>
+        </Card>
+        <Card label="Pressable card" onPress={() => {}}>
+          <Text className="type-heading text-foreground">Pressable card</Text>
+        </Card>
+        <Card label="Disabled card" category="c2" disabled onPress={() => {}}>
+          <Text className="type-heading text-foreground">Disabled card</Text>
+        </Card>
+        {categoryIds.map((categoryId) => (
+          <Card key={categoryId} category={categoryId}>
+            <Chip label={`Category ${categoryId}`} category={categoryId} />
+            <Text className="type-heading mt-8 text-foreground">Card text goes here</Text>
+          </Card>
+        ))}
+      </Section>
+
+      <Section title="Chips">
+        <View className="flex-row flex-wrap gap-8">
+          <Chip label="Neutral" />
+          <Chip label="Neutral, selected" onPress={() => {}} selected />
+          <Chip label="Neutral, pressable" onPress={() => {}} />
+        </View>
+        <View className="flex-row flex-wrap gap-8">
+          {categoryIds.map((categoryId) => (
+            <Chip key={categoryId} label={`Filled ${categoryId}`} category={categoryId} />
+          ))}
+        </View>
+        <View className="flex-row flex-wrap gap-8">
+          {categoryIds.map((categoryId) => (
+            <Chip
+              key={categoryId}
+              label={`Pick ${categoryId}`}
+              category={categoryId}
+              selected={selectedCategories.includes(categoryId)}
+              onPress={() => toggleCategory(categoryId)}
+            />
+          ))}
+        </View>
+      </Section>
+
+      <Section title="Toggles">
+        <Toggle label="Switch" value={soundOn} onValueChange={setSoundOn} />
+        <Toggle label="Switch, off" value={false} onValueChange={() => {}} />
+        <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
+      </Section>
+
+      <Section title="Text field">
+        <TextField
+          label="Text field"
+          value={name}
+          onChangeText={setName}
+          placeholder="Type here"
+          maxLength={12}
+        />
+      </Section>
+    </Screen>
+  );
+}

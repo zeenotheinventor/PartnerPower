@@ -32,6 +32,25 @@ describe('typeScale', () => {
     });
   });
 
+  it('should track the label and caption in points and leave the others untracked', () => {
+    expect(
+      Object.fromEntries(
+        Object.entries(typeScale).map(([name, style]) => [
+          name,
+          'letterSpacing' in style ? style.letterSpacing : undefined,
+        ]),
+      ),
+    ).toEqual({
+      display: undefined,
+      title: undefined,
+      heading: undefined,
+      body: undefined,
+      bodyBold: undefined,
+      label: 0.8,
+      caption: 0.7,
+    });
+  });
+
   it('should set display, title and heading in the display font at weight 800', () => {
     for (const name of ['display', 'title', 'heading'] as const) {
       expect(typeScale[name].fontFamily).toBe('Baloo2_800ExtraBold');

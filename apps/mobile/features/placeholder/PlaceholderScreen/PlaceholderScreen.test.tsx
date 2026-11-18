@@ -1,10 +1,42 @@
 import { colorThemes, typeScale } from '@getfreak/tokens';
-import { screen } from 'nativewind/test';
+import { fireEvent, screen } from 'nativewind/test';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { PlaceholderScreen } from './PlaceholderScreen';
 
+const mockPush = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ push: mockPush }) }));
+
+// __DEV__ is a read-only global in the type definitions, so it is set through the property.
+function setDevelopmentFlag(value: boolean) {
+  Object.defineProperty(globalThis, '__DEV__', { value, writable: true, configurable: true });
+}
+
 describe('PlaceholderScreen', () => {
+  const developmentFlag = __DEV__;
+
+  afterEach(() => {
+    setDevelopmentFlag(developmentFlag);
+    mockPush.mockClear();
+  });
+
+  describe('the link to the kit gallery', () => {
+    it('should open the gallery in development', async () => {
+      await renderThemed(<PlaceholderScreen />);
+
+      fireEvent.press(screen.getByRole('button', { name: 'Open the UI kit' }));
+
+      expect(mockPush).toHaveBeenCalledWith('/dev/kit');
+    });
+
+    it('should not be shown in a production build', async () => {
+      setDevelopmentFlag(false);
+      await renderThemed(<PlaceholderScreen />);
+
+      expect(screen.queryByRole('button', { name: 'Open the UI kit' })).not.toBeOnTheScreen();
+    });
+  });
+
   it('should show the app name as the heading', async () => {
     await renderThemed(<PlaceholderScreen />);
 

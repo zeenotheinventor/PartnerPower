@@ -1,0 +1,45 @@
+import { fireEvent, screen } from 'nativewind/test';
+
+import { renderThemed } from '../../../tailwind/renderThemed';
+import { KitGallery } from './KitGallery';
+
+const mockBack = jest.fn();
+jest.mock('expo-router', () => ({ useRouter: () => ({ back: mockBack }) }));
+
+describe('KitGallery', () => {
+  it('should be a screen with a heading', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('header', { name: 'UI kit' })).toBeOnTheScreen();
+  });
+
+  it.each(['button', 'switch', 'group', 'image'] as const)(
+    'should show at least one %s',
+    async (role) => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getAllByRole(role).length).toBeGreaterThan(0);
+    },
+  );
+
+  it('should show a text field', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByLabelText('Text field')).toBeOnTheScreen();
+  });
+
+  it('should show a pressable card and a disabled one', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('button', { name: 'Pressable card' })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Disabled card', disabled: true })).toBeOnTheScreen();
+  });
+
+  it('should go back from the header', async () => {
+    await renderThemed(<KitGallery />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Go back' }));
+
+    expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+});

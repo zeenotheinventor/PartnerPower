@@ -1,12 +1,29 @@
 import { copy } from '@getfreak/content';
 import { Text, View } from 'react-native';
 
+type DevKitLinkModule = typeof import('../../dev/DevKitLink');
+
 const swatchClasses = [
   'h-48 w-48 rounded-lg bg-category-c1',
   'h-48 w-48 rounded-lg bg-category-c2',
   'h-48 w-48 rounded-lg bg-category-c3',
   'h-48 w-48 rounded-lg bg-category-c4',
 ];
+
+// The link is required inside the development branch, so Metro drops it from a production bundle.
+function renderDevLink() {
+  if (__DEV__) {
+    /* eslint-disable-next-line @typescript-eslint/no-require-imports */
+    const { DevKitLink }: DevKitLinkModule = require('../../dev/DevKitLink');
+    return (
+      <View className="mt-24">
+        <DevKitLink />
+      </View>
+    );
+  }
+
+  return null;
+}
 
 export function PlaceholderScreen() {
   return (
@@ -24,6 +41,7 @@ export function PlaceholderScreen() {
           <View key={swatchClass} className={swatchClass} />
         ))}
       </View>
+      {renderDevLink()}
     </View>
   );
 }

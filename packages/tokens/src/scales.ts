@@ -6,6 +6,8 @@ export type TypeStyle = {
   fontFamily: string;
   fontSize: number;
   lineHeight: number;
+  /** In px. Left out when the style is not tracked. */
+  letterSpacing?: number;
 };
 
 // A font family name is the name the app registers the font file under. Each weight is its own
@@ -16,6 +18,6 @@ export const typeScale = {
   heading: { fontFamily: 'Baloo2_800ExtraBold', fontSize: 20, lineHeight: 26 },
   body: { fontFamily: 'Nunito_500Medium', fontSize: 16, lineHeight: 22 },
   bodyBold: { fontFamily: 'Nunito_700Bold', fontSize: 16, lineHeight: 22 },
-  label: { fontFamily: 'Nunito_800ExtraBold', fontSize: 14, lineHeight: 18 },
-  caption: { fontFamily: 'Nunito_800ExtraBold', fontSize: 12, lineHeight: 16 },
+  label: { fontFamily: 'Nunito_800ExtraBold', fontSize: 14, lineHeight: 18, letterSpacing: 0.8 },
+  caption: { fontFamily: 'Nunito_800ExtraBold', fontSize: 12, lineHeight: 16, letterSpacing: 0.7 },
 } as const satisfies Record<string, TypeStyle>;

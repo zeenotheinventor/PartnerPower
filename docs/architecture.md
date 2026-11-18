@@ -176,6 +176,7 @@ apps/mobile/
     _layout.tsx          root layout: providers and the entry guard
     index.tsx            hub
     welcome.tsx          entry confirmation, shown on first launch
+    dev/kit.tsx          gallery of the UI kit, development builds only
     games/
       dares/
         _layout.tsx      holds the round for this route group
@@ -187,6 +188,7 @@ apps/mobile/
   fonts/                 the font files the type scale uses
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
+  features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
 ```
 
@@ -204,6 +206,35 @@ apps/mobile/
 The root layout reads the entry confirmation from settings before rendering any route. Until it is
 set, every route redirects to `welcome`, including deep links. The specific wording and requirement
 are in the ticket and in `content`.
+
+### UI kit
+
+`components/ui` holds the shared components, one folder each, imported from the barrel
+`components/ui`.
+
+| Component   | What it is, and its role and name                                                                                                                         |
+| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`    | The screen shell: safe area, themed background, padding and optional scrolling. A layout container with no role. A screen's name is its `Header` heading. |
+| `Button`    | Role `button`, named by its label. Primary and secondary variants.                                                                                        |
+| `Card`      | A static card is one accessible group named by its text, so it must not contain controls. With `onPress` it is a `button` named by its `label`.           |
+| `Toggle`    | Role `switch`, named by its label, with a checked and a disabled state.                                                                                   |
+| `Chip`      | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                        |
+| `TextField` | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                            |
+| `Header`    | The title has role `header`. The optional back control is a `button` named by the caller.                                                                 |
+
+- Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
+- Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
+  shadow. Pressing a button or a pressable card sinks its face onto the edge.
+- `app/dev/kit.tsx` is a gallery of every component and state, for looking at the kit on a device.
+  Expo Router bundles every file under `app/`, so the route file exists in every build. The gallery
+  code is required only when `__DEV__` is true, a production build that reaches the route is sent
+  back to the first screen, and the link to it renders only in development.
+- Component tests render through `tailwind/renderThemed`, which compiles the real Tailwind config.
+  Its safelist must list every utility prefix and variant a component uses. One that is missing
+  silently does not resolve.
+- Decorative parts with no role, such as a depth edge or a toggle's knob, are reached in tests
+  through `tailwind/hostViewsInside`, starting from the element that was found by role.
+- `CategoryId` is typed locally in `components/ui` until the content model lands in `core`.
 
 ## Storage
 
@@ -264,6 +295,7 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   `type-body-bold`, `type-label` and `type-caption`. Each sets the font family, size and line
   height. Display, title and heading use Baloo 2. The rest use Nunito. Stock Tailwind type utilities
   such as `text-sm` and `font-bold` are switched off, so these classes are the only way to set type.
+  The label and caption styles also carry a little letter spacing.
 - The font files ship in the app bundle, one file per weight, and are loaded in the root layout
   before any route renders. If a font fails to load the app still renders, in the system font.
 - Tests in `tokens` check that both themes have the same keys and that the listed pairings meet
@@ -318,14 +350,17 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 
 ## Decisions made
 
-| Decision                            | Outcome                                                                                                                                                                            | Ticket |
-| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                   | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                              | FRK-1  |
-| Colours before the tokens package   | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                     | FRK-1  |
-| Themes                              | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".             | FRK-3  |
-| Typefaces                           | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                   | FRK-3  |
-| Category colours in the light theme | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.      | FRK-3  |
-| Text on the accent colour           | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                              | FRK-3  |
-| Spacing and radius utility names    | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                | FRK-3  |
-| Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                               | FRK-1  |
-| App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18. | FRK-1  |
+| Decision                            | Outcome                                                                                                                                                                                                                                     | Ticket |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                   | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                       | FRK-1  |
+| Colours before the tokens package   | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                              | FRK-1  |
+| Themes                              | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                      | FRK-3  |
+| Typefaces                           | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                            | FRK-3  |
+| Category colours in the light theme | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                               | FRK-3  |
+| Text on the accent colour           | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                       | FRK-3  |
+| Spacing and radius utility names    | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                         | FRK-3  |
+| Role and name for the screen shell  | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
+| Depth edge                          | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |
+| Design sizes off the scales         | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                  | FRK-4  |
+| Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
+| App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
