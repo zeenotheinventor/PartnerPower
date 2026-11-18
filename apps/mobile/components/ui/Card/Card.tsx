@@ -1,6 +1,6 @@
 import { Pressable, View } from 'react-native';
 
-import type { CategoryId } from '../CategoryId';
+import type { CategoryId } from '@getfreak/core';
 import type { CardProps } from './types';
 
 type CardTone = CategoryId | 'plain';

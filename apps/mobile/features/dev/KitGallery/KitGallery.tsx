@@ -1,19 +1,9 @@
+import { categoryIds, type CategoryId } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
-import {
-  Button,
-  Card,
-  Chip,
-  Header,
-  Screen,
-  TextField,
-  Toggle,
-  type CategoryId,
-} from '../../../components/ui';
-
-const categoryIds: CategoryId[] = ['c1', 'c2', 'c3', 'c4'];
+import { Button, Card, Chip, Header, Screen, TextField, Toggle } from '../../../components/ui';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (

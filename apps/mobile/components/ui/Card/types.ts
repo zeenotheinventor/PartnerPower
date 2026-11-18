@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { CategoryId } from '../CategoryId';
+import type { CategoryId } from '@getfreak/core';
 
 type StaticCardProps = {
   onPress?: undefined;
