@@ -22,6 +22,7 @@ function allColors(theme: ColorTheme): string[] {
     theme.accent,
     theme.accentDeep,
     theme.onAccent,
+    theme.onAccentSmall,
     ...Object.values(theme.category),
     ...Object.values(theme.onCategory),
   ];
@@ -62,6 +63,10 @@ describe('colorThemes', () => {
 
     it('should give text on the accent at least 3, which only suits large bold labels', () => {
       expect(contrastRatio(theme.onAccent, theme.accent)).toBeGreaterThanOrEqual(3);
+    });
+
+    it('should give small text on the accent at least 4.5', () => {
+      expect(contrastRatio(theme.onAccentSmall, theme.accent)).toBeGreaterThanOrEqual(4.5);
     });
 
     it.each(categoryIds)('should give the label on category %s at least 4.5', (categoryId) => {

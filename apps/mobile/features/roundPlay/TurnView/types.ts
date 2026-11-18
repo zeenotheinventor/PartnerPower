@@ -1,6 +1,6 @@
-import type { CategoryId } from '@getfreak/core';
+import type { CardKind, CategoryId } from '@getfreak/core';
 
-export type TurnViewProps = {
+type TurnViewBaseProps = {
   /** Whose turn it is, or that it is both players. */
   turnLabel: string;
   /** The card number line, such as "Card 7 of 20". */
@@ -15,3 +15,10 @@ export type TurnViewProps = {
   onPass: () => void;
   onEndRound: () => void;
 };
+
+/** A together card also names both players, such as "Sam and Alex". */
+export type TurnViewProps = TurnViewBaseProps &
+  (
+    | { kind: Extract<CardKind, 'solo'>; togetherNames?: undefined }
+    | { kind: Extract<CardKind, 'together'>; togetherNames: string }
+  );

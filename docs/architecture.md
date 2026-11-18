@@ -292,8 +292,12 @@ apps/mobile/
   holds the phone is not the one who held it for the previous card, or there was no previous
   card, the pass the phone screen names who receives it. Then the card shows. These screens are
   state of the play screen, kept with the card number they belong to, and are not routes.
-- A `together` card uses the same card view, with "Both of you" for the turn and a penalty line
-  that says both drink. Done and Pass send the same actions.
+- A `together` card uses the same card view with "Both of you" for the turn and a penalty line that
+  says both drink. The card is edged in the accent colour with the accent depth edge, in place of
+  the category colour, and has a Together chip above the category chip and a line naming both
+  players. The buttons read "We did it" and "We drink", and send the same `done` and `pass`
+  actions. The core already charges both players on a pass and keeps the turn order. The accent
+  edge and chip are the `accent` option of `Card` and `Chip`.
 - A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
   count. An endless round shows only the count.
 - The End round control, and going back by the system back button or the iOS swipe, open a confirm
@@ -341,11 +345,11 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
 | `Button`           | Role `button`, named by its label. Primary and secondary variants.                                                                                                                                                                                                                                                                            |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`.                                                                                                |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.   |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                                                                                                                       |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                              |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                                                                                                                                                                                                            |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                 |
 | `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                     |
 
@@ -407,7 +411,8 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   there, and everywhere in the light theme, it is a fill or a large label that carries its own
   label colour, never small bare text.
 - Text on the accent colour (`on-accent`) is for large bold labels only, such as a button. In the
-  light theme its contrast is 3.37, which is not enough for small text.
+  light theme its contrast is 3.37, which is not enough for small text. Small text on the accent,
+  such as a chip label, uses `on-accent-small`: 4.63 in the light theme and 11.06 in the dark.
 - Only the token colours exist as colour utilities, plus the keywords `transparent` and `current`.
   Tailwind's default palette is not available, and opacity modifiers such as `bg-accent/50` do not
   work, because the variables hold hex values. Use an `opacity-*` utility for a disabled state.
@@ -492,6 +497,8 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 | Typefaces                           | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                            | FRK-3  |
 | Category colours in the light theme | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                               | FRK-3  |
 | Text on the accent colour           | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                       | FRK-3  |
+| Small text on the accent colour     | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.    | FRK-13 |
+| Together card tint                  | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                        | FRK-13 |
 | Spacing and radius utility names    | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                         | FRK-3  |
 | Role and name for the screen shell  | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
 | Depth edge                          | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |

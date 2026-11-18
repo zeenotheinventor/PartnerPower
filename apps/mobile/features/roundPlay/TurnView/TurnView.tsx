@@ -13,10 +13,13 @@ export function TurnView({
   categoryName,
   text,
   penaltyLine,
+  kind,
+  togetherNames,
   onDone,
   onPass,
   onEndRound,
 }: TurnViewProps) {
+  const isTogether = kind === 'together';
   return (
     <Screen scroll>
       <View className="flex-row items-center justify-between gap-8">
@@ -38,9 +41,15 @@ export function TurnView({
         {turnLabel}
       </Text>
 
-      <Card category={category} grouped={false}>
+      <Card category={category} accent={isTogether} grouped={false}>
         <View className="gap-12">
-          <Chip label={categoryName} category={category} />
+          <View className="items-start gap-8">
+            {isTogether ? <Chip label={copy.roundPlay.togetherChip} accent /> : null}
+            <Chip label={categoryName} category={category} />
+          </View>
+          {isTogether ? (
+            <Text className="type-body-bold text-foreground">{togetherNames}</Text>
+          ) : null}
           <Text className="type-heading text-foreground">{text}</Text>
           <Text className="type-caption text-muted">{penaltyLine}</Text>
         </View>
@@ -48,10 +57,19 @@ export function TurnView({
 
       <View className="flex-row gap-12">
         <View className="flex-1">
-          <Button label={copy.roundPlay.done} fullWidth onPress={onDone} />
+          <Button
+            label={isTogether ? copy.roundPlay.togetherDone : copy.roundPlay.done}
+            fullWidth
+            onPress={onDone}
+          />
         </View>
         <View className="flex-1">
-          <Button label={copy.roundPlay.pass} variant="secondary" fullWidth onPress={onPass} />
+          <Button
+            label={isTogether ? copy.roundPlay.togetherPass : copy.roundPlay.pass}
+            variant="secondary"
+            fullWidth
+            onPress={onPass}
+          />
         </View>
       </View>
 

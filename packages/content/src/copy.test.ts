@@ -60,6 +60,10 @@ describe('copy', () => {
         'stepUpLine',
         'stepUpTitle',
         'title',
+        'togetherChip',
+        'togetherDone',
+        'togetherNames',
+        'togetherPass',
         'turnOf',
       ].sort(),
     );

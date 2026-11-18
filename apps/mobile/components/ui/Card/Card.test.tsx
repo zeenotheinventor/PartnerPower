@@ -67,6 +67,19 @@ describe('Card', () => {
         });
       });
 
+      it('should draw the deep accent colour as its edge and the accent as its border when accented', async () => {
+        await renderThemed(
+          <Card category="c1" accent>
+            <Text>Card 1</Text>
+          </Card>,
+          themeName,
+        );
+
+        const card = screen.getByRole('group', { name: 'Card 1' });
+        expect(card).toHaveStyle({ backgroundColor: theme.accentDeep.toLowerCase() });
+        expect(hostViewInside(card, 0)).toHaveStyle({ borderColor: theme.accent.toLowerCase() });
+      });
+
       it.each(categoryIds)(
         'should draw the colour of category %s as its edge',
         async (category) => {

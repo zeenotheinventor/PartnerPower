@@ -57,6 +57,13 @@ describe('KitGallery', () => {
     expect(screen.getByRole('button', { name: 'Disabled card', disabled: true })).toBeOnTheScreen();
   });
 
+  it('should show an accent card and an accent chip', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('group', { name: /Accent card/ })).toBeOnTheScreen();
+    expect(screen.getByRole('text', { name: 'Accent chip' })).toBeOnTheScreen();
+  });
+
   it('should go back from the header', async () => {
     await renderThemed(<KitGallery />);
 

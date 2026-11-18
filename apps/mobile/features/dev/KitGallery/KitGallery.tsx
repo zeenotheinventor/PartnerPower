@@ -79,6 +79,10 @@ export function KitGallery() {
         <Card label="Disabled card" category="c2" disabled onPress={() => {}}>
           <Text className="type-heading text-foreground">Disabled card</Text>
         </Card>
+        <Card accent>
+          <Chip label="Accent chip" accent />
+          <Text className="type-heading mt-8 text-foreground">Accent card</Text>
+        </Card>
         {categoryIds.map((categoryId) => (
           <Card key={categoryId} category={categoryId}>
             <Chip label={`Category ${categoryId}`} category={categoryId} />

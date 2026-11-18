@@ -3,7 +3,7 @@ import { Pressable, Text } from 'react-native';
 import type { CategoryId } from '@getfreak/core';
 import type { ChipProps } from './types';
 
-type ChipTone = CategoryId | 'neutral';
+type ChipTone = CategoryId | 'neutral' | 'accent';
 type ChipLook = 'filled' | 'outlined';
 
 const shapeClasses = 'self-start rounded-pill border-2 px-12';
@@ -15,6 +15,10 @@ const containerClasses: Record<ChipTone, Record<ChipLook, string>> = {
   neutral: {
     filled: `${shapeClasses} border-foreground bg-surface`,
     outlined: `${shapeClasses} border-border bg-surface`,
+  },
+  accent: {
+    filled: `${shapeClasses} border-accent bg-accent`,
+    outlined: `${shapeClasses} border-dashed border-border bg-transparent`,
   },
   c1: {
     filled: `${shapeClasses} border-category-c1 bg-category-c1`,
@@ -38,6 +42,10 @@ const labelClasses: Record<ChipTone, Record<ChipLook, string>> = {
   neutral: {
     filled: `${labelShapeClasses} text-foreground`,
     outlined: `${labelShapeClasses} text-foreground`,
+  },
+  accent: {
+    filled: `${labelShapeClasses} text-on-accent-small`,
+    outlined: `${labelShapeClasses} text-muted`,
   },
   c1: {
     filled: `${labelShapeClasses} text-on-category-c1`,
@@ -64,8 +72,8 @@ function lookOf(tone: ChipTone, selected: boolean | undefined): ChipLook {
   return selected === false ? 'outlined' : 'filled';
 }
 
-export function Chip({ label, category, onPress, selected }: ChipProps) {
-  const tone = category ?? 'neutral';
+export function Chip({ label, category, accent = false, onPress, selected }: ChipProps) {
+  const tone: ChipTone = accent ? 'accent' : (category ?? 'neutral');
   const look = lookOf(tone, selected);
 
   if (!onPress) {
