@@ -152,4 +152,41 @@ describe('playing a round in the route tree', () => {
     act(() => router.back());
     await waitFor(() => expect(currentPathname()).toBe(setupRoute));
   });
+
+  describe('Not this one', () => {
+    async function openTheSheet() {
+      await startTenCardRound();
+      fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.handoffButton }));
+      fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.notThisOne }));
+    }
+
+    it('should skip a card and stay on the round, with the sheet closed', async () => {
+      await openTheSheet();
+
+      fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.skipTitle }));
+
+      expect(currentPathname()).toBe(playRoute);
+      expect(screen.queryByText(copy.roundPlay.sheetTitle)).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.done })).toBeOnTheScreen();
+    });
+
+    it('should close the sheet, not open the end round dialog, when the player goes back', async () => {
+      await openTheSheet();
+
+      act(() => router.back());
+
+      expect(currentPathname()).toBe(playRoute);
+      expect(screen.queryByText(copy.roundPlay.sheetTitle)).not.toBeOnTheScreen();
+      expect(screen.queryByText(copy.roundPlay.endDialogTitle)).not.toBeOnTheScreen();
+    });
+
+    it('should open the end round dialog when the player goes back again', async () => {
+      await openTheSheet();
+      act(() => router.back());
+
+      act(() => router.back());
+
+      expect(screen.getByRole('header', { name: copy.roundPlay.endDialogTitle })).toBeOnTheScreen();
+    });
+  });
 });

@@ -14,6 +14,7 @@ type TurnViewBaseProps = {
   onDone: () => void;
   onPass: () => void;
   onEndRound: () => void;
+  onNotThisOne: () => void;
 };
 
 /** A together card also names both players, such as "Sam and Alex". */

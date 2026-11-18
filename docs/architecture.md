@@ -309,8 +309,8 @@ on it is stored or logged.
 
 ### Play screen
 
-`features/roundPlay/RoundPlayScreen` reads the round from `useRound()` and sends `done`, `pass` and
-`end`. The card number is `history.length + 1`, and the penalty is the category's `penalty`.
+`features/roundPlay/RoundPlayScreen` reads the round from `useRound()` and sends `done`, `pass`,
+`removeCard`, `disableCategory` and `end`. The card number is `history.length + 1`, and the penalty is the category's `penalty`.
 
 - Each card can come with two screens before it, in this order. If `current.steppingUp` is true,
   the step up screen names the new category and what passing now costs. Then, if the player who
@@ -332,6 +332,21 @@ on it is stored or logged.
   Confirming sends `end`. Once a card has been in play and the round is over, whether it ended by
   itself or by `end`, the screen replaces itself with the summary route. A round with no cards
   from the start is never shown the summary and says so instead.
+- A quiet "Not this one" control sits under the buttons of every card in play, together cards
+  included, and is not on the step up or pass the phone screens. It opens `NotThisOneSheet`, a
+  modal sheet that a screen reader treats as a dialog. "Skip this card" sends `removeCard`: the
+  engine draws a replacement of the same kind for the same player, the card number and history do
+  not change, and nobody drinks or is counted as having done a dare. The sheet then closes. The
+  sheet also has one switch per category the round was set up with, in the `CategoryToggle` of
+  setup. Switching one off sends `disableCategory` at once, and the sheet stays open. If that was
+  the category of the card in play, the engine replaces the card and the screen shows the new one
+  once the sheet is closed. The last category on is locked and says "One category has to stay on."
+  as setup does. A category already off shows as off and locked, because the round has no way to
+  switch one back on. "Keep playing" and the system back button close the sheet. The same back
+  hook closes the sheet when it is open and opens the end round dialog when it is not. If nothing
+  is left to draw, the round ends and the screen goes to the summary as it always does. A skip or
+  a switch-off pins the card view, so the replacement shows at once with no step up or pass the
+  phone screen, even when it is in a higher category. Its cost is in the penalty line.
 - The summary route shows the end of round summary. See the Summary screen section.
 
 ### Entry guard
@@ -535,3 +550,10 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 | Round setup before its ticket       | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                          | FRK-7  |
 | Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
 | App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
+| Not this one is not a penalty       | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.          | FRK-14 |
+| Staging after a replacement         | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                     | FRK-14 |
+| Switched off categories stay off    | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                | FRK-14 |
+| Sheet frame, skip row               | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                        | FRK-14 |
+| Sheet frame, shape and spacing      | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                           | FRK-14 |
+| Sheet frame, quiet control          | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                  | FRK-14 |
+| Sheet frame, last category hint     | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                 | FRK-14 |
