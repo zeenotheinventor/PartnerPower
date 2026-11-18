@@ -1,22 +1,16 @@
 # Get Freak: working rules for agents
 
-Get Freak is a mobile app of games for couples to connect with each other.
+Get Freak is an 18+ mobile app of games for couples, played together on one phone. It may be
+described as such anywhere in this repository.
 
-## Tone of everything in this repository
+## Names and content
 
-This codebase may be shown publicly as a portfolio piece. Keep it safe for work.
-
-- Describe the app as games for couples to connect with each other, and say no more than that about
-  its content. This covers the README, documents, code comments, commit messages and pull request
-  text.
-- In code, the two games are `dares` and `questions`. Their display names, and every other name shown
-  to players, live in content data, which may use whatever words the product needs.
-- Keep game content, such as card and question text, in data files apart from the code, so the code
-  can be shown without it.
-- Branch names are the ticket id plus a neutral slug, for example `FRK-12/turn-screen`. Do not copy
-  the branch name Linear suggests, since it repeats the ticket title.
-- Use neutral names for code: `category`, `level`, `card`, `deck`. Do not put content words in
-  identifiers, file names or test names.
+- In code, the two games are `dares` and `questions`, and categories and levels have ids. Their
+  display names, and every other name shown to players, live in content data, so a name can change
+  without touching code.
+- Keep game content, such as card and question text, in data files in `packages/content`, apart from
+  the code.
+- Branch names are the ticket id plus a short slug, for example `FRK-12/turn-screen`.
 
 ## Development decisions
 
@@ -39,6 +33,5 @@ asking again.
 
 ## Where things live
 
-- The plan and tickets are in Linear under the `FRK` team. The ticket is the spec, and it holds the
-  content detail that this repository leaves out.
+- The plan and tickets are in Linear under the `FRK` team. The ticket is the spec.
 - Node 26 (`.nvmrc`) and pnpm.

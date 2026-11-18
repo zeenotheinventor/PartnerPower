@@ -219,8 +219,8 @@ apps/mobile/
 
 ### Entry guard
 
-Until the player has confirmed on the `welcome` screen, no other screen exists. The specific wording
-and requirement are in the ticket and in `content`.
+Until the player has confirmed on the `welcome` screen, no other screen exists. The screen asks the
+player to confirm they are 18 or over, and its wording is in `content`.
 
 - `components/EntryStack` is the root navigator. It renders nothing while the settings load, and
   after that it stays mounted. It uses Expo Router's protected groups: `welcome` is in a group that
@@ -377,8 +377,7 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 - One ticket, one branch, one pull request. Squash merge.
 - A pull request is merged once CI has passed and the reviewer has approved it. `CLAUDE.md` has
   the rule under Development decisions.
-- Branch names are the ticket id plus a neutral slug, for example `FRK-12/turn-screen`.
-- The tone rules in `CLAUDE.md` apply to code, comments, commits and pull requests.
+- Branch names are the ticket id plus a short slug, for example `FRK-12/turn-screen`.
 
 ## Decisions still open
 
