@@ -146,7 +146,9 @@ The `Card` type leaves room for later milestones through two optional fields tha
 shipped card from one a player wrote.
 
 User-facing copy also lives in `content`, in one module, in British English. Screens never hold
-string literals for copy.
+string literals for copy. A line with a value in it carries a marker such as `{name}`, and
+`fillCopy` fills it. Its type reads the markers from the line, so a missing or misspelled value
+fails typecheck.
 
 ## Round engine
 
@@ -256,7 +258,8 @@ apps/mobile/
   features/hub/          the hub: the first screen, with a tile for each game
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen
-  features/roundPlay/    the round screen. A stand-in until the turn screen is built.
+  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
+  features/roundSummary/ the summary screen. A stand-in until the full summary is built.
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
@@ -278,6 +281,30 @@ apps/mobile/
   that session and is asked again at the next launch. Nothing in it logs.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
+
+### Play screen
+
+`features/roundPlay/RoundPlayScreen` reads the round from `useRound()` and sends `done`, `pass` and
+`end`. The card number is `history.length + 1`, and the penalty is the category's `penalty`.
+
+- Each card can come with two screens before it, in this order. If `current.steppingUp` is true,
+  the step up screen names the new category and what passing now costs. Then, if the player who
+  holds the phone is not the one who held it for the previous card, or there was no previous
+  card, the pass the phone screen names who receives it. Then the card shows. These screens are
+  state of the play screen, kept with the card number they belong to, and are not routes.
+- A `together` card uses the same card view, with "Both of you" for the turn and a penalty line
+  that says both drink. Done and Pass send the same actions.
+- A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
+  count. An endless round shows only the count.
+- The End round control, and going back by the system back button or the iOS swipe, open a confirm
+  dialog. The screen calls `usePreventRemove` from `expo-router/react-navigation` while a card is in
+  play. That is the hook the native stack reads, so the iOS swipe is stopped as well as the back
+  button. A raw `beforeRemove` listener is not enough there.
+  Confirming sends `end`. Once a card has been in play and the round is over, whether it ended by
+  itself or by `end`, the screen replaces itself with the summary route. A round with no cards
+  from the start is never shown the summary and says so instead.
+- The summary route is a stand-in that shows each player's dares done and drinks from `summarise`,
+  and a way back to setup.
 
 ### Entry guard
 
