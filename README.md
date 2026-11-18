@@ -1,6 +1,6 @@
 # Get Freak
 
-A mobile app of games for couples to connect with each other, played together on one phone.
+An 18+ mobile app of games for couples, played together on one phone.
 
 ## Stack
 
