@@ -259,7 +259,7 @@ apps/mobile/
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen
   features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
-  features/roundSummary/ the summary screen. A stand-in until the full summary is built.
+  features/roundSummary/ the end of round summary screen and the player score block
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
@@ -272,6 +272,9 @@ apps/mobile/
   renders `RoundProvider` (`features/round`), and `useRound` gives `round` (undefined until a round
   has started), `startNewRound(setup, deck)`, which calls `startRound` and holds the result, and
   `dispatch` for a `RoundAction`. Setup builds the `RoundSetup` and the play route reads the round.
+  The provider also keeps `lastStart`, the setup and deck the last round was started from, in
+  memory only, so the summary can start another round like it. It goes with the round when the
+  route group is left.
 - **Settings**, such as the entry confirmation and the remembered player names, are read from
   storage once at launch and exposed through a small settings context, `settings`. Saving the names
   never rejects: a failed write is ignored and the names still count for that session. The
@@ -281,6 +284,28 @@ apps/mobile/
   that session and is asked again at the next launch. Nothing in it logs.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
+
+### Summary screen
+
+`features/roundSummary/RoundSummaryScreen` shows `summarise` of the round from `useRound()`. Nothing
+on it is stored or logged.
+
+- The heading is "Round over!", with a line giving the cards played and the categories reached,
+  in the singular for one. Each player has a `PlayerScore` block that reads as one group, such as
+  "Alex, 8 dares done, 2 drinks, boldest". The boldest player's block carries a "Boldest" badge.
+  A tie has no badge, and its line says so. The character line is plain text in a bordered box.
+  There is no art and no confetti yet.
+- The badge is a static `Chip` with the `accent` option, like the Together chip. It fills with the
+  accent colour and sets its small text in `on-accent-small`. The boldest block's depth edge stays
+  `accent-deep`, since an edge carries no text.
+- Play again starts a round from `lastStart` with the same players, level, categories, length and
+  deck, and a new seed from `randomSeed`. It then replaces the summary with the play route. The
+  play screen is a new screen, so it does not read the old round as finished.
+- Settings goes back to setup, which is still mounted under the summary and so still shows the
+  level, categories, length and names of the last round. Home goes to the hub with `dismissTo`,
+  which leaves the route group and discards the round and `lastStart`. A new visit to the game
+  starts setup at its defaults. The names are still remembered, because they are settings.
+- Going back by the system back button or the iOS swipe goes to setup, as Settings does.
 
 ### Play screen
 
@@ -307,8 +332,7 @@ apps/mobile/
   Confirming sends `end`. Once a card has been in play and the round is over, whether it ended by
   itself or by `end`, the screen replaces itself with the summary route. A round with no cards
   from the start is never shown the summary and says so instead.
-- The summary route is a stand-in that shows each player's dares done and drinks from `summarise`,
-  and a way back to setup.
+- The summary route shows the end of round summary. See the Summary screen section.
 
 ### Entry guard
 

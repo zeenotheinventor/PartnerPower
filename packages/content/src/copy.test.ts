@@ -72,7 +72,29 @@ describe('copy', () => {
 
   it('should give the summary screen every line as non-empty text', () => {
     expect(Object.keys(copy.roundSummary).sort()).toEqual(
-      ['backToSetup', 'daresDone', 'drinks', 'title'].sort(),
+      [
+        'boldestBadge',
+        'boldestLine',
+        'cardCountMany',
+        'cardCountOne',
+        'categoryCountMany',
+        'categoryCountOne',
+        'daresDoneMany',
+        'daresDoneOne',
+        'doneLabel',
+        'drinkLabelMany',
+        'drinkLabelOne',
+        'drinksMany',
+        'drinksOne',
+        'home',
+        'playAgain',
+        'playerSummary',
+        'playerSummaryBoldest',
+        'settings',
+        'subtitle',
+        'tieLine',
+        'title',
+      ].sort(),
     );
     expectEveryValueToBeText(copy.roundSummary);
   });
