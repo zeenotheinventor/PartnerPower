@@ -24,3 +24,22 @@ export type {
   LevelId,
   ParseDeckResult,
 } from './contentModel';
+export {
+  endlessStepInterval,
+  isRoundOver,
+  reduceRound,
+  startRound,
+  summarise,
+  togetherCardInterval,
+} from './round';
+export type {
+  CurrentCard,
+  PlayedCard,
+  PlayerIndex,
+  PlayerSummary,
+  RoundAction,
+  RoundLength,
+  RoundSetup,
+  RoundState,
+  RoundSummary,
+} from './round';
