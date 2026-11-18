@@ -1,3 +1,4 @@
 export { copy } from './copy';
-export { displayNames } from './displayNames';
+export { decks } from './decks';
+export { categoryNames, displayNames, levelNames } from './displayNames';
 export type { GameDisplayName } from './displayNames';

@@ -126,13 +126,19 @@ interface Deck {
 }
 ```
 
-`core` owns these types and a Zod schema for `Deck`. `content` exports decks as data files and a
-`displayNames` map for categories, levels and games. A test in `content` validates every deck
-against the schema and checks that card ids are unique.
+`core` owns these types, the ordered category and level lists, `categoriesForLevel`, and a Zod
+schema for `Deck`. The types are derived from the schema where it defines them. `parseDeck` checks
+an unknown value against the schema and returns every problem as a message that names the card by
+index and id, for example `cards[3] (id "card-4"): unknown category "c9"`. Duplicate card ids in a
+deck fail in the schema, not only in a test. Penalties are 1 to 4 for c1 to c4.
+
+`content` exports `decks` as data, `categoryNames` and `levelNames`, typed by id so a missing name
+fails typecheck, and `displayNames` for games. A test in `content` validates every deck against the
+schema and checks that card ids are unique across all decks.
 
 The `Card` type leaves room for later milestones through two optional fields that are not used yet:
-`effect`, for cards that change the turn, and `source`, to tell a shipped card from one a player
-wrote.
+`effect`, a string for cards that change the turn, and `source`, `shipped` or `player`, to tell a
+shipped card from one a player wrote.
 
 User-facing copy also lives in `content`, in one module, in British English. Screens never hold
 string literals for copy.
@@ -269,7 +275,6 @@ player to confirm they are 18 or over, and its wording is in `content`.
   silently does not resolve.
 - Decorative parts with no role, such as a depth edge or a toggle's knob, are reached in tests
   through `tailwind/hostViewsInside`, starting from the element that was found by role.
-- `CategoryId` is typed locally in `components/ui` until the content model lands in `core`.
 
 ## Storage
 

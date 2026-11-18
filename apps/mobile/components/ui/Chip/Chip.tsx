@@ -1,6 +1,6 @@
 import { Pressable, Text } from 'react-native';
 
-import type { CategoryId } from '../CategoryId';
+import type { CategoryId } from '@getfreak/core';
 import type { ChipProps } from './types';
 
 type ChipTone = CategoryId | 'neutral';

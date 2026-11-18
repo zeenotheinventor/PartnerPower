@@ -1,4 +1,4 @@
-import type { GameId } from '@getfreak/core';
+import type { CategoryId, GameId, LevelId } from '@getfreak/core';
 
 export type GameDisplayName = {
   title: string;
@@ -15,4 +15,18 @@ export const displayNames: Record<GameId, GameDisplayName> = {
     title: 'Drink If',
     description: 'Learn what they are into.',
   },
+};
+
+// The one place a category is named, so renaming c4 is a single edit here.
+export const categoryNames: Record<CategoryId, string> = {
+  c1: 'Soft',
+  c2: 'Foreplay',
+  c3: 'Oral',
+  c4: 'Sex',
+};
+
+export const levelNames: Record<LevelId, string> = {
+  l1: 'Flirty',
+  l2: 'Spicy',
+  l3: 'Freaky',
 };
