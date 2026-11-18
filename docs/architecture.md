@@ -217,6 +217,8 @@ interface Storage {
 - Keys are a closed union type. Every read is validated with a schema, and a value that fails
   validation is treated as absent.
 - `clearAll` removes everything the app has stored. Tests cover it.
+  Today the expo-sqlite key-value store is the only persistence, so clearing it is enough. Any
+  later store (the encrypted database, files) must be added to `clearAll` in the same change.
 - Milestones 1 and 2 store only settings. Nothing from a round is kept.
 
 Later milestones store text that players write. Before that ships, the database moves to the
