@@ -95,6 +95,15 @@ export function RoundPlayScreen() {
   const categoryName = categoryNames[card.category];
   const penalty = penaltyOf(card.category);
   const isTogether = card.kind === 'together';
+  const kindProps = isTogether
+    ? {
+        kind: 'together' as const,
+        togetherNames: fillCopy(copy.roundPlay.togetherNames, {
+          first: round.players[0],
+          second: round.players[1],
+        }),
+      }
+    : { kind: 'solo' as const };
   const afterStepUp = () => showStage(phoneChanges(round) ? 'handoff' : 'card');
 
   let view;
@@ -139,6 +148,7 @@ export function RoundPlayScreen() {
           isTogether ? copy.roundPlay.penaltyTogether : copy.roundPlay.penalty,
           { penalty },
         )}
+        {...kindProps}
         onDone={() => dispatch({ type: 'done' })}
         onPass={() => dispatch({ type: 'pass' })}
         onEndRound={() => setIsDialogOpen(true)}

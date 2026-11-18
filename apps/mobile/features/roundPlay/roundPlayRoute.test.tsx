@@ -57,6 +57,7 @@ function playUntilTheSummary() {
     copy.roundPlay.handoffButton,
     copy.roundPlay.stepUpButton,
     copy.roundPlay.done,
+    copy.roundPlay.togetherDone,
   ];
   for (let presses = 0; presses < 60 && currentPathname() === playRoute; presses += 1) {
     const name = nextButtons.find((label) => screen.queryByRole('button', { name: label }));

@@ -93,6 +93,15 @@ describe('Chip', () => {
       },
     );
 
+    it('should fill an accent chip with the accent and set its label in the small label colour', async () => {
+      await renderThemed(<Chip label="Level 1" accent />, themeName);
+
+      expect(screen.getByRole('text', { name: 'Level 1' })).toHaveStyle({
+        backgroundColor: theme.accent.toLowerCase(),
+      });
+      expect(screen.getByText('Level 1')).toHaveStyle({ color: theme.onAccentSmall.toLowerCase() });
+    });
+
     it('should outline an unselected category chip with a muted label', async () => {
       await renderThemed(
         <Chip label="Level 1" category="c2" onPress={jest.fn()} selected={false} />,

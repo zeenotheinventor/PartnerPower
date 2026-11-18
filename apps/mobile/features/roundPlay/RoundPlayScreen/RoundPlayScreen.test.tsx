@@ -7,8 +7,12 @@ import {
   type CurrentCard,
   type Deck,
   type RoundSetup,
+  type RoundState,
+  summarise,
 } from '@getfreak/core';
+import { colorThemes } from '@getfreak/tokens';
 import { act, fireEvent, screen, within } from 'nativewind/test';
+import { StyleSheet } from 'react-native';
 import { useEffect, type ReactNode } from 'react';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -105,7 +109,12 @@ function StartRound({
 }
 
 async function renderPlay(round?: RoundSetup, roundDeck: Deck = deck) {
-  const play = <RoundPlayScreen />;
+  const play = (
+    <>
+      <RoundProbe />
+      <RoundPlayScreen />
+    </>
+  );
   return renderThemed(
     <RoundProvider>
       {round ? (
@@ -119,6 +128,26 @@ async function renderPlay(round?: RoundSetup, roundDeck: Deck = deck) {
   );
 }
 
+// The latest round the provider holds, so a test can read what the buttons did to it.
+const latest: { round?: RoundState } = {};
+function RoundProbe() {
+  const { round } = useRound();
+  useEffect(() => {
+    latest.round = round;
+  }, [round]);
+  return null;
+}
+
+/** The background colours of the views around an element, which include the card's edge. */
+function backgroundsAround(element: ReturnType<typeof screen.getByText>): string[] {
+  const backgrounds: string[] = [];
+  for (let node = element.parent; node; node = node.parent) {
+    const background = StyleSheet.flatten(node.props.style)?.backgroundColor;
+    if (typeof background === 'string') backgrounds.push(background);
+  }
+  return backgrounds;
+}
+
 const press = (name: string) => fireEvent.press(screen.getByRole('button', { name }));
 
 const handoffTitle = (name: string) => fillCopy(copy.roundPlay.handoffTitle, { name });
@@ -126,6 +155,17 @@ const handoffLine = (name: string) => fillCopy(copy.roundPlay.handoffLine, { nam
 const turnOf = (name: string) => fillCopy(copy.roundPlay.turnOf, { name });
 const cardCount = (number: number, length: number) =>
   fillCopy(copy.roundPlay.cardCount, { number, length });
+
+// A together card words its two buttons differently, so these press whichever pair is showing.
+function pressDone() {
+  const togetherDone = screen.queryByRole('button', { name: copy.roundPlay.togetherDone });
+  press(togetherDone ? copy.roundPlay.togetherDone : copy.roundPlay.done);
+}
+
+function pressPass() {
+  const togetherPass = screen.queryByRole('button', { name: copy.roundPlay.togetherPass });
+  press(togetherPass ? copy.roundPlay.togetherPass : copy.roundPlay.pass);
+}
 
 /** Gets past the Pass the phone screen to the card. */
 function takeThePhone() {
@@ -140,7 +180,7 @@ function playUntilCard(number: number) {
       press(copy.roundPlay.stepUpButton);
       if (screen.queryByRole('button', { name: copy.roundPlay.handoffButton })) takeThePhone();
     }
-    press(copy.roundPlay.done);
+    pressDone();
   }
   if (screen.queryByRole('button', { name: copy.roundPlay.stepUpButton })) {
     press(copy.roundPlay.stepUpButton);
@@ -155,6 +195,7 @@ describe('RoundPlayScreen', () => {
     mockCanGoBack = true;
     mockPreventsRemove = false;
     mockOnRemovePrevented = undefined;
+    latest.round = undefined;
   });
 
   describe('the first card', () => {
@@ -236,7 +277,7 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories);
       playUntilCard(5);
 
-      press(copy.roundPlay.done);
+      pressDone();
       press(copy.roundPlay.stepUpButton);
 
       expect(screen.queryByRole('header', { name: /Pass the phone/ })).not.toBeOnTheScreen();
@@ -249,7 +290,7 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories);
       playUntilCard(5);
 
-      press(copy.roundPlay.done);
+      pressDone();
 
       expect(screen.getByRole('header', { name: copy.roundPlay.stepUpTitle })).toBeOnTheScreen();
       expect(screen.getByText(copy.roundPlay.stepUpLine)).toBeOnTheScreen();
@@ -263,7 +304,7 @@ describe('RoundPlayScreen', () => {
     it('should show the card straight after Bring it when the same player holds the phone', async () => {
       await renderPlay(twoCategories);
       playUntilCard(5);
-      press(copy.roundPlay.done);
+      pressDone();
 
       press(copy.roundPlay.stepUpButton);
 
@@ -322,25 +363,129 @@ describe('RoundPlayScreen', () => {
   });
 
   describe('a together card', () => {
+    const togetherPenaltyLine = fillCopy(copy.roundPlay.penaltyTogether, { penalty: 1 });
+    const bothNames = fillCopy(copy.roundPlay.togetherNames, {
+      first: 'Player A',
+      second: 'Player B',
+    });
+
     it('should say both players, and that both drink for passing', async () => {
       await renderPlay(twoCategories);
       playUntilCard(5);
 
       expect(screen.getByText(copy.roundPlay.bothOfYou)).toBeOnTheScreen();
       expect(screen.getByText(textOfCard(twoCategories, 5))).toBeOnTheScreen();
-      expect(
-        screen.getByText(fillCopy(copy.roundPlay.penaltyTogether, { penalty: 1 })),
-      ).toBeOnTheScreen();
+      expect(screen.getByText(togetherPenaltyLine)).toBeOnTheScreen();
       expect(screen.queryByText(turnOf('Player A'))).not.toBeOnTheScreen();
     });
 
-    it('should move on after Done and after Pass like any other card', async () => {
+    it('should be marked as a together card and name both players', async () => {
       await renderPlay(twoCategories);
       playUntilCard(5);
 
-      press(copy.roundPlay.pass);
+      expect(screen.getByRole('text', { name: copy.roundPlay.togetherChip })).toBeOnTheScreen();
+      expect(screen.getByText(bothNames)).toBeOnTheScreen();
+      expect(screen.getByText(categoryNames.c1)).toBeOnTheScreen();
+    });
+
+    it('should offer We did it and We drink in place of Done and Pass', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      expect(screen.getByRole('button', { name: copy.roundPlay.togetherDone })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.togetherPass })).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: copy.roundPlay.done })).not.toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: copy.roundPlay.pass })).not.toBeOnTheScreen();
+    });
+
+    it('should count a dare done for both players after We did it', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+      const before = latest.round && summarise(latest.round).players;
+
+      press(copy.roundPlay.togetherDone);
+
+      const after = latest.round && summarise(latest.round).players;
+      expect(after?.map((player) => player.daresDone)).toEqual(
+        before?.map((player) => player.daresDone + 1),
+      );
+      expect(after?.map((player) => player.drinks)).toEqual(before?.map((player) => player.drinks));
+    });
+
+    it('should charge both players the drink penalty after We drink', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+      const before = latest.round && summarise(latest.round).players;
+
+      press(copy.roundPlay.togetherPass);
+
+      const after = latest.round && summarise(latest.round).players;
+      expect(after?.map((player) => player.drinks)).toEqual(
+        before?.map((player) => player.drinks + 1),
+      );
+      expect(after?.map((player) => player.daresDone)).toEqual(
+        before?.map((player) => player.daresDone),
+      );
+    });
+
+    it('should move on after We did it and after We drink', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      press(copy.roundPlay.togetherPass);
 
       expect(screen.getByRole('header', { name: copy.roundPlay.stepUpTitle })).toBeOnTheScreen();
+    });
+
+    it('should carry on with the turn order from where it was, with no phone to pass', async () => {
+      // Card 4 was Player B's, card 5 is for both, so card 6 is Player A's, who holds the phone.
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      press(copy.roundPlay.togetherPass);
+      press(copy.roundPlay.stepUpButton);
+
+      expect(screen.queryByRole('header', { name: /Pass the phone/ })).not.toBeOnTheScreen();
+      expect(screen.getByText(turnOf('Player A'))).toBeOnTheScreen();
+      expect(screen.getByText(textOfCard(twoCategories, 6))).toBeOnTheScreen();
+    });
+
+    it('should edge the card in the deep accent colour', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      const edges = backgroundsAround(screen.getByText(textOfCard(twoCategories, 5)));
+
+      expect(edges).toContain(colorThemes.light.accentDeep.toLowerCase());
+    });
+
+    it('should edge a card for one player in its category colour, not the accent', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      const edges = backgroundsAround(screen.getByText(textOfCard(twoCategories, 1)));
+
+      expect(edges).toContain(colorThemes.light.category.c1.toLowerCase());
+      expect(edges).not.toContain(colorThemes.light.accentDeep.toLowerCase());
+    });
+
+    it('should show none of the together parts on a card for one player', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      expect(
+        screen.queryByRole('text', { name: copy.roundPlay.togetherChip }),
+      ).not.toBeOnTheScreen();
+      expect(screen.queryByText(bothNames)).not.toBeOnTheScreen();
+      expect(
+        screen.queryByRole('button', { name: copy.roundPlay.togetherDone }),
+      ).not.toBeOnTheScreen();
+      expect(
+        screen.queryByRole('button', { name: copy.roundPlay.togetherPass }),
+      ).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.done })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.pass })).toBeOnTheScreen();
+      expect(screen.queryByText(copy.roundPlay.bothOfYou)).not.toBeOnTheScreen();
     });
   });
 
@@ -349,7 +494,7 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories);
       playUntilCard(10);
 
-      press(copy.roundPlay.done);
+      pressDone();
 
       expect(mockReplace).toHaveBeenCalledWith(summaryRoute);
     });
@@ -358,7 +503,7 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories);
       playUntilCard(10);
 
-      press(copy.roundPlay.pass);
+      pressPass();
 
       expect(mockReplace).toHaveBeenCalledWith(summaryRoute);
     });
@@ -425,7 +570,7 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories);
       playUntilCard(10);
 
-      press(copy.roundPlay.done);
+      pressDone();
 
       expect(mockPreventsRemove).toBe(false);
     });

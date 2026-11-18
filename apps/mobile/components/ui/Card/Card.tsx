@@ -3,12 +3,13 @@ import { Pressable, View } from 'react-native';
 import type { CategoryId } from '@getfreak/core';
 import type { CardProps } from './types';
 
-type CardTone = CategoryId | 'plain';
+type CardTone = CategoryId | 'plain' | 'accent';
 
 // A static card is an outer view that is the depth edge, with the face inside it. Both carry the
 // same colour so the border and the edge read as one shape.
 const staticEdgeClasses: Record<CardTone, string> = {
   plain: 'rounded-xl bg-border pb-4',
+  accent: 'rounded-xl bg-accent-deep pb-4',
   c1: 'rounded-xl bg-category-c1 pb-4',
   c2: 'rounded-xl bg-category-c2 pb-4',
   c3: 'rounded-xl bg-category-c3 pb-4',
@@ -17,6 +18,7 @@ const staticEdgeClasses: Record<CardTone, string> = {
 
 const staticFaceClasses: Record<CardTone, string> = {
   plain: 'rounded-xl border-2 border-border bg-surface p-16',
+  accent: 'rounded-xl border-2 border-accent bg-surface p-16',
   c1: 'rounded-xl border-2 border-category-c1 bg-surface p-16',
   c2: 'rounded-xl border-2 border-category-c2 bg-surface p-16',
   c3: 'rounded-xl border-2 border-category-c3 bg-surface p-16',
@@ -27,6 +29,7 @@ const staticFaceClasses: Record<CardTone, string> = {
 // 4px down, and pressing moves the face onto it, so nothing shows above the face.
 const pressableEdgeClasses: Record<CardTone, string> = {
   plain: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-xl bg-border',
+  accent: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-xl bg-accent-deep',
   c1: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-xl bg-category-c1',
   c2: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-xl bg-category-c2',
   c3: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-xl bg-category-c3',
@@ -35,6 +38,7 @@ const pressableEdgeClasses: Record<CardTone, string> = {
 
 const pressableFaceClasses: Record<CardTone, string> = {
   plain: 'mb-4 rounded-xl border-2 border-border bg-surface p-16 group-active:translate-y-4',
+  accent: 'mb-4 rounded-xl border-2 border-accent bg-surface p-16 group-active:translate-y-4',
   c1: 'mb-4 rounded-xl border-2 border-category-c1 bg-surface p-16 group-active:translate-y-4',
   c2: 'mb-4 rounded-xl border-2 border-category-c2 bg-surface p-16 group-active:translate-y-4',
   c3: 'mb-4 rounded-xl border-2 border-category-c3 bg-surface p-16 group-active:translate-y-4',
@@ -50,12 +54,13 @@ const pressableFaceClasses: Record<CardTone, string> = {
 export function Card({
   children,
   category,
+  accent = false,
   onPress,
   label,
   disabled = false,
   grouped = true,
 }: CardProps) {
-  const tone = category ?? 'plain';
+  const tone: CardTone = accent ? 'accent' : (category ?? 'plain');
 
   if (!onPress) {
     return (

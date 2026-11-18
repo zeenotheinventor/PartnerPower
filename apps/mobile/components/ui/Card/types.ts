@@ -24,4 +24,6 @@ type PressableCardProps = {
 export type CardProps = {
   children: ReactNode;
   category?: CategoryId;
+  /** Edges the card in the accent colour in place of the category colour. */
+  accent?: boolean;
 } & (StaticCardProps | PressableCardProps);
