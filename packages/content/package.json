@@ -1,5 +1,5 @@
 {
-  "name": "@partnerpower/content",
+  "name": "@getfreak/content",
   "version": "0.0.0",
   "private": true,
   "main": "src/index.ts",

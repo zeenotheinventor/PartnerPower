@@ -1,6 +1,6 @@
-# PartnerPower: working rules for agents
+# Get Freak: working rules for agents
 
-PartnerPower is a mobile app of games for couples to connect with each other.
+Get Freak is a mobile app of games for couples to connect with each other.
 
 ## Tone of everything in this repository
 
@@ -11,7 +11,6 @@ This codebase may be shown publicly as a portfolio piece. Keep it safe for work.
   text.
 - In code, the two games are `dares` and `questions`. Their display names, and every other name shown
   to players, live in content data, which may use whatever words the product needs.
-- Do not write the project code name anywhere in the repository.
 - Keep game content, such as card and question text, in data files apart from the code, so the code
   can be shown without it.
 - Branch names are the ticket id plus a neutral slug, for example `FRK-12/turn-screen`. Do not copy
@@ -23,4 +22,4 @@ This codebase may be shown publicly as a portfolio piece. Keep it safe for work.
 
 - The plan and tickets are in Linear under the `FRK` team. The ticket is the spec, and it holds the
   content detail that this repository leaves out.
-- Node 24 (`.nvmrc`) and pnpm.
+- Node 26 (`.nvmrc`) and pnpm.

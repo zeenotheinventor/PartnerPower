@@ -1,10 +1,10 @@
-# PartnerPower
+# Get Freak
 
 A mobile app of games for couples to connect with each other, played together on one phone.
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 24 and pnpm. No backend.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend.
 
 ## Layout
 
@@ -15,12 +15,12 @@ Expo, React Native, TypeScript, Expo Router and NativeWind. Node 24 and pnpm. No
 
 ## Setup
 
-1. Use Node 24: `nvm use` reads `.nvmrc`.
+1. Use Node 26: `nvm use` reads `.nvmrc`.
 2. Install dependencies from the repository root: `pnpm install`.
 3. Create a development build, which the app needs because it uses a development client:
-   - iOS simulator or device: `pnpm --filter @partnerpower/mobile ios`
-   - Android emulator or device: `pnpm --filter @partnerpower/mobile android`
-4. Start Metro: `pnpm --filter @partnerpower/mobile start`. Open the development build and it
+   - iOS simulator or device: `pnpm --filter @getfreak/mobile ios`
+   - Android emulator or device: `pnpm --filter @getfreak/mobile android`
+4. Start Metro: `pnpm --filter @getfreak/mobile start`. Open the development build and it
    connects to Metro.
 
 Building for iOS needs Xcode, and building for Android needs the Android SDK. The `ios` and
@@ -39,8 +39,8 @@ Run these from the repository root.
 | `pnpm format`    | Writes Prettier fixes                         |
 
 To run one package's tests, filter by package name, for example
-`pnpm --filter @partnerpower/core test`. Jest options go after the script name, for example
-`pnpm --filter @partnerpower/mobile test --watch`.
+`pnpm --filter @getfreak/core test`. Jest options go after the script name, for example
+`pnpm --filter @getfreak/mobile test --watch`.
 
 ## Planning
 

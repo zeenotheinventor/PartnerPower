@@ -6,7 +6,7 @@ describe('PlaceholderScreen', () => {
   it('should show the app name as the heading', () => {
     render(<PlaceholderScreen />);
 
-    expect(screen.getByRole('header', { name: 'PartnerPower' })).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: 'Get Freak' })).toBeOnTheScreen();
   });
 
   it('should show that the app is coming soon', () => {

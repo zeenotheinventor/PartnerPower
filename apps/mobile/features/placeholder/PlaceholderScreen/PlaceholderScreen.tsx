@@ -1,4 +1,4 @@
-import { copy } from '@partnerpower/content';
+import { copy } from '@getfreak/content';
 import { Text, View } from 'react-native';
 
 export function PlaceholderScreen() {

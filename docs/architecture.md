@@ -1,6 +1,6 @@
 # Architecture
 
-PartnerPower is a mobile app of games for couples to connect with each other, played together on
+Get Freak is a mobile app of games for couples to connect with each other, played together on
 one phone. This document says how the code is laid out and why. It covers the first two milestones
 in detail and names the decisions later milestones depend on.
 
@@ -24,7 +24,7 @@ for how. Change it in the same pull request as any change that departs from it.
 
 | Concern    | Choice                                                                                                             |
 | ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| Runtime    | Node 24, pnpm                                                                                                      |
+| Runtime    | Node 26, pnpm                                                                                                      |
 | App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                |
 | Navigation | Expo Router, file-based                                                                                            |
 | Styling    | NativeWind utilities over design tokens                                                                            |
@@ -269,7 +269,9 @@ every pull request, and a failing check blocks the merge. Run `pnpm check` befor
 
 ## Decisions made
 
-| Decision                          | Outcome                                                                                                                               | Ticket |
-| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable. | FRK-1  |
-| Colours before the tokens package | Two placeholder colours sit in the app's Tailwind config until FRK-3 creates `packages/tokens`.                                       | FRK-1  |
+| Decision                          | Outcome                                                                                                                                                                            | Ticket |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                              | FRK-1  |
+| Colours before the tokens package | Two placeholder colours sit in the app's Tailwind config until FRK-3 creates `packages/tokens`.                                                                                    | FRK-1  |
+| Node version                      | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                               | FRK-1  |
+| App name and identifiers          | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18. | FRK-1  |

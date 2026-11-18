@@ -54,7 +54,7 @@ export default tseslint.config(
       { group: frameworkModules },
       {
         group: [
-          '@partnerpower/*',
+          '@getfreak/*',
           '**/apps/**',
           '**/packages/**',
           '**/content',
@@ -71,8 +71,8 @@ export default tseslint.config(
       { group: frameworkModules },
       {
         group: [
-          '@partnerpower/*',
-          '!@partnerpower/core',
+          '@getfreak/*',
+          '!@getfreak/core',
           '**/apps/**',
           '**/packages/**',
           '**/mobile',

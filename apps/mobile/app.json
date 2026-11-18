@@ -1,16 +1,16 @@
 {
   "expo": {
-    "name": "PartnerPower",
-    "slug": "partner-power",
-    "scheme": "partnerpower",
+    "name": "Get Freak",
+    "slug": "get-freak",
+    "scheme": "getfreak",
     "version": "1.0.0",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
     "ios": {
-      "bundleIdentifier": "com.sojisoft.partnerpower"
+      "bundleIdentifier": "com.sojisoft.getfreak"
     },
     "android": {
-      "package": "com.sojisoft.partnerpower"
+      "package": "com.sojisoft.getfreak"
     },
     "plugins": ["expo-router"]
   }

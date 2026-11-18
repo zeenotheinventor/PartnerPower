@@ -1,5 +1,5 @@
 export const copy = {
-  appName: 'PartnerPower',
+  appName: 'Get Freak',
   placeholder: {
     status: 'Coming soon',
   },
