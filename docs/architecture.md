@@ -229,6 +229,8 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
   inline `style` objects.
 - Dark theme first. Each category id has a colour token, `category-c1` to `category-c4`.
+- Until `packages/tokens` lands (FRK-3), the scaffold keeps two placeholder colours, `surface` and
+  `ink`, in the app's Tailwind config. FRK-3 moves them into `tokens` and removes them from there.
 
 ## Testing
 
@@ -267,6 +269,7 @@ every pull request, and a failing check blocks the merge. Run `pnpm check` befor
 
 ## Decisions made
 
-| Decision          | Outcome                                                                                                                               | Ticket |
-| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable. | FRK-1  |
+| Decision                          | Outcome                                                                                                                               | Ticket |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable. | FRK-1  |
+| Colours before the tokens package | Two placeholder colours sit in the app's Tailwind config until FRK-3 creates `packages/tokens`.                                       | FRK-1  |

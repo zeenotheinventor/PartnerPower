@@ -52,14 +52,33 @@ export default tseslint.config(
     files: ['packages/core/**/*.{ts,tsx,js}'],
     rules: restrictImports([
       { group: frameworkModules },
-      { group: ['@partnerpower/*', '**/apps/**', '**/packages/**'] },
+      {
+        group: [
+          '@partnerpower/*',
+          '**/apps/**',
+          '**/packages/**',
+          '**/content',
+          '**/content/**',
+          '**/mobile',
+          '**/mobile/**',
+        ],
+      },
     ]),
   },
   {
     files: ['packages/content/**/*.{ts,tsx,js}'],
     rules: restrictImports([
       { group: frameworkModules },
-      { group: ['@partnerpower/*', '!@partnerpower/core', '**/apps/**', '**/packages/**'] },
+      {
+        group: [
+          '@partnerpower/*',
+          '!@partnerpower/core',
+          '**/apps/**',
+          '**/packages/**',
+          '**/mobile',
+          '**/mobile/**',
+        ],
+      },
     ]),
   },
 );
