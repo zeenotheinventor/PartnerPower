@@ -165,6 +165,82 @@ describe('SettingsProvider', () => {
     expect(result.current.hasConfirmedEntry).toBe(false);
   });
 
+  describe('remembered player names', () => {
+    it('should report no names when none are stored', async () => {
+      const { result } = renderSettings(createStorage(createInMemoryBackend()));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.playerNames).toEqual(['', '']);
+    });
+
+    it('should report the stored names once loaded', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('playerNames', JSON.stringify(['Sam', 'Alex']));
+      const { result } = renderSettings(createStorage(backend));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.playerNames).toEqual(['Sam', 'Alex']);
+      expectNothingLogged();
+    });
+
+    it('should treat invalid stored names as no names', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('playerNames', JSON.stringify(['Sam']));
+      const { result } = renderSettings(createStorage(backend));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.playerNames).toEqual(['', '']);
+    });
+
+    it('should keep the confirmation when the names cannot be read', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('entryConfirmation', 'true');
+      const storage = createStorage(backend);
+      const { result } = renderSettings({
+        ...storage,
+        get: (key, schema) =>
+          key === 'playerNames'
+            ? Promise.reject(new Error('The read failed'))
+            : storage.get(key, schema),
+      });
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current.hasConfirmedEntry).toBe(true);
+      expect(result.current.playerNames).toEqual(['', '']);
+      expectNothingLogged();
+    });
+
+    it('should write the names to storage and report them', async () => {
+      const backend = createInMemoryBackend();
+      const { result } = renderSettings(createStorage(backend));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(() => result.current.savePlayerNames(['Sam', 'Alex']));
+
+      expect(backend.entries.get('playerNames')).toBe(JSON.stringify(['Sam', 'Alex']));
+      expect(result.current.playerNames).toEqual(['Sam', 'Alex']);
+      expectNothingLogged();
+    });
+
+    it('should still report the names for this session when the write fails', async () => {
+      const failingStorage: Storage = {
+        ...createStorage(createInMemoryBackend()),
+        set: () => Promise.reject(new Error('The write failed')),
+      };
+      const { result } = renderSettings(failingStorage);
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(() => result.current.savePlayerNames(['Sam', 'Alex']));
+
+      expect(result.current.playerNames).toEqual(['Sam', 'Alex']);
+      expectNothingLogged();
+    });
+  });
+
   it('should fail clearly when used outside the provider', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
 

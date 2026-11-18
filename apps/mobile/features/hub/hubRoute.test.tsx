@@ -29,10 +29,7 @@ describe('the hub in the route tree', () => {
     fireEvent.press(screen.getByRole('button', { name: displayNames[availableEntry.id].title }));
     await waitFor(() => expect(currentPathname()).toBe(availableEntry.setupRoute));
 
-    expect(
-      screen.getByRole('header', { name: displayNames[availableEntry.id].title }),
-    ).toBeOnTheScreen();
-    expect(screen.getByText(copy.roundSetup.status)).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
 
   it('should return to the hub from round setup with the back button', async () => {
@@ -65,6 +62,6 @@ describe('the hub in the route tree', () => {
     await launchApp(availableEntry.setupRoute);
 
     expect(currentPathname()).toBe(availableEntry.setupRoute);
-    expect(screen.getByText(copy.roundSetup.status)).toBeOnTheScreen();
+    expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
 });

@@ -1,5 +1,5 @@
 import { cssInterop } from 'nativewind';
-import { ScrollView, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
 import type { ScreenProps } from './types';
@@ -9,19 +9,29 @@ const ThemedSafeAreaView = cssInterop(SafeAreaView, { className: 'style' });
 
 // A screen is a layout container and has no accessibility role of its own. Its name for a screen
 // reader comes from the Header heading inside it.
-export function Screen({ children, scroll = false }: ScreenProps) {
+export function Screen({ children, scroll = false, avoidKeyboard = false }: ScreenProps) {
+  const content = scroll ? (
+    <ScrollView
+      className="flex-1"
+      contentContainerClassName="grow gap-16 px-16 pb-24 pt-16"
+      keyboardShouldPersistTaps="handled"
+    >
+      {children}
+    </ScrollView>
+  ) : (
+    <View className="flex-1 gap-16 px-16 pb-24 pt-16">{children}</View>
+  );
+
   return (
     <ThemedSafeAreaView className="flex-1 bg-background">
-      {scroll ? (
-        <ScrollView
-          className="flex-1"
-          contentContainerClassName="grow gap-16 px-16 pb-24 pt-16"
-          keyboardShouldPersistTaps="handled"
-        >
-          {children}
-        </ScrollView>
+      {avoidKeyboard ? (
+        // Padding is the behaviour React Native advises for both platforms with edge-to-edge
+        // windows, where the system no longer resizes the window for the keyboard.
+        <KeyboardAvoidingView behavior="padding" className="flex-1">
+          {content}
+        </KeyboardAvoidingView>
       ) : (
-        <View className="flex-1 gap-16 px-16 pb-24 pt-16">{children}</View>
+        content
       )}
     </ThemedSafeAreaView>
   );

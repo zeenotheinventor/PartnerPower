@@ -3,7 +3,17 @@ import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, Card, Chip, Header, Screen, TextField, Toggle } from '../../../components/ui';
+import {
+  Button,
+  CategoryToggle,
+  Card,
+  Chip,
+  Header,
+  Screen,
+  SegmentedControl,
+  TextField,
+  Toggle,
+} from '../../../components/ui';
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -21,6 +31,9 @@ export function KitGallery() {
   const router = useRouter();
   const [soundOn, setSoundOn] = useState(true);
   const [name, setName] = useState('');
+  const [option, setOption] = useState('b');
+  const [categoryOn, setCategoryOn] = useState(true);
+  const [categoryOff, setCategoryOff] = useState(false);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>(['c1', 'c2']);
 
   const toggleCategory = (categoryId: CategoryId) =>
@@ -102,6 +115,52 @@ export function KitGallery() {
         <Toggle label="Switch" value={soundOn} onValueChange={setSoundOn} />
         <Toggle label="Switch, off" value={false} onValueChange={() => {}} />
         <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
+      </Section>
+
+      <Section title="Segmented control">
+        <SegmentedControl
+          label="Segmented control"
+          options={[
+            { value: 'a', label: 'Option A' },
+            { value: 'b', label: 'Option B' },
+            { value: 'c', label: 'Option C' },
+          ]}
+          value={option}
+          onValueChange={setOption}
+        />
+      </Section>
+
+      <Section title="Category toggles">
+        <View className="flex-row flex-wrap gap-8">
+          <View className="w-[48%]">
+            <CategoryToggle
+              label="Category on"
+              category="c1"
+              value={categoryOn}
+              onValueChange={setCategoryOn}
+            />
+          </View>
+          <View className="w-[48%]">
+            <CategoryToggle
+              label="Category off"
+              category="c2"
+              value={categoryOff}
+              onValueChange={setCategoryOff}
+            />
+          </View>
+          <View className="w-[48%]">
+            <CategoryToggle
+              label="Category locked"
+              category="c3"
+              value
+              locked
+              onValueChange={() => {}}
+            />
+          </View>
+          <View className="w-[48%]">
+            <CategoryToggle label="Category four" category="c4" value onValueChange={() => {}} />
+          </View>
+        </View>
       </Section>
 
       <Section title="Text field">

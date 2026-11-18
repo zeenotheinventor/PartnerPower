@@ -15,8 +15,31 @@ describe('copy', () => {
   });
 
   it('should give the round setup screen every line as non-empty text', () => {
-    expect(Object.keys(copy.roundSetup).sort()).toEqual(['backLabel', 'status'].sort());
+    expect(Object.keys(copy.roundSetup).sort()).toEqual(
+      [
+        'backLabel',
+        'categoriesLabel',
+        'lastCategoryHint',
+        'lengthEndless',
+        'lengthLabel',
+        'lengthTen',
+        'lengthTwenty',
+        'levelLabel',
+        'playerOneLabel',
+        'playerTwoLabel',
+        'start',
+        'surprises',
+        'title',
+      ].sort(),
+    );
     expectEveryValueToBeText(copy.roundSetup);
+  });
+
+  it('should give the round screen every line as non-empty text', () => {
+    expect(Object.keys(copy.roundPlay).sort()).toEqual(
+      ['backLabel', 'categoryLabel', 'noCards', 'title', 'turnLabel'].sort(),
+    );
+    expectEveryValueToBeText(copy.roundPlay);
   });
 
   it('should give the welcome screen every line as non-empty text', () => {
