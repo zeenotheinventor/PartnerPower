@@ -1,15 +1,18 @@
 import '../global.css';
 
-import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 
+import { EntryStack } from '../components/EntryStack';
 import { FontGate } from '../components/FontGate';
+import { SettingsProvider } from '../settings';
 
 export default function RootLayout() {
   return (
     <FontGate>
-      <StatusBar style="auto" />
-      <Stack screenOptions={{ headerShown: false }} />
+      <SettingsProvider>
+        <StatusBar style="auto" />
+        <EntryStack />
+      </SettingsProvider>
     </FontGate>
   );
 }

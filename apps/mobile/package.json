@@ -14,6 +14,7 @@
     "@expo-google-fonts/baloo-2": "^0.4.2",
     "@expo-google-fonts/nunito": "^0.4.2",
     "@getfreak/content": "workspace:^",
+    "@getfreak/core": "workspace:^",
     "@getfreak/tokens": "workspace:^",
     "expo": "~57.0.33",
     "expo-constants": "~57.0.24",

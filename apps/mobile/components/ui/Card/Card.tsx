@@ -43,15 +43,27 @@ const pressableFaceClasses: Record<CardTone, string> = {
 
 /**
  * Without onPress a card is for reading. A screen reader treats it as one group named by the text
- * inside, so a static card must not contain controls. With onPress it is one button named by its
+ * inside, so a static card must not contain controls. Passing grouped as false leaves the card
+ * without an accessibility element of its own, so its children are read separately. With onPress it is one button named by its
  * label.
  */
-export function Card({ children, category, onPress, label, disabled = false }: CardProps) {
+export function Card({
+  children,
+  category,
+  onPress,
+  label,
+  disabled = false,
+  grouped = true,
+}: CardProps) {
   const tone = category ?? 'plain';
 
   if (!onPress) {
     return (
-      <View accessible role="group" className={staticEdgeClasses[tone]}>
+      <View
+        accessible={grouped}
+        role={grouped ? 'group' : undefined}
+        className={staticEdgeClasses[tone]}
+      >
         <View className={staticFaceClasses[tone]}>{children}</View>
       </View>
     );

@@ -1,24 +1,7 @@
 import { z } from 'zod';
 
+import { createInMemoryBackend } from './createInMemoryBackend';
 import { createStorage } from './createStorage';
-import type { StorageBackend } from './types';
-
-function createInMemoryBackend(): StorageBackend & { entries: Map<string, string> } {
-  const entries = new Map<string, string>();
-  return {
-    entries,
-    getItem: async (key) => entries.get(key) ?? null,
-    setItem: async (key, value) => {
-      entries.set(key, value);
-    },
-    removeItem: async (key) => {
-      entries.delete(key);
-    },
-    clear: async () => {
-      entries.clear();
-    },
-  };
-}
 
 const namesSchema = z.tuple([z.string(), z.string()]);
 const flagSchema = z.boolean();

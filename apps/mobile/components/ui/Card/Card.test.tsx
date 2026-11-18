@@ -27,6 +27,30 @@ describe('Card', () => {
       expect(screen.getByRole('group', { name: 'Card 1' })).toBeOnTheScreen();
     });
 
+    it('should be one group by default, so a screen reader reads its text together', async () => {
+      await renderThemed(
+        <Card>
+          <Text accessibilityRole="header">Card title</Text>
+          <Text>Card body</Text>
+        </Card>,
+      );
+
+      expect(screen.getByRole('group')).toBeOnTheScreen();
+    });
+
+    it('should not be a group when it is not grouped, so its children are read separately', async () => {
+      await renderThemed(
+        <Card grouped={false}>
+          <Text accessibilityRole="header">Card title</Text>
+          <Text>Card body</Text>
+        </Card>,
+      );
+
+      expect(screen.queryByRole('group')).not.toBeOnTheScreen();
+      expect(screen.getByRole('header', { name: 'Card title' })).toBeOnTheScreen();
+      expect(screen.getByText('Card body')).toBeOnTheScreen();
+    });
+
     describe.each(themeNames)('with the device in %s mode', (themeName) => {
       const theme = colorThemes[themeName];
 

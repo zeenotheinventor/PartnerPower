@@ -173,7 +173,8 @@ returns the same state for an action that does not apply.
 ```
 apps/mobile/
   app/
-    _layout.tsx          root layout: providers and the entry guard
+    _layout.tsx          root layout: providers and the root navigator with the entry guard
+    +not-found.tsx       sends an unknown path to the one screen that is open to the player
     index.tsx            hub
     welcome.tsx          entry confirmation, shown on first launch
     dev/kit.tsx          gallery of the UI kit, development builds only
@@ -185,6 +186,8 @@ apps/mobile/
         summary.tsx
   components/ui/         the UI kit
   components/FontGate/   holds rendering until the bundled fonts are ready
+  components/EntryStack/ the root navigator, with the entry guard
+  settings/              the settings context
   fonts/                 the font files the type scale uses
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
@@ -196,31 +199,53 @@ apps/mobile/
 
 - **Round state** lives in a `useReducer` inside the game's route group layout and is shared through
   context. It wraps `reduceRound` from `core`. Leaving the route group discards it.
-- **Settings**, such as the entry confirmation and remembered player names, are read from storage at
-  launch and exposed through a small settings context.
+- **Settings**, such as the entry confirmation and remembered player names, are read from storage
+  once at launch and exposed through a small settings context, `settings`. The provider takes the
+  storage to use as a prop, so tests pass an in-memory one. A failed read or an invalid stored
+  value counts as not confirmed. If the write on confirming fails, the player is still let in for
+  that session and is asked again at the next launch. Nothing in it logs.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
 
 ### Entry guard
 
-The root layout reads the entry confirmation from settings before rendering any route. Until it is
-set, every route redirects to `welcome`, including deep links. The specific wording and requirement
-are in the ticket and in `content`.
+Until the player has confirmed on the `welcome` screen, no other screen exists. The specific wording
+and requirement are in the ticket and in `content`.
+
+- `components/EntryStack` is the root navigator. It renders nothing while the settings load, and
+  after that it stays mounted. It uses Expo Router's protected groups: `welcome` is in a group that
+  is open only until the player has confirmed, and every other route is in a group that is open
+  only after. A deep link to a closed route, on a cold start or with the app already open, ends at
+  `welcome`, and the closed screen never renders.
+- A protected group only covers the routes listed in it, so every new route must be added to the
+  second group in `EntryStack`. A test walks the real route files under `app/` and fails if any of
+  them can be opened before confirming.
+- `welcome` only stores the confirmation. The navigator reacts to the setting, sends the player to
+  the first screen, and leaves nothing to go back to.
+- Declining stores nothing. The closing screen is state inside the `welcome` route, not a route of
+  its own, and it offers only a way back to the question.
+- `app/+not-found.tsx` is always available, so it reads the settings and sends an unknown path to
+  `welcome` or to the first screen. Without it, Expo Router shows its own unmatched screen outside
+  the root layout.
+- Expo Router's built-in sitemap route also sits outside the root layout. It is turned off with the
+  router plugin's `sitemap` option in `app.json`.
+- The navigator must not be swapped for a redirect. Doing that remounts the root layout, re-reads
+  the settings, and loops when a closed route is opened while the app is running.
 
 ### UI kit
 
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component   | What it is, and its role and name                                                                                                                         |
-| ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`    | The screen shell: safe area, themed background, padding and optional scrolling. A layout container with no role. A screen's name is its `Header` heading. |
-| `Button`    | Role `button`, named by its label. Primary and secondary variants.                                                                                        |
-| `Card`      | A static card is one accessible group named by its text, so it must not contain controls. With `onPress` it is a `button` named by its `label`.           |
-| `Toggle`    | Role `switch`, named by its label, with a checked and a disabled state.                                                                                   |
-| `Chip`      | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                        |
-| `TextField` | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                            |
-| `Header`    | The title has role `header`. The optional back control is a `button` named by the caller.                                                                 |
+| Component   | What it is, and its role and name                                                                                                                                                                                                              |
+| ----------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`    | The screen shell: safe area, themed background, padding and optional scrolling. A layout container with no role. A screen's name is its `Header` heading.                                                                                      |
+| `Button`    | Role `button`, named by its label. Primary and secondary variants.                                                                                                                                                                             |
+| `Card`      | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. |
+| `Toggle`    | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                        |
+| `Chip`      | A pressable chip is a `button` with a selected state. A static chip is plain text.                                                                                                                                                             |
+| `TextField` | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                 |
+| `Header`    | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                      |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -311,6 +336,9 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - `tokens`: theme key parity and contrast thresholds for the listed text and background pairings.
 - `apps/mobile`: component and screen tests with React Native Testing Library. Query by accessible
   role and name first. A test id is a last resort.
+- The entry guard is tested against the real route tree with Expo Router's testing library, over
+  an in-memory key-value store. `features/welcome/testing/appEnvironment` holds that setup, and any
+  test that renders the route tree should use it.
 - Every UI kit component has an accessible role and name.
 
 ## Checks and CI
@@ -362,5 +390,9 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 | Role and name for the screen shell  | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
 | Depth edge                          | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |
 | Design sizes off the scales         | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                  | FRK-4  |
+| Entry guard mechanism               | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.  | FRK-6  |
+| Declining the entry confirmation    | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                           | FRK-6  |
+| A failed write when confirming      | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                        | FRK-6  |
+| Built-in sitemap route              | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                          | FRK-6  |
 | Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
 | App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |

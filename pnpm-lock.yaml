@@ -41,6 +41,9 @@ importers:
       '@getfreak/content':
         specifier: workspace:^
         version: link:../../packages/content
+      '@getfreak/core':
+        specifier: workspace:^
+        version: link:../../packages/core
       '@getfreak/tokens':
         specifier: workspace:^
         version: link:../../packages/tokens
