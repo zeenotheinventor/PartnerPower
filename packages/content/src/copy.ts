@@ -60,6 +60,13 @@ export const copy = {
     endDialogBody: "You'll see the scores so far.",
     endDialogConfirm: 'End round',
     endDialogCancel: 'Keep playing',
+    notThisOne: 'Not this one',
+    sheetTitle: 'Not this one?',
+    skipTitle: 'Skip this card',
+    skipBody: 'A new card is drawn. Nobody drinks.',
+    switchOffLabel: 'Or switch off for the rest of the round',
+    switchedOffHint: 'Switched off for the rest of the round.',
+    sheetClose: 'Keep playing',
   },
   roundSummary: {
     title: 'Round over!',

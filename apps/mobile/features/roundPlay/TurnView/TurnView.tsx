@@ -18,6 +18,7 @@ export function TurnView({
   onDone,
   onPass,
   onEndRound,
+  onNotThisOne,
 }: TurnViewProps) {
   const isTogether = kind === 'together';
   return (
@@ -73,8 +74,13 @@ export function TurnView({
         </View>
       </View>
 
-      {/* The space below the buttons is kept for the Not this one control. */}
-      <View className="h-24" />
+      <Pressable
+        accessibilityRole="button"
+        onPress={onNotThisOne}
+        className="min-h-48 items-center justify-center"
+      >
+        <Text className="type-caption text-muted underline">{copy.roundPlay.notThisOne}</Text>
+      </Pressable>
     </Screen>
   );
 }

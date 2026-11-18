@@ -61,6 +61,24 @@ const deck: Deck = {
 
 const deckWithNoCards: Deck = { id: 'empty-deck', version: 1, cards: [] };
 
+// The middle category has two cards for one player and a together card, so a skip on card 6 finds
+// no card left in it and draws from the category above.
+const deckWithThinMiddle: Deck = {
+  id: 'thin-middle-deck',
+  version: 1,
+  cards: [
+    ...makeCards('c1'),
+    ...makeCards('c2').filter(({ id }) => ['c2-solo-1', 'c2-solo-2', 'c2-together'].includes(id)),
+    ...makeCards('c3'),
+  ],
+};
+
+const deckWithOneCard: Deck = {
+  id: 'one-card-deck',
+  version: 1,
+  cards: [{ id: 'only-card', category: 'c1', kind: 'solo', text: 'Only card' }],
+};
+
 // Ten cards over c1 and c2 gives five of each. Card 5 and card 10 are together cards.
 const twoCategories: RoundSetup = {
   players: ['Player A', 'Player B'],
@@ -146,6 +164,11 @@ function backgroundsAround(element: ReturnType<typeof screen.getByText>): string
     if (typeof background === 'string') backgrounds.push(background);
   }
   return backgrounds;
+}
+
+function roundNow(): RoundState {
+  if (!latest.round) throw new Error('No round has been started');
+  return latest.round;
 }
 
 const press = (name: string) => fireEvent.press(screen.getByRole('button', { name }));
@@ -595,6 +618,302 @@ describe('RoundPlayScreen', () => {
       act(() => mockOnRemovePrevented?.());
 
       expect(screen.getByRole('header', { name: copy.roundPlay.endDialogTitle })).toBeOnTheScreen();
+    });
+  });
+
+  describe('Not this one', () => {
+    const notThisOneName = copy.roundPlay.notThisOne;
+    const sheetTitle = copy.roundPlay.sheetTitle;
+    const openSheet = () => press(notThisOneName);
+    const isSheetOpen = () => screen.queryByText(sheetTitle) !== null;
+    const isDialogOpen = () => screen.queryByText(copy.roundPlay.endDialogTitle) !== null;
+
+    it('should show the quiet control under the buttons on a card for one player', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      expect(screen.getByRole('button', { name: notThisOneName })).toBeOnTheScreen();
+    });
+
+    it('should show it on a together card too', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      expect(screen.getByText(copy.roundPlay.bothOfYou)).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: notThisOneName })).toBeOnTheScreen();
+    });
+
+    it('should not show it on the Pass the phone screen', async () => {
+      await renderPlay(twoCategories);
+
+      expect(screen.queryByRole('button', { name: notThisOneName })).not.toBeOnTheScreen();
+    });
+
+    it('should not show the sheet until the control is pressed', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      expect(isSheetOpen()).toBe(false);
+    });
+
+    it('should open the sheet with the option to skip and a switch for each category in the round', async () => {
+      await renderPlay(threeCategories);
+      takeThePhone();
+
+      openSheet();
+
+      expect(screen.getByRole('header', { name: sheetTitle })).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.skipTitle })).toBeOnTheScreen();
+      expect(screen.getAllByRole('switch')).toHaveLength(3);
+      expect(
+        screen.getByRole('switch', { name: categoryNames.c3, checked: true }),
+      ).toBeOnTheScreen();
+    });
+
+    describe('skipping the card', () => {
+      it('should draw a new card for the same player, with no phone to pass, and close the sheet', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        const skippedText = textOfCard(twoCategories, 1);
+        openSheet();
+
+        press(copy.roundPlay.skipTitle);
+
+        expect(isSheetOpen()).toBe(false);
+        expect(screen.queryByText(skippedText)).not.toBeOnTheScreen();
+        expect(latest.round?.current?.card.text).toBeDefined();
+        expect(screen.getByText(latest.round?.current?.card.text ?? '')).toBeOnTheScreen();
+        expect(screen.getByText(turnOf('Player A'))).toBeOnTheScreen();
+        expect(screen.queryByRole('button', { name: copy.roundPlay.handoffButton })).toBeNull();
+      });
+
+      it('should not use up a card of the round, or cost anyone a drink or a dare', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        openSheet();
+
+        press(copy.roundPlay.skipTitle);
+
+        expect(screen.getByText(cardCount(1, 10))).toBeOnTheScreen();
+        expect(latest.round?.history).toHaveLength(0);
+        expect(summarise(roundNow()).players).toEqual([
+          { name: 'Player A', daresDone: 0, drinks: 0 },
+          { name: 'Player B', daresDone: 0, drinks: 0 },
+        ]);
+        expect(mockReplace).not.toHaveBeenCalled();
+      });
+
+      it('should never bring the skipped card back for the rest of the round', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        const skippedId = latest.round?.current?.card.id;
+        openSheet();
+        press(copy.roundPlay.skipTitle);
+
+        playUntilCard(10);
+        pressDone();
+
+        expect(mockReplace).toHaveBeenCalledWith(summaryRoute);
+        expect(latest.round?.history).toHaveLength(10);
+        expect(latest.round?.history.map(({ cardId }) => cardId)).not.toContain(skippedId);
+      });
+
+      it('should not step up to a replacement in a higher category, because the cost is on the card', async () => {
+        await renderPlay(threeCategories, deckWithThinMiddle);
+        playUntilCard(6);
+        openSheet();
+
+        press(copy.roundPlay.skipTitle);
+
+        expect(roundNow().current?.card.category).toBe('c3');
+        expect(roundNow().current?.steppingUp).toBe(true);
+        expect(screen.queryByRole('button', { name: copy.roundPlay.stepUpButton })).toBeNull();
+        expect(screen.getByRole('button', { name: copy.roundPlay.done })).toBeOnTheScreen();
+      });
+
+      it('should skip a together card for another together card, with nobody drinking', async () => {
+        await renderPlay(twoCategories);
+        playUntilCard(5);
+        openSheet();
+
+        press(copy.roundPlay.skipTitle);
+
+        expect(latest.round?.current?.card.kind).toBe('together');
+        expect(latest.round?.history.filter(({ outcome }) => outcome === 'passed')).toHaveLength(0);
+      });
+
+      it('should show the summary when no card is left to draw', async () => {
+        await renderPlay({ ...twoCategories, enabledCategories: ['c1'] }, deckWithOneCard);
+        takeThePhone();
+        openSheet();
+
+        press(copy.roundPlay.skipTitle);
+
+        expect(mockReplace).toHaveBeenCalledWith(summaryRoute);
+      });
+    });
+
+    describe('switching a category off', () => {
+      it('should take its cards out for the rest of the round, and show it as off', async () => {
+        await renderPlay(threeCategories);
+        takeThePhone();
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c3 }));
+
+        expect(latest.round?.enabled).toEqual(['c1', 'c2']);
+        expect(latest.round?.unused.some(({ category }) => category === 'c3')).toBe(false);
+        expect(
+          screen.getByRole('switch', { name: categoryNames.c3, checked: false, disabled: true }),
+        ).toBeOnTheScreen();
+      });
+
+      it('should leave the card in play alone when it is in another category', async () => {
+        await renderPlay(threeCategories);
+        takeThePhone();
+        const cardId = latest.round?.current?.card.id;
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c3 }));
+
+        expect(latest.round?.current?.card.id).toBe(cardId);
+        expect(isSheetOpen()).toBe(true);
+      });
+
+      it('should replace the card in play when it is in that category, and keep the sheet open', async () => {
+        await renderPlay(threeCategories);
+        takeThePhone();
+        const cardId = latest.round?.current?.card.id;
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c1 }));
+
+        expect(latest.round?.current?.card.id).not.toBe(cardId);
+        expect(latest.round?.current?.card.category).toBe('c2');
+        expect(isSheetOpen()).toBe(true);
+        expect(latest.round?.history).toHaveLength(0);
+      });
+
+      it('should show the replacement card behind the sheet once it is closed', async () => {
+        await renderPlay(threeCategories);
+        takeThePhone();
+        openSheet();
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c1 }));
+
+        press(copy.roundPlay.sheetClose);
+
+        expect(screen.getByText(latest.round?.current?.card.text ?? '')).toBeOnTheScreen();
+        expect(screen.getByText(categoryNames.c2)).toBeOnTheScreen();
+      });
+
+      it('should not step up to the replacement, because the cost is on the card', async () => {
+        await renderPlay(threeCategories);
+        playUntilCard(6);
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+        press(copy.roundPlay.sheetClose);
+
+        expect(latest.round?.current?.steppingUp).toBe(true);
+        expect(screen.queryByRole('button', { name: copy.roundPlay.stepUpButton })).toBeNull();
+        expect(screen.getByRole('button', { name: copy.roundPlay.done })).toBeOnTheScreen();
+      });
+
+      it('should never deal a card of the switched off category again', async () => {
+        await renderPlay(threeCategories);
+        takeThePhone();
+        openSheet();
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+        press(copy.roundPlay.sheetClose);
+
+        playUntilCard(10);
+        pressDone();
+
+        const categoriesPlayed = latest.round?.history.map(({ category }) => category);
+        expect(categoriesPlayed).toHaveLength(10);
+        expect(categoriesPlayed).not.toContain('c2');
+      });
+
+      it('should lock the last category on, and say why', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c1 }));
+
+        const locked = screen.getByRole('switch', {
+          name: categoryNames.c2,
+          checked: true,
+          disabled: true,
+        });
+        expect(locked).toHaveProp('accessibilityHint', copy.roundSetup.lastCategoryHint);
+        fireEvent.press(locked);
+        expect(latest.round?.enabled).toEqual(['c2']);
+      });
+
+      it('should show the summary, and no sheet, when the last card is in the category switched off', async () => {
+        await renderPlay(
+          { ...twoCategories, enabledCategories: ['c1', 'c2'] },
+          {
+            ...deckWithOneCard,
+            cards: [{ id: 'only-card', category: 'c1', kind: 'solo', text: 'Only card' }],
+          },
+        );
+        takeThePhone();
+        openSheet();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c1 }));
+
+        expect(mockReplace).toHaveBeenCalledWith(summaryRoute);
+        expect(isSheetOpen()).toBe(false);
+      });
+
+      it('should show a category that was never in the round as no switch', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        openSheet();
+
+        expect(screen.queryByRole('switch', { name: categoryNames.c3 })).not.toBeOnTheScreen();
+      });
+    });
+
+    describe('closing the sheet', () => {
+      it('should close from Keep playing and leave the card as it was', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        const cardId = latest.round?.current?.card.id;
+        openSheet();
+
+        press(copy.roundPlay.sheetClose);
+
+        expect(isSheetOpen()).toBe(false);
+        expect(latest.round?.current?.card.id).toBe(cardId);
+        expect(screen.getByText(textOfCard(twoCategories, 1))).toBeOnTheScreen();
+      });
+
+      it('should close, and not open the End round dialog, when the player goes back', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        openSheet();
+
+        expect(mockPreventsRemove).toBe(true);
+        act(() => mockOnRemovePrevented?.());
+
+        expect(isSheetOpen()).toBe(false);
+        expect(isDialogOpen()).toBe(false);
+        expect(mockReplace).not.toHaveBeenCalled();
+      });
+
+      it('should open the End round dialog when the player goes back once the sheet is closed', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+        openSheet();
+        act(() => mockOnRemovePrevented?.());
+
+        act(() => mockOnRemovePrevented?.());
+
+        expect(isDialogOpen()).toBe(true);
+      });
     });
   });
 

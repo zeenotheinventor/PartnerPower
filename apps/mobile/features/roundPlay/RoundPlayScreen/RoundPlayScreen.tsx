@@ -1,5 +1,5 @@
 import { categoryNames, copy, fillCopy } from '@getfreak/content';
-import { categories, isRoundOver, type RoundState } from '@getfreak/core';
+import { categories, isRoundOver, type CategoryId, type RoundState } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
 import { useEffect, useState } from 'react';
@@ -9,6 +9,7 @@ import { Header, Screen } from '../../../components/ui';
 import { useRound } from '../../round/RoundProvider';
 import { EndRoundDialog } from '../EndRoundDialog';
 import { HandoffView } from '../HandoffView';
+import { NotThisOneSheet } from '../NotThisOneSheet';
 import { SteppingUpView } from '../SteppingUpView';
 import { TurnView } from '../TurnView';
 
@@ -56,6 +57,7 @@ export function RoundPlayScreen() {
   const showStage = (nextStage: Stage) => setStageState({ cardNumber, stage: nextStage });
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isSheetOpen, setIsSheetOpen] = useState(false);
 
   // A round that starts with no cards is over from the start and shows the no cards line. Once a
   // card has been in play, the round being over means it is time for the summary.
@@ -63,14 +65,28 @@ export function RoundPlayScreen() {
   if (current && !hasPlayed) setHasPlayed(true);
 
   const isPlaying = current !== null;
-  // While a card is in play, going back opens the dialog. This is the hook the native stack reads,
-  // so the iOS swipe is stopped too, and not only the Android back button.
-  usePreventRemove(isPlaying, () => setIsDialogOpen(true));
+  // While a card is in play, going back opens the dialog, or closes the sheet when it is open. This
+  // is the hook the native stack reads, so the iOS swipe is stopped too, and not only the Android
+  // back button.
+  usePreventRemove(isPlaying, () => (isSheetOpen ? setIsSheetOpen(false) : setIsDialogOpen(true)));
 
   const isOverAfterPlaying = hasPlayed && round !== undefined && isRoundOver(round);
   useEffect(() => {
     if (isOverAfterPlaying) router.replace(summaryRoute);
   }, [isOverAfterPlaying, router]);
+
+  // A new card in place of the one in play stays on the card view. The player already holds the
+  // phone, and the cost is on the card itself, so no step up screen comes first.
+  const skipCard = () => {
+    showStage('card');
+    setIsSheetOpen(false);
+    dispatch({ type: 'removeCard' });
+  };
+
+  const switchCategoryOff = (category: CategoryId) => {
+    showStage('card');
+    dispatch({ type: 'disableCategory', category });
+  };
 
   const endRound = () => {
     setIsDialogOpen(false);
@@ -152,6 +168,7 @@ export function RoundPlayScreen() {
         onDone={() => dispatch({ type: 'done' })}
         onPass={() => dispatch({ type: 'pass' })}
         onEndRound={() => setIsDialogOpen(true)}
+        onNotThisOne={() => setIsSheetOpen(true)}
       />
     );
   }
@@ -159,6 +176,17 @@ export function RoundPlayScreen() {
   return (
     <>
       {view}
+      <NotThisOneSheet
+        visible={isSheetOpen}
+        categories={round.pacing.map((category) => ({
+          category,
+          name: categoryNames[category],
+          isOn: round.enabled.includes(category),
+        }))}
+        onSkip={skipCard}
+        onSwitchOff={switchCategoryOff}
+        onClose={() => setIsSheetOpen(false)}
+      />
       <EndRoundDialog
         visible={isDialogOpen}
         onConfirm={endRound}
