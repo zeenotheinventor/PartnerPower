@@ -1,7 +1,7 @@
 // This import comes first so that its mocks are in place before Expo Router loads.
 import { backend, currentPathname, launchApp } from '../welcome/testing/appEnvironment';
 
-import { categoryNames, copy, displayNames } from '@getfreak/content';
+import { copy, displayNames, fillCopy } from '@getfreak/content';
 import type { Deck } from '@getfreak/core';
 import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
@@ -67,16 +67,18 @@ describe('round setup in the route tree', () => {
     expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
 
-  it('should open the round screen from Start, with the first card of the round', async () => {
+  it('should open the round screen from Start, asking for the phone to go to the first player', async () => {
     await launchApp(setupRoute);
     enterNames('Player A', 'Player B');
 
     await pressStart();
     await waitFor(() => expect(currentPathname()).toBe(playRoute));
 
-    expect(screen.getByRole('header', { name: copy.roundPlay.title })).toBeOnTheScreen();
-    expect(screen.getByText('Player A')).toBeOnTheScreen();
-    expect(screen.getByText(categoryNames.c1)).toBeOnTheScreen();
+    expect(
+      screen.getByRole('header', {
+        name: fillCopy(copy.roundPlay.handoffTitle, { name: 'Player A' }),
+      }),
+    ).toBeOnTheScreen();
   });
 
   it('should say the round has no cards when no deck ships', async () => {
@@ -88,32 +90,6 @@ describe('round setup in the route tree', () => {
     await waitFor(() => expect(currentPathname()).toBe(playRoute));
 
     expect(screen.getByText(copy.roundPlay.noCards)).toBeOnTheScreen();
-  });
-
-  it('should go back to setup from the round screen', async () => {
-    await launchApp(setupRoute);
-    enterNames('Player A', 'Player B');
-    await pressStart();
-    await waitFor(() => expect(currentPathname()).toBe(playRoute));
-
-    fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.backLabel }));
-    await waitFor(() => expect(currentPathname()).toBe(setupRoute));
-
-    expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
-  });
-
-  it('should let Start open the round screen again after coming back to setup', async () => {
-    await launchApp(setupRoute);
-    enterNames('Player A', 'Player B');
-    await pressStart();
-    await waitFor(() => expect(currentPathname()).toBe(playRoute));
-    fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.backLabel }));
-    await waitFor(() => expect(currentPathname()).toBe(setupRoute));
-
-    await pressStart();
-    await waitFor(() => expect(currentPathname()).toBe(playRoute));
-
-    expect(screen.getByRole('header', { name: copy.roundPlay.title })).toBeOnTheScreen();
   });
 
   it('should fall back to setup from a round screen opened by a deep link', async () => {

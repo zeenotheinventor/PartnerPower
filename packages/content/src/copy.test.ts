@@ -37,9 +37,40 @@ describe('copy', () => {
 
   it('should give the round screen every line as non-empty text', () => {
     expect(Object.keys(copy.roundPlay).sort()).toEqual(
-      ['backLabel', 'categoryLabel', 'noCards', 'title', 'turnLabel'].sort(),
+      [
+        'backLabel',
+        'bothOfYou',
+        'cardCount',
+        'cardCountEndless',
+        'done',
+        'endDialogBody',
+        'endDialogCancel',
+        'endDialogConfirm',
+        'endDialogTitle',
+        'endRound',
+        'handoffButton',
+        'handoffLine',
+        'handoffTitle',
+        'noCards',
+        'pass',
+        'penalty',
+        'penaltyTogether',
+        'stepUpButton',
+        'stepUpCost',
+        'stepUpLine',
+        'stepUpTitle',
+        'title',
+        'turnOf',
+      ].sort(),
     );
     expectEveryValueToBeText(copy.roundPlay);
+  });
+
+  it('should give the summary screen every line as non-empty text', () => {
+    expect(Object.keys(copy.roundSummary).sort()).toEqual(
+      ['backToSetup', 'daresDone', 'drinks', 'title'].sort(),
+    );
+    expectEveryValueToBeText(copy.roundSummary);
   });
 
   it('should give the welcome screen every line as non-empty text', () => {
