@@ -9,6 +9,7 @@ export {
   categoriesForLevel,
   categoryIds,
   deckSchema,
+  findDuplicateCardIds,
   isCategoryId,
   levelIds,
   levels,

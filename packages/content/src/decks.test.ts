@@ -1,60 +1,99 @@
-import { parseDeck, type Deck } from '@getfreak/core';
+import { categoryIds, findDuplicateCardIds, parseDeck, type Card } from '@getfreak/core';
 
 import { decks } from './decks';
 
-function cardIdsOf(shippedDecks: readonly Deck[]): string[] {
-  return shippedDecks.flatMap((deck) => deck.cards.map((card) => card.id));
-}
+const minimumCardsPerCategory = 30;
+const minimumTogetherCardsPerCategory = 8;
+const maximumTextLength = 140;
+const barredWords = [
+  'he',
+  'she',
+  'him',
+  'her',
+  'his',
+  'hers',
+  'boyfriend',
+  'girlfriend',
+  'husband',
+  'wife',
+  'drink',
+  'wine',
+  'shot',
+  'shots',
+  'booze',
+  'beer',
+  'tipsy',
+];
+const barredWordPattern = new RegExp(`\\b(${barredWords.join('|')})\\b`, 'i');
 
-function duplicatesIn(ids: string[]): string[] {
-  return ids.filter((id, index) => ids.indexOf(id) !== index);
-}
+const shippedCards: Card[] = decks.flatMap((deck) => deck.cards);
 
-// The starter deck is added to `decks` by FRK-10. Until then these tests run over an empty array,
-// so the tests on a fixture below keep the checks honest.
 describe('shipped decks', () => {
   it('should pass validation for every deck', () => {
     decks.forEach((deck) => expect(parseDeck(deck)).toEqual({ success: true, deck }));
   });
 
+  it('should ship at least one deck', () => {
+    expect(decks.length).toBeGreaterThan(0);
+  });
+
   it('should use each card id once across all decks', () => {
-    expect(duplicatesIn(cardIdsOf(decks))).toEqual([]);
+    expect(findDuplicateCardIds(decks)).toEqual([]);
   });
 
   it('should give each deck an id of its own', () => {
-    expect(duplicatesIn(decks.map((deck) => deck.id))).toEqual([]);
-  });
-});
-
-describe('the deck checks', () => {
-  const validDeck: Deck = {
-    id: 'deck-one',
-    version: 1,
-    cards: [{ id: 'card-1', category: 'c1', kind: 'solo', text: 'Card text one' }],
-  };
-  const otherDeck: Deck = {
-    id: 'deck-two',
-    version: 1,
-    cards: [{ id: 'card-2', category: 'c2', kind: 'together', text: 'Card text two' }],
-  };
-
-  it('should accept a valid fixture deck', () => {
-    expect(parseDeck(validDeck).success).toBe(true);
+    expect(new Set(decks.map((deck) => deck.id)).size).toBe(decks.length);
   });
 
-  it('should reject a fixture deck with an unknown category', () => {
-    const brokenDeck = {
-      ...validDeck,
-      cards: [{ id: 'card-1', category: 'c9', kind: 'solo', text: 'Card text one' }],
-    };
-
-    expect(parseDeck(brokenDeck).success).toBe(false);
+  it('should mark every card as shipped', () => {
+    expect(shippedCards.filter((card) => card.source !== 'shipped')).toEqual([]);
   });
 
-  it('should find a card id used in two decks', () => {
-    const clashingDeck: Deck = { ...otherDeck, cards: validDeck.cards };
+  it('should leave every card without an effect', () => {
+    expect(shippedCards.filter((card) => card.effect !== undefined)).toEqual([]);
+  });
 
-    expect(duplicatesIn(cardIdsOf([validDeck, clashingDeck]))).toEqual(['card-1']);
-    expect(duplicatesIn(cardIdsOf([validDeck, otherDeck]))).toEqual([]);
+  it.each(categoryIds)('should have enough cards in %s', (categoryId) => {
+    const cards = shippedCards.filter((card) => card.category === categoryId);
+
+    expect(cards.length).toBeGreaterThanOrEqual(minimumCardsPerCategory);
+  });
+
+  it.each(categoryIds)('should have enough together cards in %s', (categoryId) => {
+    const togetherCards = shippedCards.filter(
+      (card) => card.category === categoryId && card.kind === 'together',
+    );
+
+    expect(togetherCards.length).toBeGreaterThanOrEqual(minimumTogetherCardsPerCategory);
+  });
+
+  it('should keep every card text short enough for the screen', () => {
+    const tooLong = shippedCards.filter((card) => card.text.length > maximumTextLength);
+
+    expect(tooLong.map((card) => card.id)).toEqual([]);
+  });
+
+  it('should never repeat a card text', () => {
+    const texts = shippedCards.map((card) => card.text.toLowerCase());
+
+    expect(new Set(texts).size).toBe(texts.length);
+  });
+
+  it('should keep dashes and semicolons out of every card text', () => {
+    const offending = shippedCards.filter((card) => /[—–;]|--/.test(card.text));
+
+    expect(offending.map((card) => card.id)).toEqual([]);
+  });
+
+  it('should keep gendered words and the forfeit word out of every card text', () => {
+    const offending = shippedCards.filter((card) => barredWordPattern.test(card.text));
+
+    expect(offending.map((card) => card.id)).toEqual([]);
+  });
+
+  it('should number each card id after its category', () => {
+    const misnumbered = shippedCards.filter((card) => !card.id.includes(`-${card.category}-`));
+
+    expect(misnumbered.map((card) => card.id)).toEqual([]);
   });
 });
