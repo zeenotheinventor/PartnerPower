@@ -13,6 +13,8 @@ This codebase may be shown publicly as a portfolio piece. Keep it safe for work.
   the two games are `dares` and `questions`. Their display names come from content data.
 - Keep game content, such as card and question text, in data files apart from the code, so the code
   can be shown without it.
+- Branch names are the ticket id plus a neutral slug, for example `FRK-12/turn-screen`. Do not copy
+  the branch name Linear suggests, since it repeats the ticket title.
 - Use neutral names for code: `category`, `level`, `card`, `deck`. Do not put content words in
   identifiers, file names or test names.
 
