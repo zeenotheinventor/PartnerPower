@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "Get Freak",
+    "slug": "get-freak",
+    "scheme": "getfreak",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "com.sojisoft.getfreak"
+    },
+    "android": {
+      "package": "com.sojisoft.getfreak"
+    },
+    "plugins": ["expo-router"]
+  }
+}

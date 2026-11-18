@@ -5,3 +5,7 @@ ios/
 android/
 *.log
 .env*
+coverage/
+*.tsbuildinfo
+expo-env.d.ts
+.DS_Store

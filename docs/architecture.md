@@ -1,6 +1,6 @@
 # Architecture
 
-PartnerPower is a mobile app of games for couples to connect with each other, played together on
+Get Freak is a mobile app of games for couples to connect with each other, played together on
 one phone. This document says how the code is laid out and why. It covers the first two milestones
 in detail and names the decisions later milestones depend on.
 
@@ -22,17 +22,17 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Stack
 
-| Concern | Choice |
-|---|---|
-| Runtime | Node 26, pnpm |
-| App | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode |
-| Navigation | Expo Router, file-based |
-| Styling | NativeWind utilities over design tokens |
-| Storage | `expo-sqlite`, through its key-value store |
-| Validation | Zod, in the core package |
-| Tests | Jest with `jest-expo` and React Native Testing Library |
-| Checks | ESLint flat config, Prettier, `tsc --noEmit` |
-| CI | GitHub Actions |
+| Concern    | Choice                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| Runtime    | Node 26, pnpm                                                                                                      |
+| App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                |
+| Navigation | Expo Router, file-based                                                                                            |
+| Styling    | NativeWind utilities over design tokens                                                                            |
+| Storage    | `expo-sqlite`, through its key-value store                                                                         |
+| Validation | Zod, in the core package                                                                                           |
+| Tests      | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core` and `content` |
+| Checks     | ESLint flat config, Prettier, `tsc --noEmit`                                                                       |
+| CI         | GitHub Actions                                                                                                     |
 
 There is no global state library. See State below.
 
@@ -54,12 +54,12 @@ docs/
 
 ### Import rules
 
-| Package | May import |
-|---|---|
-| `core` | nothing from the workspace, and nothing from React, React Native or Expo |
-| `content` | types and validators from `core` |
-| `tokens` | nothing |
-| `apps/mobile` | all three packages |
+| Package       | May import                                                               |
+| ------------- | ------------------------------------------------------------------------ |
+| `core`        | nothing from the workspace, and nothing from React, React Native or Expo |
+| `content`     | types and validators from `core`                                         |
+| `tokens`      | nothing                                                                  |
+| `apps/mobile` | all three packages                                                       |
 
 ESLint enforces these with import restrictions. A test in `core` fails if a React or Expo import
 appears there.
@@ -229,6 +229,8 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
   inline `style` objects.
 - Dark theme first. Each category id has a colour token, `category-c1` to `category-c4`.
+- Until `packages/tokens` lands (FRK-3), the scaffold keeps two placeholder colours, `surface` and
+  `ink`, in the app's Tailwind config. FRK-3 moves them into `tokens` and removes them from there.
 
 ## Testing
 
@@ -241,8 +243,17 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 
 ## Checks and CI
 
-Root scripts: `lint`, `typecheck`, `test`, and `check`, which runs all three. CI runs `check` on
-every pull request, and a failing check blocks the merge. Run `pnpm check` before pushing.
+Root scripts: `lint`, `typecheck`, `test`, and `check`, which runs all three. Run `pnpm check`
+before pushing.
+
+CI runs the same checks as parallel jobs, scoped to what a change affects. A `scope` job uses pnpm's
+dependency graph to pick the changed packages and their dependents, and anything outside `apps/` and
+`packages/` runs everything. `lint` runs on every change. `core`, `content` and `mobile` each run
+their own `typecheck` and `test`. One aggregator job, `checks`, depends on all of them and is the
+only required status, so a failing job blocks the merge and adding a job never touches branch
+protection. There is no workflow-level path filter, so `checks` always reports. A newer push to a
+pull request cancels its older run, pushes to `main` get their own scoped run, and a full run can be
+started by hand. The shared setup lives in `.github/actions/setup`.
 
 ## Privacy
 
@@ -259,9 +270,17 @@ every pull request, and a failing check blocks the merge. Run `pnpm check` befor
 
 ## Decisions still open
 
-| Decision | Needed by |
-|---|---|
-| Stay on Expo SDK 57 or start on 58 | FRK-1 |
-| Launch platforms: iOS, Android or both | Launch milestone |
-| Whether an alternative forfeit mode ships | FRK-16 |
-| Error reporting and analytics, if any | Launch milestone |
+| Decision                                  | Needed by        |
+| ----------------------------------------- | ---------------- |
+| Launch platforms: iOS, Android or both    | Launch milestone |
+| Whether an alternative forfeit mode ships | FRK-16           |
+| Error reporting and analytics, if any     | Launch milestone |
+
+## Decisions made
+
+| Decision                          | Outcome                                                                                                                                                                            | Ticket |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                              | FRK-1  |
+| Colours before the tokens package | Two placeholder colours sit in the app's Tailwind config until FRK-3 creates `packages/tokens`.                                                                                    | FRK-1  |
+| Node version                      | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                               | FRK-1  |
+| App name and identifiers          | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18. | FRK-1  |

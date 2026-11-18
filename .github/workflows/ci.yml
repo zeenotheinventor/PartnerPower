@@ -1,0 +1,101 @@
+name: CI
+
+# Every pull request runs the checks that its changes can affect. The only required status is
+# the `checks` job at the bottom. Scoping lives in job-level `if:` conditions, never in a
+# workflow-level `paths` filter, so `checks` always reports.
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+# A newer push to a pull request cancels its older run. Every commit on main keeps its own run.
+concurrency:
+  group: ci-${{ github.event.pull_request.number || github.sha }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+permissions:
+  contents: read
+
+jobs:
+  scope:
+    name: scope
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    outputs:
+      core: ${{ steps.scope.outputs.core }}
+      content: ${{ steps.scope.outputs.content }}
+      mobile: ${{ steps.scope.outputs.mobile }}
+    steps:
+      # Two commits are enough: on a pull request HEAD is the merge commit, whose first
+      # parent is the base tip. On main, HEAD^1 is the previous commit.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: ./.github/actions/setup
+        with:
+          install: 'false'
+      - id: scope
+        run: .github/scripts/scope.sh "${{ github.event_name == 'workflow_dispatch' && 'full' || 'HEAD^1' }}"
+
+  # Lint is repository-wide (ESLint and Prettier, which also covers the docs) and takes seconds,
+  # so it runs on every change.
+  lint:
+    name: lint
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm lint
+
+  core:
+    name: core
+    needs: scope
+    if: needs.scope.outputs.core == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @getfreak/core typecheck
+      - run: pnpm --filter @getfreak/core test
+
+  content:
+    name: content
+    needs: scope
+    if: needs.scope.outputs.content == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @getfreak/content typecheck
+      - run: pnpm --filter @getfreak/content test
+
+  mobile:
+    name: mobile
+    needs: scope
+    if: needs.scope.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @getfreak/mobile typecheck
+      - run: pnpm --filter @getfreak/mobile test
+
+  # The single required status. It fails if any job failed or was cancelled, and passes when
+  # every job succeeded or was skipped.
+  checks:
+    name: checks
+    needs: [scope, lint, core, content, mobile]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Fail when a job failed or was cancelled
+        if: contains(needs.*.result, 'failure') || contains(needs.*.result, 'cancelled')
+        run: exit 1
+      - name: Report success
+        run: echo "All jobs passed or were skipped."
