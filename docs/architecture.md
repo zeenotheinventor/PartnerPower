@@ -375,6 +375,8 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 ## Working conventions
 
 - One ticket, one branch, one pull request. Squash merge.
+- A pull request is merged once CI has passed and the reviewer has approved it. `CLAUDE.md` has
+  the rule under Development decisions.
 - Branch names are the ticket id plus a neutral slug, for example `FRK-12/turn-screen`.
 - The tone rules in `CLAUDE.md` apply to code, comments, commits and pull requests.
 
