@@ -145,16 +145,16 @@ string literals for copy.
 
 ## Round engine
 
-A round of the `dares` game is a reducer in `core`.
+A round of the `dares` game is a reducer in `core`, in `round.ts`. It is pure: no React and no I/O.
 
 ```ts
-interface RoundSetup {
-  players: [string, string];
+type RoundSetup = {
+  players: readonly [string, string];
   level: LevelId;
-  enabledCategories: CategoryId[];
+  enabledCategories: readonly CategoryId[];
   length: 10 | 20 | 'endless';
   seed: number;
-}
+};
 
 type RoundAction =
   | { type: 'done' }
@@ -166,20 +166,64 @@ type RoundAction =
 function startRound(setup: RoundSetup, deck: Deck): RoundState;
 function reduceRound(state: RoundState, action: RoundAction): RoundState;
 function summarise(state: RoundState): RoundSummary;
+function isRoundOver(state: RoundState): boolean;
 ```
+
+`startRound` throws an `Error` that says what is wrong when the setup is invalid: a player without a
+name, no enabled category, an unknown category, a category outside the level, a category listed
+twice, or a seed that is not a whole number. The order of `enabledCategories` does not matter.
+The engine sorts it by rank. A deck with no cards in the enabled categories gives a round that is
+already over.
+
+`RoundState` is plain serialisable data. It holds the players, the enabled categories, the cards not
+yet dealt, the seeded generator state, whose turn it is, the current card and a `history` of the
+cards played. `current` is null when the round is over. Each history entry records the card, its
+category and kind, the player who held the phone, and whether it was `done` or `passed`, which is
+all that `summarise` needs. For the card in play, `current` carries two things for the screens:
+`player`, who holds the phone, so the UI can show "pass the phone" when it changes, and
+`steppingUp`, true for the first card in a higher category than the previous card, for the
+"stepping up" screen.
 
 Rules the engine owns:
 
 - Cards are dealt only from enabled categories, and no card repeats in a round.
-- Turns alternate between the two players. A `together` card does not consume a turn.
+- Turns alternate between the two players, starting with the first. A `together` card does not
+  consume a turn. The player whose turn it would have been plays the next solo card, and holds the
+  phone for the together card.
 - The round starts in the lowest enabled category and steps up as it progresses.
-- Passing a card costs the category's penalty. Passing a `together` card costs both players.
-- `removeCard` draws a replacement at no cost and keeps the removed card out of the round.
-- All randomness comes from a seeded generator held in the state. The app supplies the seed, so
-  tests are repeatable.
+  - A round of 10 or 20 cards splits its card count across the enabled categories in rank order as
+    evenly as possible, with any remainder going to the higher categories. Twenty cards over four
+    categories is 5 each, and 10 over three is 3, 3, 4.
+  - An endless round steps up one category every 5 cards, then stays in the highest enabled one.
+    It ends by itself only when no unused card is left in any enabled category.
+- If the category for a card has no unused card of the kind needed, the engine takes one from the
+  next higher enabled category, then the next lower, nearest first. The preferred kind is tried in
+  every category before the other kind. If no card is left anywhere, the round is over.
+- Every 5th card of the round (cards 5, 10, 15 and so on) is a `together` card when the category
+  for that card has one, otherwise a `solo` card.
+- A `together` card counts toward the round length. A card removed with `removeCard` does not.
+- Passing a card costs the category's `penalty`, in drink units. The player holding the phone pays
+  for a `solo` card. Passing a `together` card costs both players the penalty. A `together` card
+  done counts as one done for each player.
+- `removeCard` draws a replacement of the same kind from the same category at no cost, with the
+  same player and the same place in the round, and keeps the removed card out of the round. If no
+  replacement is left, the round is over.
+- `disableCategory` returns the same state if the category is not enabled or if it is the last one
+  enabled. Otherwise its cards leave the deal, and pacing carries on as if the category had never
+  been there: each later position that belonged to it goes to the next higher enabled category, or
+  the next lower one if none is higher. If the current card is in the disabled category it is
+  replaced at no cost, as with `removeCard`.
+- `end` finishes the round. Every action on a finished round returns the same state.
+- All randomness comes from a seeded generator (mulberry32) whose state lives in `RoundState`. The
+  app supplies the seed, so the same seed and actions always give the same round.
 
-`RoundState` is plain serialisable data. The reducer never throws on a valid state and action. It
-returns the same state for an action that does not apply.
+`summarise` gives, for each player, the name, the dares done and the drinks taken in penalty units.
+It also gives the cards played, the categories reached from lowest to highest, and `boldest`: the
+index of the player with more dares done, or `'tie'` when they are equal. A tie is not broken by
+drinks.
+
+The reducer never throws on a valid state and action. It returns the same state for an action that
+does not apply.
 
 ## App structure
 
