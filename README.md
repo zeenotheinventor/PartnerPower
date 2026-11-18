@@ -7,7 +7,7 @@ A mobile app of adult games for couples, played on one phone. 18+ only. The work
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 22 and pnpm. No backend.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 24 and pnpm. No backend.
 
 ## Planning
 
