@@ -20,6 +20,7 @@ export function EntryStack() {
       </Stack.Protected>
       <Stack.Protected guard={hasConfirmedEntry}>
         <Stack.Screen name="index" />
+        <Stack.Screen name="games/dares/setup" />
         <Stack.Screen name="dev/kit" />
       </Stack.Protected>
     </Stack>

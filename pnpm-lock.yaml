@@ -137,6 +137,10 @@ importers:
         version: 3.4.19(yaml@2.9.1)
 
   packages/content:
+    dependencies:
+      '@getfreak/core':
+        specifier: workspace:^
+        version: link:../core
     devDependencies:
       '@swc/core':
         specifier: ^1.16.22

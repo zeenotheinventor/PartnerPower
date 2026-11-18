@@ -1,5 +1,5 @@
-import { PlaceholderScreen } from '../features/placeholder/PlaceholderScreen';
+import { HubScreen } from '../features/hub/HubScreen';
 
 export default function IndexRoute() {
-  return <PlaceholderScreen />;
+  return <HubScreen />;
 }

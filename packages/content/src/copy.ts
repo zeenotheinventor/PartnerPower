@@ -13,7 +13,12 @@ export const copy = {
     body: 'Get Freak is for adults only.',
     backLabel: 'Go back',
   },
-  placeholder: {
-    status: 'Coming soon',
+  hub: {
+    greeting: 'Welcome back, you two. What are we feeling?',
+    comingSoon: 'Coming soon',
+  },
+  roundSetup: {
+    status: 'Round setup is on its way.',
+    backLabel: 'Back',
   },
 };

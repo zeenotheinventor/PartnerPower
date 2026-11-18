@@ -80,9 +80,16 @@ interface GameEntry {
 }
 ```
 
-The hub renders the list of entries. Titles and descriptions come from `content`, looked up by id.
-Adding a game means adding an entry, a route group and a core module. The hub layout does not
-change.
+`core` exports the entries as one ordered list, `gameEntries`. The hub renders that list. Titles and
+descriptions come from `content`, in `displayNames`, which is keyed by game id and typed from
+`GameId`, so a registered game without a title and description fails typecheck.
+
+The hub joins each entry with its names and hands the result to a list component that knows nothing
+about any particular game. An available game's tile opens its `setupRoute`. A coming soon game's
+tile is disabled and carries a marker.
+
+Adding a game means adding an entry, its names in `content`, a route group registered behind the
+entry guard, and a core module. The hub layout does not change.
 
 ## Content model
 
@@ -191,6 +198,9 @@ apps/mobile/
   fonts/                 the font files the type scale uses
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
+  features/hub/          the hub: the first screen, with a tile for each game
+  features/roundSetup/   round setup. A stand-in until the round setup ticket builds it.
+  features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
 ```
@@ -394,5 +404,7 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 | Declining the entry confirmation    | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                           | FRK-6  |
 | A failed write when confirming      | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                        | FRK-6  |
 | Built-in sitemap route              | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                          | FRK-6  |
+| Game tiles on the hub               | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                         | FRK-7  |
+| Round setup before its ticket       | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                          | FRK-7  |
 | Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
 | App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
