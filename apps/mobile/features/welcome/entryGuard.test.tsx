@@ -18,11 +18,11 @@ jest.mock('../welcome/WelcomeScreen', () => {
     },
   };
 });
-jest.mock('../placeholder/PlaceholderScreen', () => {
+jest.mock('../hub/HubScreen', () => {
   const { Text } = jest.requireActual<typeof import('react-native')>('react-native');
   const content = jest.requireActual<typeof import('@getfreak/content')>('@getfreak/content');
   return {
-    PlaceholderScreen: () => {
+    HubScreen: () => {
       mockRenderedScreens.push('first screen');
       return <Text accessibilityRole="header">{content.copy.appName}</Text>;
     },
@@ -79,7 +79,7 @@ describe('the entry guard', () => {
     });
 
     it('should send a path that does not exist to the welcome screen', async () => {
-      await launch('/games/dares/setup');
+      await launch('/no/such/route');
 
       expect(currentPathname()).toBe('/welcome');
       expect(mockRenderedScreens).not.toContain('first screen');
@@ -189,7 +189,7 @@ describe('the entry guard', () => {
     });
 
     it('should send a path that does not exist to the first screen', async () => {
-      await launch('/games/dares/setup');
+      await launch('/no/such/route');
 
       expect(currentPathname()).toBe('/');
       expect(screen.getByRole('header', { name: firstScreenName })).toBeOnTheScreen();

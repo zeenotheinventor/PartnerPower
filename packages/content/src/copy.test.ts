@@ -9,8 +9,14 @@ describe('copy', () => {
     expect(copy.appName).toBe('Get Freak');
   });
 
-  it('should give the placeholder screen a status line', () => {
-    expect(copy.placeholder.status).toBe('Coming soon');
+  it('should give the hub every line as non-empty text', () => {
+    expect(Object.keys(copy.hub).sort()).toEqual(['comingSoon', 'greeting'].sort());
+    expectEveryValueToBeText(copy.hub);
+  });
+
+  it('should give the round setup screen every line as non-empty text', () => {
+    expect(Object.keys(copy.roundSetup).sort()).toEqual(['backLabel', 'status'].sort());
+    expectEveryValueToBeText(copy.roundSetup);
   });
 
   it('should give the welcome screen every line as non-empty text', () => {

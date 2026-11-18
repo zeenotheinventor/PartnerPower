@@ -8,6 +8,9 @@
     "typecheck": "tsc --noEmit",
     "test": "jest"
   },
+  "dependencies": {
+    "@getfreak/core": "workspace:^"
+  },
   "devDependencies": {
     "@swc/core": "^1.16.22",
     "@swc/jest": "^0.2.39",
