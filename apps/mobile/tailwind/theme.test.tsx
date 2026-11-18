@@ -65,6 +65,22 @@ describe('sizes', () => {
   });
 });
 
+describe('letter spacing', () => {
+  it('should give the label type its tracking in px', async () => {
+    await renderThemed(<Probe label="Tracked" className="type-label" />);
+
+    // The compiler stores the value as a 32 bit float, so compare with a tolerance.
+    const { letterSpacing } = screen.getByRole('image', { name: 'Tracked' }).props.style;
+    expect(letterSpacing).toBeCloseTo(0.8, 5);
+  });
+
+  it('should give the body type no tracking', async () => {
+    await renderThemed(<Probe label="Plain" className="type-body" />);
+
+    expect(screen.getByRole('image', { name: 'Plain' }).props.style?.letterSpacing).toBeUndefined();
+  });
+});
+
 describe('keyword values', () => {
   it('should resolve a transparent background', async () => {
     await renderThemed(<Probe label="Clear" className="bg-transparent" />);

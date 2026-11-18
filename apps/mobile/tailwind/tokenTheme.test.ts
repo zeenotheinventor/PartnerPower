@@ -81,6 +81,14 @@ describe('typeStyleUtilities', () => {
     });
   });
 
+  it('should give a tracked style its letter spacing in px', () => {
+    expect(typeStyleUtilities(typeScale)['.type-label']).toMatchObject({ letterSpacing: '0.8px' });
+  });
+
+  it('should leave an untracked style without a letter spacing', () => {
+    expect(typeStyleUtilities(typeScale)['.type-body']).not.toHaveProperty('letterSpacing');
+  });
+
   it('should dash-case multi word style names', () => {
     expect(Object.keys(typeStyleUtilities(typeScale))).toContain('.type-body-bold');
   });
