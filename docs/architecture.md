@@ -22,17 +22,17 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Stack
 
-| Concern | Choice |
-|---|---|
-| Runtime | Node 24, pnpm |
-| App | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode |
-| Navigation | Expo Router, file-based |
-| Styling | NativeWind utilities over design tokens |
-| Storage | `expo-sqlite`, through its key-value store |
-| Validation | Zod, in the core package |
-| Tests | Jest with `jest-expo` and React Native Testing Library |
-| Checks | ESLint flat config, Prettier, `tsc --noEmit` |
-| CI | GitHub Actions |
+| Concern    | Choice                                                                                                             |
+| ---------- | ------------------------------------------------------------------------------------------------------------------ |
+| Runtime    | Node 24, pnpm                                                                                                      |
+| App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                |
+| Navigation | Expo Router, file-based                                                                                            |
+| Styling    | NativeWind utilities over design tokens                                                                            |
+| Storage    | `expo-sqlite`, through its key-value store                                                                         |
+| Validation | Zod, in the core package                                                                                           |
+| Tests      | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core` and `content` |
+| Checks     | ESLint flat config, Prettier, `tsc --noEmit`                                                                       |
+| CI         | GitHub Actions                                                                                                     |
 
 There is no global state library. See State below.
 
@@ -54,12 +54,12 @@ docs/
 
 ### Import rules
 
-| Package | May import |
-|---|---|
-| `core` | nothing from the workspace, and nothing from React, React Native or Expo |
-| `content` | types and validators from `core` |
-| `tokens` | nothing |
-| `apps/mobile` | all three packages |
+| Package       | May import                                                               |
+| ------------- | ------------------------------------------------------------------------ |
+| `core`        | nothing from the workspace, and nothing from React, React Native or Expo |
+| `content`     | types and validators from `core`                                         |
+| `tokens`      | nothing                                                                  |
+| `apps/mobile` | all three packages                                                       |
 
 ESLint enforces these with import restrictions. A test in `core` fails if a React or Expo import
 appears there.
@@ -259,9 +259,14 @@ every pull request, and a failing check blocks the merge. Run `pnpm check` befor
 
 ## Decisions still open
 
-| Decision | Needed by |
-|---|---|
-| Stay on Expo SDK 57 or start on 58 | FRK-1 |
-| Launch platforms: iOS, Android or both | Launch milestone |
-| Whether an alternative forfeit mode ships | FRK-16 |
-| Error reporting and analytics, if any | Launch milestone |
+| Decision                                  | Needed by        |
+| ----------------------------------------- | ---------------- |
+| Launch platforms: iOS, Android or both    | Launch milestone |
+| Whether an alternative forfeit mode ships | FRK-16           |
+| Error reporting and analytics, if any     | Launch milestone |
+
+## Decisions made
+
+| Decision          | Outcome                                                                                                                               | Ticket |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable. | FRK-1  |

@@ -1,0 +1,17 @@
+{
+  "expo": {
+    "name": "PartnerPower",
+    "slug": "partner-power",
+    "scheme": "partnerpower",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "ios": {
+      "bundleIdentifier": "com.sojisoft.partnerpower"
+    },
+    "android": {
+      "package": "com.sojisoft.partnerpower"
+    },
+    "plugins": ["expo-router"]
+  }
+}

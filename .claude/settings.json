@@ -1,5 +1,5 @@
 {
   "permissions": {
-    "allow": ["mcp__Linear"]
+    "allow": ["mcp__Linear", "mcp__linear", "mcp__e2cc705b-54b1-4377-926f-4b1b324b5d13"]
   }
 }
