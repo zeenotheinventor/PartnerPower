@@ -131,14 +131,17 @@ describe('the entry guard', () => {
       expect(mockRenderedScreens).not.toContain('first screen');
     });
 
-    it('should read the stored confirmation exactly once, including across confirming', async () => {
+    it('should read each stored setting exactly once, including across confirming', async () => {
       const readSpy = jest.spyOn(backend, 'getItem');
       await launch('/');
 
       fireEvent.press(screen.getByRole('button', { name: confirmButtonName }));
       await waitFor(() => expect(currentPathname()).toBe('/'));
 
-      expect(readSpy).toHaveBeenCalledTimes(1);
+      expect(readSpy.mock.calls.map(([key]) => key).sort()).toEqual([
+        'entryConfirmation',
+        'playerNames',
+      ]);
     });
 
     it('should let the player in for this session when the write fails, and ask again next launch', async () => {

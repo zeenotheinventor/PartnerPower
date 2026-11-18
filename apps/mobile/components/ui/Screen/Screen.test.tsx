@@ -1,6 +1,6 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
-import { ScrollView, StyleSheet } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet } from 'react-native';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { Button } from '../Button';
@@ -40,6 +40,40 @@ describe('Screen', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
 
     expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  describe('keyboard avoidance', () => {
+    it('should not wrap its content in a keyboard avoiding view by default', async () => {
+      await renderScreenContent(true);
+
+      // React Native has no role or label to find this view by, so it is found by its type.
+      expect(screen.UNSAFE_queryByType(KeyboardAvoidingView)).toBeNull();
+    });
+
+    it('should wrap its content in a keyboard avoiding view that pads for the keyboard', async () => {
+      await renderThemed(
+        <Screen scroll avoidKeyboard>
+          <Button label="Continue" onPress={jest.fn()} />
+        </Screen>,
+      );
+
+      const avoidingView = screen.UNSAFE_getByType(KeyboardAvoidingView);
+      expect(avoidingView.props.behavior).toBe('padding');
+      expect(avoidingView.findByType(ScrollView)).toBeTruthy();
+    });
+
+    it('should still let its content be pressed', async () => {
+      const onPress = jest.fn();
+      await renderThemed(
+        <Screen scroll avoidKeyboard>
+          <Button label="Continue" onPress={onPress} />
+        </Screen>,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
   });
 
   it('should not scroll by default', async () => {
