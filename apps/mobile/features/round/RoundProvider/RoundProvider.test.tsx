@@ -74,6 +74,30 @@ describe('RoundProvider', () => {
     expect(result.current.round).toBeUndefined();
   });
 
+  it('should hold no last start until a round is started', () => {
+    const { result } = renderRound();
+
+    expect(result.current.lastStart).toBeUndefined();
+  });
+
+  it('should keep the setup and deck of the round that was last started', () => {
+    const { result } = renderRound();
+
+    act(() => result.current.startNewRound(setup, deck));
+    act(() => result.current.dispatch({ type: 'done' }));
+
+    expect(result.current.lastStart).toEqual({ setup, deck });
+  });
+
+  it('should replace the last start when another round is started', () => {
+    const { result } = renderRound();
+    act(() => result.current.startNewRound(setup, deck));
+
+    act(() => result.current.startNewRound({ ...setup, seed: 8 }, deck));
+
+    expect(result.current.lastStart?.setup.seed).toBe(8);
+  });
+
   it('should fail clearly when used outside the provider', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
 

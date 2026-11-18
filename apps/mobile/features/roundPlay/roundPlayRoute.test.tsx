@@ -81,10 +81,12 @@ describe('playing a round in the route tree', () => {
 
     expect(screen.getByRole('header', { name: copy.roundSummary.title })).toBeOnTheScreen();
     // Every card was done, and a together card counts as done for both players.
-    expect(screen.getAllByText(fillCopy(copy.roundSummary.daresDone, { count: 6 }))).toHaveLength(
-      2,
-    );
-    expect(screen.getAllByText(fillCopy(copy.roundSummary.drinks, { count: 0 }))).toHaveLength(2);
+    expect(
+      screen.getByRole('group', { name: /^Player A, 6 dares done, 0 drinks/ }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole('group', { name: /^Player B, 6 dares done, 0 drinks/ }),
+    ).toBeOnTheScreen();
   });
 
   it('should go back to setup from the summary, and start another round from there', async () => {
@@ -92,7 +94,7 @@ describe('playing a round in the route tree', () => {
     playUntilTheSummary();
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
 
-    fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.backToSetup }));
+    fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.settings }));
     await waitFor(() => expect(currentPathname()).toBe(setupRoute));
     fireEvent.press(screen.getByRole('button', { name: copy.roundSetup.start }));
     await act(async () => {});
@@ -134,9 +136,12 @@ describe('playing a round in the route tree', () => {
     fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.endDialogConfirm }));
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
 
-    expect(screen.getAllByText(fillCopy(copy.roundSummary.daresDone, { count: 0 }))).toHaveLength(
-      2,
-    );
+    expect(
+      screen.getByRole('group', { name: /^Player A, 0 dares done, 0 drinks/ }),
+    ).toBeOnTheScreen();
+    expect(
+      screen.getByRole('group', { name: /^Player B, 0 dares done, 0 drinks/ }),
+    ).toBeOnTheScreen();
   });
 
   it('should go back to setup, not to the finished round, from the summary with the back gesture', async () => {
