@@ -12,6 +12,6 @@
     "android": {
       "package": "com.sojisoft.getfreak"
     },
-    "plugins": ["expo-router"]
+    "plugins": ["expo-router", "expo-sqlite"]
   }
 }
