@@ -58,8 +58,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm --filter @partnerpower/core typecheck
-      - run: pnpm --filter @partnerpower/core test
+      - run: pnpm --filter @getfreak/core typecheck
+      - run: pnpm --filter @getfreak/core test
 
   content:
     name: content
@@ -70,8 +70,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm --filter @partnerpower/content typecheck
-      - run: pnpm --filter @partnerpower/content test
+      - run: pnpm --filter @getfreak/content typecheck
+      - run: pnpm --filter @getfreak/content test
 
   mobile:
     name: mobile
@@ -82,8 +82,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
-      - run: pnpm --filter @partnerpower/mobile typecheck
-      - run: pnpm --filter @partnerpower/mobile test
+      - run: pnpm --filter @getfreak/mobile typecheck
+      - run: pnpm --filter @getfreak/mobile test
 
   # The single required status. It fails if any job failed or was cancelled, and passes when
   # every job succeeded or was skipped.
