@@ -1,5 +1,6 @@
 {
   "extends": ["expo/tsconfig.base", "../../tsconfig.base.json"],
   "compilerOptions": { "lib": ["ESNext"] },
-  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"]
+  "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
+  "exclude": ["tailwind/rawColorGuard.test.ts"]
 }

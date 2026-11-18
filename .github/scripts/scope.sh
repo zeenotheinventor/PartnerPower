@@ -13,7 +13,7 @@
 # CI unchecked.
 set -euo pipefail
 
-known_packages=(core content mobile)
+known_packages=(core content tokens mobile)
 scope="@getfreak"
 
 base="${1:?usage: scope.sh <base-ref | full>}"

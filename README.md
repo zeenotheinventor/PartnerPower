@@ -11,6 +11,8 @@ Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No
 - `apps/mobile`: the Expo app.
 - `packages/core`: game rules in pure TypeScript, with no React, React Native or Expo imports.
 - `packages/content`: user-facing copy and other data.
+- `packages/tokens`: design tokens: colours for the light and dark themes, type, spacing and radius.
+- `tools`: data shared by the checks, such as the pattern that finds raw colour values.
 - `docs/architecture.md`: how the code is laid out and why.
 
 ## Setup
@@ -50,8 +52,8 @@ GitHub Actions runs on every pull request, on every push to `main`, and on deman
   packages plus the packages that depend on them. A change outside `apps/` and `packages/`, such as
   root config, the lockfile or the workflows, runs everything.
 - `lint` runs ESLint and the Prettier check on every change.
-- `core`, `content` and `mobile` each run `typecheck` and `test` for that package, and are skipped
-  when the change cannot affect them.
+- `core`, `content`, `tokens` and `mobile` each run `typecheck` and `test` for that package, and are
+  skipped when the change cannot affect them.
 - `checks` is the one required status. It fails if any job failed or was cancelled, and passes when
   every job passed or was skipped. Branch protection names only `checks`.
 

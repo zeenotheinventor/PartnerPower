@@ -25,6 +25,7 @@ jobs:
     outputs:
       core: ${{ steps.scope.outputs.core }}
       content: ${{ steps.scope.outputs.content }}
+      tokens: ${{ steps.scope.outputs.tokens }}
       mobile: ${{ steps.scope.outputs.mobile }}
     steps:
       # Two commits are enough: on a pull request HEAD is the merge commit, whose first
@@ -73,6 +74,18 @@ jobs:
       - run: pnpm --filter @getfreak/content typecheck
       - run: pnpm --filter @getfreak/content test
 
+  tokens:
+    name: tokens
+    needs: scope
+    if: needs.scope.outputs.tokens == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @getfreak/tokens typecheck
+      - run: pnpm --filter @getfreak/tokens test
+
   mobile:
     name: mobile
     needs: scope
@@ -89,7 +102,7 @@ jobs:
   # every job succeeded or was skipped.
   checks:
     name: checks
-    needs: [scope, lint, core, content, mobile]
+    needs: [scope, lint, core, content, tokens, mobile]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
