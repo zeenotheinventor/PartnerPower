@@ -22,17 +22,18 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Stack
 
-| Concern    | Choice                                                                                                             |
-| ---------- | ------------------------------------------------------------------------------------------------------------------ |
-| Runtime    | Node 26, pnpm                                                                                                      |
-| App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                |
-| Navigation | Expo Router, file-based                                                                                            |
-| Styling    | NativeWind utilities over design tokens                                                                            |
-| Storage    | `expo-sqlite`, through its key-value store                                                                         |
-| Validation | Zod, in the core package                                                                                           |
-| Tests      | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core` and `content` |
-| Checks     | ESLint flat config, Prettier, `tsc --noEmit`                                                                       |
-| CI         | GitHub Actions                                                                                                     |
+| Concern    | Choice                                                                                                                       |
+| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Runtime    | Node 26, pnpm                                                                                                                |
+| App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
+| Navigation | Expo Router, file-based                                                                                                      |
+| Styling    | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
+| Fonts      | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
+| Storage    | `expo-sqlite`, through its key-value store                                                                                   |
+| Validation | Zod, in the core package                                                                                                     |
+| Tests      | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
+| Checks     | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
+| CI         | GitHub Actions                                                                                                               |
 
 There is no global state library. See State below.
 
@@ -48,6 +49,7 @@ packages/
   core/                game rules, types, validation. Pure TypeScript.
   content/             decks, display names and user-facing copy. Data only.
   tokens/              design tokens: colour, type, spacing, radius
+tools/                 data shared by the checks, such as the raw colour pattern
 docs/
   architecture.md      this file
 ```
@@ -61,8 +63,8 @@ docs/
 | `tokens`      | nothing                                                                  |
 | `apps/mobile` | all three packages                                                       |
 
-ESLint enforces these with import restrictions. A test in `core` fails if a React or Expo import
-appears there.
+ESLint enforces these with import restrictions. Nothing but `apps/mobile` may import `tokens`. A
+test in `core` and a test in `tokens` fail if a React or Expo import appears there.
 
 ## Games
 
@@ -181,6 +183,9 @@ apps/mobile/
         play.tsx
         summary.tsx
   components/ui/         the UI kit
+  components/FontGate/   holds rendering until the bundled fonts are ready
+  fonts/                 the font files the type scale uses
+  tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
   storage/               the storage module
 ```
@@ -227,18 +232,51 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 
 ## Styling
 
-- Tokens are defined once in `packages/tokens` and fed to the Tailwind config that NativeWind reads.
+- Tokens are defined once in `packages/tokens`, as typed data: two colour themes with the same
+  keys, a type scale, a spacing scale and a radius scale. `apps/mobile/tailwind.config.ts` feeds
+  them to the Tailwind config that NativeWind reads.
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
-  inline `style` objects.
-- Dark theme first. Each category id has a colour token, `category-c1` to `category-c4`.
-- Until `packages/tokens` lands (FRK-3), the scaffold keeps two placeholder colours, `surface` and
-  `ink`, in the app's Tailwind config. FRK-3 moves them into `tokens` and removes them from there.
+  inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
+  `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
+  a test does the same for the app's CSS files. Named colours such as `red`, and colours in JSON
+  files such as `app.json`, are not checked, so review has to keep those out.
+- There are two themes, light and dark, and the app follows the device's colour scheme. The Tailwind
+  config writes each theme as CSS variables, the light values by default and the dark values under
+  `prefers-color-scheme: dark`. A colour class is semantic and reads a variable, so a screen writes
+  one class, such as `bg-background` or `text-foreground`, and needs no `dark:` variant.
+- Each category id has a fill colour, `category-c1` to `category-c4`, and a label colour for text on
+  that fill, `on-category-c1` to `on-category-c4`. In the dark theme a category colour is readable
+  on the background by itself. On the dark surface colour its contrast drops as low as 4.33, so
+  there, and everywhere in the light theme, it is a fill or a large label that carries its own
+  label colour, never small bare text.
+- Text on the accent colour (`on-accent`) is for large bold labels only, such as a button. In the
+  light theme its contrast is 3.37, which is not enough for small text.
+- Only the token colours exist as colour utilities, plus the keywords `transparent` and `current`.
+  Tailwind's default palette is not available, and opacity modifiers such as `bg-accent/50` do not
+  work, because the variables hold hex values. Use an `opacity-*` utility for a disabled state.
+  Tailwind's default shadow and ring utilities still carry colours of their own, so they stay
+  unused until they are given token values.
+- Spacing and radius utilities are in pixels and named by their value or size: `p-16` is 16px, and
+  the radii are `rounded-none`, `rounded-sm`, `rounded-md`, `rounded-lg`, `rounded-xl` and
+  `rounded-pill`. This differs from stock Tailwind, where `p-4` is 16px. A spacing value that is not
+  on the scale, such as `p-5`, produces no style and no error.
+- Type is set with one class per style: `type-display`, `type-title`, `type-heading`, `type-body`,
+  `type-body-bold`, `type-label` and `type-caption`. Each sets the font family, size and line
+  height. Display, title and heading use Baloo 2. The rest use Nunito. Stock Tailwind type utilities
+  such as `text-sm` and `font-bold` are switched off, so these classes are the only way to set type.
+- The font files ship in the app bundle, one file per weight, and are loaded in the root layout
+  before any route renders. If a font fails to load the app still renders, in the system font.
+- Tests in `tokens` check that both themes have the same keys and that the listed pairings meet
+  their contrast thresholds: text and muted text on the background and the surface, text on the
+  accent, text on each category fill, and each dark category colour on the dark background and
+  surface. The accent colours themselves are not tested as text on a background.
 
 ## Testing
 
 - `core`: unit tests for every rule in the engine, using fixed seeds. Fixtures use placeholder card
   text such as `Card 1`.
 - `content`: schema validation of every deck.
+- `tokens`: theme key parity and contrast thresholds for the listed text and background pairings.
 - `apps/mobile`: component and screen tests with React Native Testing Library. Query by accessible
   role and name first. A test id is a last resort.
 - Every UI kit component has an accessible role and name.
@@ -250,7 +288,7 @@ before pushing.
 
 CI runs the same checks as parallel jobs, scoped to what a change affects. A `scope` job uses pnpm's
 dependency graph to pick the changed packages and their dependents, and anything outside `apps/` and
-`packages/` runs everything. `lint` runs on every change. `core`, `content` and `mobile` each run
+`packages/` runs everything. `lint` runs on every change. `core`, `content`, `tokens` and `mobile` each run
 their own `typecheck` and `test`. One aggregator job, `checks`, depends on all of them and is the
 only required status, so a failing job blocks the merge and adding a job never touches branch
 protection. There is no workflow-level path filter, so `checks` always reports. A newer push to a
@@ -280,9 +318,14 @@ started by hand. The shared setup lives in `.github/actions/setup`.
 
 ## Decisions made
 
-| Decision                          | Outcome                                                                                                                                                                            | Ticket |
-| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                 | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                              | FRK-1  |
-| Colours before the tokens package | Two placeholder colours sit in the app's Tailwind config until FRK-3 creates `packages/tokens`.                                                                                    | FRK-1  |
-| Node version                      | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                               | FRK-1  |
-| App name and identifiers          | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18. | FRK-1  |
+| Decision                            | Outcome                                                                                                                                                                            | Ticket |
+| ----------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                   | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                              | FRK-1  |
+| Colours before the tokens package   | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                     | FRK-1  |
+| Themes                              | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".             | FRK-3  |
+| Typefaces                           | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                   | FRK-3  |
+| Category colours in the light theme | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.      | FRK-3  |
+| Text on the accent colour           | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                              | FRK-3  |
+| Spacing and radius utility names    | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                | FRK-3  |
+| Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                               | FRK-1  |
+| App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18. | FRK-1  |
