@@ -42,6 +42,24 @@ To run one package's tests, filter by package name, for example
 `pnpm --filter @getfreak/core test`. Jest options go after the script name, for example
 `pnpm --filter @getfreak/mobile test --watch`.
 
+## Continuous integration
+
+GitHub Actions runs on every pull request, on every push to `main`, and on demand.
+
+- `scope` works out which packages the change affects, using pnpm's dependency graph: the changed
+  packages plus the packages that depend on them. A change outside `apps/` and `packages/`, such as
+  root config, the lockfile or the workflows, runs everything.
+- `lint` runs ESLint and the Prettier check on every change.
+- `core`, `content` and `mobile` each run `typecheck` and `test` for that package, and are skipped
+  when the change cannot affect them.
+- `checks` is the one required status. It fails if any job failed or was cancelled, and passes when
+  every job passed or was skipped. Branch protection names only `checks`.
+
+To start a full run by hand, open the Actions tab, choose the CI workflow, then Run workflow. Or run
+`gh workflow run CI --ref <branch>`.
+
+`pnpm check` is the local equivalent. It runs `lint`, `typecheck` and `test` for every package.
+
 ## Planning
 
 The plan lives in Linear under the `FRK` team. Each milestone is built in its own session.

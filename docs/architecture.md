@@ -243,8 +243,17 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 
 ## Checks and CI
 
-Root scripts: `lint`, `typecheck`, `test`, and `check`, which runs all three. CI runs `check` on
-every pull request, and a failing check blocks the merge. Run `pnpm check` before pushing.
+Root scripts: `lint`, `typecheck`, `test`, and `check`, which runs all three. Run `pnpm check`
+before pushing.
+
+CI runs the same checks as parallel jobs, scoped to what a change affects. A `scope` job uses pnpm's
+dependency graph to pick the changed packages and their dependents, and anything outside `apps/` and
+`packages/` runs everything. `lint` runs on every change. `core`, `content` and `mobile` each run
+their own `typecheck` and `test`. One aggregator job, `checks`, depends on all of them and is the
+only required status, so a failing job blocks the merge and adding a job never touches branch
+protection. There is no workflow-level path filter, so `checks` always reports. A newer push to a
+pull request cancels its older run, pushes to `main` get their own scoped run, and a full run can be
+started by hand. The shared setup lives in `.github/actions/setup`.
 
 ## Privacy
 

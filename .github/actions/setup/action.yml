@@ -1,0 +1,50 @@
+name: Set up the workspace
+description: Node from .nvmrc, pnpm from the packageManager field, the pnpm store cache and a frozen install.
+
+inputs:
+  install:
+    description: Set to "false" to skip the cache and the install (for jobs that only read the repository).
+    default: 'true'
+
+runs:
+  using: composite
+  steps:
+    - name: Print runner resources
+      shell: bash
+      run: |
+        echo "CPUs: $(nproc)"
+        grep MemTotal /proc/meminfo
+
+    - uses: pnpm/action-setup@v4
+
+    - uses: actions/setup-node@v4
+      with:
+        node-version-file: .nvmrc
+
+    - name: Find the pnpm store
+      if: inputs.install == 'true'
+      id: store
+      shell: bash
+      run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+
+    # Restored on every run. Saved only on main (see the save step below).
+    - name: Restore the pnpm store
+      if: inputs.install == 'true'
+      id: cache
+      uses: actions/cache/restore@v4
+      with:
+        path: ${{ steps.store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+        restore-keys: pnpm-store-${{ runner.os }}-
+
+    - name: Install dependencies
+      if: inputs.install == 'true'
+      shell: bash
+      run: pnpm install --frozen-lockfile
+
+    - name: Save the pnpm store
+      if: inputs.install == 'true' && github.ref == 'refs/heads/main' && steps.cache.outputs.cache-hit != 'true'
+      uses: actions/cache/save@v4
+      with:
+        path: ${{ steps.store.outputs.path }}
+        key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
