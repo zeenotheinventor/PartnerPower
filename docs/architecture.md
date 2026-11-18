@@ -441,6 +441,10 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   an in-memory key-value store. `features/welcome/testing/appEnvironment` holds that setup, and any
   test that renders the route tree should use it.
 - Every UI kit component has an accessible role and name.
+- `apps/mobile` tests have a 30 second limit, set once in `jest.config.js`. The first test in a file
+  that renders loads React Native, compiles the Tailwind config, and for route tests loads every
+  screen, and that work is several times slower on a loaded machine or with a cold cache. Do not
+  raise the limit for a single test; fix the slow work instead.
 
 ## Checks and CI
 
