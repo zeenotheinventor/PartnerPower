@@ -1,6 +1,10 @@
 {
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["jest", "node"] },
-  "include": ["tailwind/rawColorGuard.test.ts"],
+  "include": [
+    "tailwind/rawColorGuard.test.ts",
+    "features/welcome/routeCoverage.test.tsx",
+    "nativewind-env.d.ts"
+  ],
   "exclude": []
 }
