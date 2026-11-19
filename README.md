@@ -51,6 +51,25 @@ Installing a newer `.apk` over the old one keeps what the app has stored on the 
 Adding or changing a native module, such as `expo-audio` or `expo-haptics`, needs a new build. A
 development client made before the change does not have the module, so make a new one.
 
+## Publishing an update
+
+Once a phone has a build made with `expo-updates`, JavaScript and content changes reach it without a
+new build. The `preview` build listens to the `preview` channel. From `apps/mobile`:
+
+```
+npx eas-cli update --channel preview --message "What changed"
+```
+
+The app checks at launch and downloads the update in the background. It runs from the next time the
+app is opened from closed, never in the middle of a round, and a short toast says it has updated.
+CI never publishes.
+
+An update only reaches builds with the same `version` in `app.json`, which is the runtime version.
+Anything native needs a new build: adding or changing a native module, or changing `app.json`
+settings that become native config. Raise `version` in the same change so that older builds do not
+receive JavaScript they cannot run. The first build with updates in it has to be installed by hand,
+and every update after that arrives over the air.
+
 iPhone builds need a paid Apple Developer account and are not set up yet.
 
 ## Everyday commands

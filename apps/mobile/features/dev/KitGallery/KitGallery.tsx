@@ -12,6 +12,7 @@ import {
   Screen,
   SegmentedControl,
   TextField,
+  Toast,
   Toggle,
 } from '../../../components/ui';
 
@@ -30,6 +31,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function KitGallery() {
   const router = useRouter();
   const [soundOn, setSoundOn] = useState(true);
+  const [isToastShowing, setIsToastShowing] = useState(false);
   const [name, setName] = useState('');
   const [option, setOption] = useState('b');
   const [categoryOn, setCategoryOn] = useState(true);
@@ -44,144 +46,157 @@ export function KitGallery() {
     );
 
   return (
-    <Screen scroll>
-      <Header
-        title="UI kit"
-        subtitle="Every component in the current theme"
-        backLabel="Go back"
-        onBack={() => router.back()}
-        trailing={
-          <View
-            accessible
-            accessibilityRole="image"
-            accessibilityLabel="Avatar"
-            className="h-48 w-48 rounded-lg border-2 border-border bg-surface"
-          />
-        }
-      />
+    <>
+      <Screen scroll>
+        <Header
+          title="UI kit"
+          subtitle="Every component in the current theme"
+          backLabel="Go back"
+          onBack={() => router.back()}
+          trailing={
+            <View
+              accessible
+              accessibilityRole="image"
+              accessibilityLabel="Avatar"
+              className="h-48 w-48 rounded-lg border-2 border-border bg-surface"
+            />
+          }
+        />
 
-      <Section title="Buttons">
-        <Button label="Primary" onPress={() => {}} />
-        <Button label="Secondary" variant="secondary" onPress={() => {}} />
-        <Button label="Primary, full width" fullWidth onPress={() => {}} />
-        <Button label="Secondary, full width" variant="secondary" fullWidth onPress={() => {}} />
-        <Button label="Primary, disabled" disabled onPress={() => {}} />
-        <Button label="Secondary, disabled" variant="secondary" disabled onPress={() => {}} />
-      </Section>
+        <Section title="Buttons">
+          <Button label="Primary" onPress={() => {}} />
+          <Button label="Secondary" variant="secondary" onPress={() => {}} />
+          <Button label="Primary, full width" fullWidth onPress={() => {}} />
+          <Button label="Secondary, full width" variant="secondary" fullWidth onPress={() => {}} />
+          <Button label="Primary, disabled" disabled onPress={() => {}} />
+          <Button label="Secondary, disabled" variant="secondary" disabled onPress={() => {}} />
+        </Section>
 
-      <Section title="Cards">
-        <Card>
-          <Text className="type-heading text-foreground">Plain card</Text>
-        </Card>
-        <Card label="Pressable card" onPress={() => {}}>
-          <Text className="type-heading text-foreground">Pressable card</Text>
-        </Card>
-        <Card label="Disabled card" category="c2" disabled onPress={() => {}}>
-          <Text className="type-heading text-foreground">Disabled card</Text>
-        </Card>
-        <Card accent>
-          <Chip label="Accent chip" accent />
-          <Text className="type-heading mt-8 text-foreground">Accent card</Text>
-        </Card>
-        {categoryIds.map((categoryId) => (
-          <Card key={categoryId} category={categoryId}>
-            <Chip label={`Category ${categoryId}`} category={categoryId} />
-            <Text className="type-heading mt-8 text-foreground">Card text goes here</Text>
+        <Section title="Cards">
+          <Card>
+            <Text className="type-heading text-foreground">Plain card</Text>
           </Card>
-        ))}
-      </Section>
-
-      <Section title="Chips">
-        <View className="flex-row flex-wrap gap-8">
-          <Chip label="Neutral" />
-          <Chip label="Neutral, selected" onPress={() => {}} selected />
-          <Chip label="Neutral, pressable" onPress={() => {}} />
-        </View>
-        <View className="flex-row flex-wrap gap-8">
+          <Card label="Pressable card" onPress={() => {}}>
+            <Text className="type-heading text-foreground">Pressable card</Text>
+          </Card>
+          <Card label="Disabled card" category="c2" disabled onPress={() => {}}>
+            <Text className="type-heading text-foreground">Disabled card</Text>
+          </Card>
+          <Card accent>
+            <Chip label="Accent chip" accent />
+            <Text className="type-heading mt-8 text-foreground">Accent card</Text>
+          </Card>
           {categoryIds.map((categoryId) => (
-            <Chip key={categoryId} label={`Filled ${categoryId}`} category={categoryId} />
+            <Card key={categoryId} category={categoryId}>
+              <Chip label={`Category ${categoryId}`} category={categoryId} />
+              <Text className="type-heading mt-8 text-foreground">Card text goes here</Text>
+            </Card>
           ))}
-        </View>
-        <View className="flex-row flex-wrap gap-8">
-          {categoryIds.map((categoryId) => (
-            <Chip
-              key={categoryId}
-              label={`Pick ${categoryId}`}
-              category={categoryId}
-              selected={selectedCategories.includes(categoryId)}
-              onPress={() => toggleCategory(categoryId)}
-            />
-          ))}
-        </View>
-      </Section>
+        </Section>
 
-      <Section title="Toggles">
-        <Toggle label="Switch" value={soundOn} onValueChange={setSoundOn} />
-        <Toggle label="Switch, off" value={false} onValueChange={() => {}} />
-        <Toggle
-          label="Switch, with a description"
-          description="A line that says what the switch does."
-          value={soundOn}
-          onValueChange={setSoundOn}
+        <Section title="Chips">
+          <View className="flex-row flex-wrap gap-8">
+            <Chip label="Neutral" />
+            <Chip label="Neutral, selected" onPress={() => {}} selected />
+            <Chip label="Neutral, pressable" onPress={() => {}} />
+          </View>
+          <View className="flex-row flex-wrap gap-8">
+            {categoryIds.map((categoryId) => (
+              <Chip key={categoryId} label={`Filled ${categoryId}`} category={categoryId} />
+            ))}
+          </View>
+          <View className="flex-row flex-wrap gap-8">
+            {categoryIds.map((categoryId) => (
+              <Chip
+                key={categoryId}
+                label={`Pick ${categoryId}`}
+                category={categoryId}
+                selected={selectedCategories.includes(categoryId)}
+                onPress={() => toggleCategory(categoryId)}
+              />
+            ))}
+          </View>
+        </Section>
+
+        <Section title="Toggles">
+          <Toggle label="Switch" value={soundOn} onValueChange={setSoundOn} />
+          <Toggle label="Switch, off" value={false} onValueChange={() => {}} />
+          <Toggle
+            label="Switch, with a description"
+            description="A line that says what the switch does."
+            value={soundOn}
+            onValueChange={setSoundOn}
+          />
+          <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
+        </Section>
+
+        <Section title="Segmented control">
+          <SegmentedControl
+            label="Segmented control"
+            options={[
+              { value: 'a', label: 'Option A' },
+              { value: 'b', label: 'Option B' },
+              { value: 'c', label: 'Option C' },
+            ]}
+            value={option}
+            onValueChange={setOption}
+          />
+        </Section>
+
+        <Section title="Category toggles">
+          <View className="flex-row flex-wrap gap-8">
+            <View className="w-[48%]">
+              <CategoryToggle
+                label="Category on"
+                category="c1"
+                value={categoryOn}
+                onValueChange={setCategoryOn}
+              />
+            </View>
+            <View className="w-[48%]">
+              <CategoryToggle
+                label="Category off"
+                category="c2"
+                value={categoryOff}
+                onValueChange={setCategoryOff}
+              />
+            </View>
+            <View className="w-[48%]">
+              <CategoryToggle
+                label="Category locked"
+                category="c3"
+                value
+                locked
+                onValueChange={() => {}}
+              />
+            </View>
+            <View className="w-[48%]">
+              <CategoryToggle label="Category four" category="c4" value onValueChange={() => {}} />
+            </View>
+          </View>
+        </Section>
+
+        <Section title="Text field">
+          <TextField
+            label="Text field"
+            value={name}
+            onChangeText={setName}
+            placeholder="Type here"
+            maxLength={12}
+          />
+        </Section>
+
+        <Section title="Toast">
+          <Button label="Show toast" variant="secondary" onPress={() => setIsToastShowing(true)} />
+        </Section>
+      </Screen>
+      {isToastShowing ? (
+        <Toast
+          message="Toast message"
+          dismissHint="Tap to dismiss"
+          onDismiss={() => setIsToastShowing(false)}
         />
-        <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
-      </Section>
-
-      <Section title="Segmented control">
-        <SegmentedControl
-          label="Segmented control"
-          options={[
-            { value: 'a', label: 'Option A' },
-            { value: 'b', label: 'Option B' },
-            { value: 'c', label: 'Option C' },
-          ]}
-          value={option}
-          onValueChange={setOption}
-        />
-      </Section>
-
-      <Section title="Category toggles">
-        <View className="flex-row flex-wrap gap-8">
-          <View className="w-[48%]">
-            <CategoryToggle
-              label="Category on"
-              category="c1"
-              value={categoryOn}
-              onValueChange={setCategoryOn}
-            />
-          </View>
-          <View className="w-[48%]">
-            <CategoryToggle
-              label="Category off"
-              category="c2"
-              value={categoryOff}
-              onValueChange={setCategoryOff}
-            />
-          </View>
-          <View className="w-[48%]">
-            <CategoryToggle
-              label="Category locked"
-              category="c3"
-              value
-              locked
-              onValueChange={() => {}}
-            />
-          </View>
-          <View className="w-[48%]">
-            <CategoryToggle label="Category four" category="c4" value onValueChange={() => {}} />
-          </View>
-        </View>
-      </Section>
-
-      <Section title="Text field">
-        <TextField
-          label="Text field"
-          value={name}
-          onChangeText={setName}
-          placeholder="Type here"
-          maxLength={12}
-        />
-      </Section>
-    </Screen>
+      ) : null}
+    </>
   );
 }

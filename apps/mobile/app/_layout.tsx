@@ -6,6 +6,7 @@ import { EntryStack } from '../components/EntryStack';
 import { FontGate } from '../components/FontGate';
 import { FeedbackProvider } from '../feedback/FeedbackProvider';
 import { SettingsProvider } from '../settings';
+import { UpdateToastHost } from '../updates/UpdateToastHost';
 
 export default function RootLayout() {
   return (
@@ -14,6 +15,7 @@ export default function RootLayout() {
         <FeedbackProvider>
           <StatusBar style="auto" />
           <EntryStack />
+          <UpdateToastHost />
         </FeedbackProvider>
       </SettingsProvider>
     </FontGate>
