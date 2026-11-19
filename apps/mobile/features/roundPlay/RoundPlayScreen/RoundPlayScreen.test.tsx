@@ -14,8 +14,9 @@ import { colorThemes } from '@getfreak/tokens';
 import { act, fireEvent, screen, within } from 'nativewind/test';
 import { StyleSheet, View } from 'react-native';
 import { useReducedMotion } from 'react-native-reanimated';
-import { useEffect, type ReactNode } from 'react';
+import { Children, isValidElement, useEffect, type ReactNode } from 'react';
 
+import { Button } from '../../../components/ui';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { effectDuration } from '../pressEffect/motion';
 import { RoundProvider, useRound } from '../../round/RoundProvider';
@@ -35,6 +36,19 @@ jest.mock('expo-router/react-navigation', () => ({
     mockOnRemovePrevented = callback;
   },
 }));
+
+// Counts how many times a burst is mounted, which is how a test sees a layer being replaced.
+const mockStarburstMounted = jest.fn();
+jest.mock('../pressEffect/Starburst', () => {
+  const { useEffect } = jest.requireActual('react');
+  const { Starburst: ActualStarburst } = jest.requireActual('../pressEffect/Starburst');
+  return {
+    Starburst: (props: { category: string }) => {
+      useEffect(() => mockStarburstMounted(), []);
+      return ActualStarburst(props);
+    },
+  };
+});
 
 const summaryRoute = '/games/dares/summary';
 const setupRoute = '/games/dares/setup';
@@ -975,11 +989,19 @@ describe('RoundPlayScreen', () => {
     const hostBounds = { x: 0, y: 40 };
     const hidden = { includeHiddenElements: true };
 
+    // The answer button sits in a wrapper whose only child is the Button. Any other measured view
+    // is the screen view that holds the effect layer.
     function measureWindowAsDevice() {
-      let measurements = 0;
-      jest.spyOn(View.prototype, 'measureInWindow').mockImplementation((callback) => {
-        measurements += 1;
-        if (measurements % 2 === 1) {
+      jest.spyOn(View.prototype, 'measureInWindow').mockImplementation(function (
+        this: View,
+        callback,
+      ) {
+        const child: unknown = Children.toArray(this.props.children)[0];
+        const isButtonWrapper =
+          Children.count(this.props.children) === 1 &&
+          isValidElement(child) &&
+          child.type === Button;
+        if (isButtonWrapper) {
           callback(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
         } else {
           callback(hostBounds.x, hostBounds.y, 390, 800);
@@ -1118,6 +1140,20 @@ describe('RoundPlayScreen', () => {
       expect(burstCores()).toHaveLength(0);
       expect(splashRings()).toHaveLength(1);
       expect(screen.queryAllByTestId('splash-drop', hidden)).toHaveLength(6);
+    });
+
+    it('should replay the burst on a second press of the same kind', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+      takeThePhone();
+      mockStarburstMounted.mockClear();
+
+      pressDone();
+
+      // A fresh layer mounts the burst again, so its animations start again. A reused layer would
+      // keep the particles of the first press and play nothing.
+      expect(mockStarburstMounted).toHaveBeenCalledTimes(1);
     });
 
     it('should not stack two bursts of the same kind', async () => {

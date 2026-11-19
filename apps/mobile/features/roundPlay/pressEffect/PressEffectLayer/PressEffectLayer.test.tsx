@@ -2,7 +2,8 @@ import { colorThemes } from '@getfreak/tokens';
 import { act, screen } from 'nativewind/test';
 import { StyleSheet } from 'react-native';
 import { isHiddenFromAccessibility } from '@testing-library/react-native';
-import { useReducedMotion } from 'react-native-reanimated';
+import * as Reanimated from 'react-native-reanimated';
+import { ReduceMotion, useReducedMotion } from 'react-native-reanimated';
 
 import { renderThemed } from '../../../../tailwind/renderThemed';
 import { burstMotion, effectDuration, splashMotion } from '../motion';
@@ -153,6 +154,21 @@ describe('PressEffectLayer', () => {
       await renderThemed(<PressEffectLayer effect={passEffect} onFinished={jest.fn()} />);
       expect([...paintedColours()]).toEqual([colorThemes.light.muted.toLowerCase()]);
     });
+
+    // The Reanimated mock ignores this option, so the only way to see it is on the call.
+    it.each([doneEffect, passEffect])(
+      'should ask for the $kind fade to run even when the system setting is on',
+      async (effect) => {
+        const withTiming = jest.spyOn(Reanimated, 'withTiming');
+        await renderThemed(<PressEffectLayer effect={effect} onFinished={jest.fn()} />);
+
+        expect(withTiming).toHaveBeenCalledTimes(2);
+        for (const [, options] of withTiming.mock.calls) {
+          expect(options).toMatchObject({ reduceMotion: ReduceMotion.Never });
+        }
+        withTiming.mockRestore();
+      },
+    );
 
     it('should last 400 ms for Done and 480 ms for Pass', async () => {
       expect(effectDuration.reducedMotionDone).toBe(400);
