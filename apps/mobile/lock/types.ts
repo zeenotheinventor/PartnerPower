@@ -28,8 +28,11 @@ export type SetPinResult = { ok: true } | { ok: false; reason: 'invalidPin' };
 export type CheckPinResult =
   /** The PIN matched. The count of wrong PINs is back to zero. */
   | { status: 'correct' }
-  /** The PIN did not match. The next try may go ahead at once. */
-  | { status: 'wrong' }
+  /**
+   * The PIN did not match. The next try may go ahead at once. `triesLeftBeforeWait` is how many more
+   * wrong PINs in a row are allowed before a wait starts, counting this one.
+   */
+  | { status: 'wrong'; triesLeftBeforeWait: number }
   /**
    * No try is allowed until the wait ends. It is the result of the wrong PIN that started the wait,
    * and of every try made during it. A try made during a wait is not looked at and not counted.
@@ -73,4 +76,10 @@ export type LockService = {
   /** Whether the player turned biometrics on. False until they do. */
   getBiometricsChoice(): Promise<boolean>;
   setBiometricsChoice(isChosen: boolean): Promise<void>;
+  /**
+   * Calls the listener each time the lock is turned on (a PIN is set) or off (the PIN is cleared).
+   * Gives back the function that stops listening. The listener is not told which, so it asks
+   * `isLockOn`.
+   */
+  subscribe(listener: () => void): () => void;
 };

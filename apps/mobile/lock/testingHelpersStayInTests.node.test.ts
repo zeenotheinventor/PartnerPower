@@ -20,9 +20,15 @@ function importsLockTestHelpers(source: string): boolean {
 }
 
 // The helpers hold fakes, `jest` calls and a hash that is not the real one. A file that ships must
-// never reach them, or they would end up in the app. Tests, and the helpers themselves, may.
+// never reach them, or they would end up in the app. Tests, and the helpers themselves, may. So may
+// the other test support folders, named `testing`, such as the one that launches the app for a
+// route test. Only tests import those folders, and a bundle of the release build holds none of them.
 function mayUseHelpers(relativePath: string): boolean {
-  return /\.test\.tsx?$/.test(relativePath) || relativePath.startsWith(helperFolder);
+  return (
+    /\.test\.tsx?$/.test(relativePath) ||
+    relativePath.startsWith(helperFolder) ||
+    /(^|\/)testing\//.test(relativePath)
+  );
 }
 
 describe('the lock test helpers', () => {

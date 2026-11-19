@@ -18,7 +18,11 @@ const confirmLabels: Record<ClearStatus, string> = {
  * it asks again. On success the root remounts and this goes with it, so a success sets no state.
  * A failure keeps the dialog open with an error line and Try again.
  */
-export function ClearEverythingDialog({ clearEverything, onCancel }: ClearEverythingDialogProps) {
+export function ClearEverythingDialog({
+  variant = 'default',
+  clearEverything,
+  onCancel,
+}: ClearEverythingDialogProps) {
   const [status, setStatus] = useState<ClearStatus>('asking');
 
   const clear = async () => {
@@ -32,8 +36,8 @@ export function ClearEverythingDialog({ clearEverything, onCancel }: ClearEveryt
   return (
     <Dialog
       visible
-      title={copy.clear.title}
-      body={copy.clear.body}
+      title={variant === 'forgotPin' ? copy.clear.forgotTitle : copy.clear.title}
+      body={variant === 'forgotPin' ? copy.clear.forgotBody : copy.clear.body}
       confirmLabel={confirmLabels[status]}
       confirmVariant="danger"
       cancelLabel={copy.clear.cancel}

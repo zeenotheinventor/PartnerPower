@@ -47,6 +47,23 @@ describe('ClearEverythingDialog', () => {
       expect(screen.getByText(copy.clear.body)).toBeOnTheScreen();
     });
 
+    it('should ask in the forgot PIN words, with the same lists and buttons, when it is opened from the lock screen', async () => {
+      await renderThemed(
+        <ClearEverythingDialog
+          variant="forgotPin"
+          clearEverything={jest.fn()}
+          onCancel={jest.fn()}
+        />,
+      );
+
+      expect(screen.getByRole('header', { name: copy.clear.forgotTitle })).toBeOnTheScreen();
+      expect(screen.getByText(copy.clear.forgotBody)).toBeOnTheScreen();
+      expect(screen.queryByText(copy.clear.title)).toBeNull();
+      expect(screen.getByText(copy.clear.removed[1] ?? '')).toBeOnTheScreen();
+      expect(confirmButton()).toBeOnTheScreen();
+      expect(cancelButton()).toBeOnTheScreen();
+    });
+
     it('should list what goes and what stays', async () => {
       await renderDialog(jest.fn());
 

@@ -54,6 +54,13 @@ jest.mock('expo-notifications', () => ({
   cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
 }));
 
+// Screen capture is a native module too. A test that checks what the lock asked of it reads these
+// mocks.
+jest.mock('expo-screen-capture', () => ({
+  preventScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+  allowScreenCaptureAsync: jest.fn(() => Promise.resolve()),
+}));
+
 // The real error reporting SDK starts a timer as it loads, which would keep a test file that loads
 // the root layout from exiting, and it would report to the network if it were started. Nothing
 // starts it in a test. This stands in for the calls the app makes, and a test reads what was

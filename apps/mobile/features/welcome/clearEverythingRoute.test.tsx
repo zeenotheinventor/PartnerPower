@@ -1,5 +1,10 @@
 // This import comes first so that its mocks are in place before Expo Router loads.
-import { backend, currentPathname, launchApp } from './testing/appEnvironment';
+import {
+  backend,
+  currentPathname,
+  launchUnlockedApp as launchApp,
+  storedPinHash,
+} from './testing/appEnvironment';
 
 import { copy } from '@getfreak/content';
 import { Slot } from 'expo-router';
@@ -25,6 +30,19 @@ jest.mock('expo-secure-store', () => ({
     return Promise.resolve();
   },
 }));
+
+// The hash is the real SHA-256, so the lock screen can check the PIN that is stored. The native
+// module is not available under Jest.
+jest.mock('expo-crypto', () => {
+  const { sha256Hex } = jest.requireActual<typeof import('../../lock/testing/sha256Hex')>(
+    '../../lock/testing/sha256Hex',
+  );
+  return {
+    CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+    digestStringAsync: (_algorithm: string, text: string) => Promise.resolve(sha256Hex(text)),
+    getRandomBytes: (byteCount: number) => Uint8Array.from({ length: byteCount }, (_, i) => i),
+  };
+});
 
 const clearButtonName = 'Clear for the test';
 
@@ -59,10 +77,7 @@ describe('clear everything in the real root layout', () => {
     await backend.setItem('entryConfirmation', 'true');
     await backend.setItem('installMarker', 'true');
     await backend.setItem('playerNames', JSON.stringify(['Name 1', 'Name 2']));
-    mockSecureItems.set(
-      'lockPinHash',
-      JSON.stringify({ salt: 'a'.repeat(32), hash: 'b'.repeat(64) }),
-    );
+    mockSecureItems.set('lockPinHash', storedPinHash());
     mockSecureItems.set('lockBiometricsChoice', 'true');
   });
 

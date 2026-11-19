@@ -10,6 +10,14 @@ export const pinLength = 4;
 const wrongPinsPerWait = 5;
 const firstWaitMilliseconds = 30_000;
 
+/**
+ * How many more wrong PINs can be tried before the next wait starts. It counts down from five
+ * through each run of five wrong PINs in a row.
+ */
+export function triesLeftBeforeWait(failedCount: number): number {
+  return wrongPinsPerWait - (failedCount % wrongPinsPerWait);
+}
+
 /** No wait is longer than this, however many wrong PINs there have been. */
 export const maximumWaitMilliseconds = 15 * 60_000;
 
