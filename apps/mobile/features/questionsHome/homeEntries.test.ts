@@ -21,10 +21,10 @@ describe('homeEntries', () => {
     ]);
   });
 
-  it('should switch on only Play a round, which opens setup', () => {
+  it('should switch on Play a round, which opens setup, and Secret match, which opens its intro', () => {
     expect(homeEntries.map((entry) => entry.route)).toEqual([
       '/games/questions/setup',
-      null,
+      '/games/questions/match',
       null,
       null,
     ]);

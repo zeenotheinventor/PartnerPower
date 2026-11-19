@@ -605,6 +605,7 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx      a stand-in until the Drink If summary replaces it
+        match.tsx        secret match: holds the session for the route, in memory only
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -630,6 +631,7 @@ apps/mobile/
   features/questionsSetup/ the Drink If round setup screen
   features/questionsPlay/  the Drink If play screen and its turn views
   features/questionsSummary/ the Drink If round summary screen and its player score block
+  features/secretMatch/  the secret match screens: the provider, the intro, the answering view, the handoff, the reveal and the cover
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -965,6 +967,54 @@ category's `penalty`, or the drinks the reveal carries.
 - The screen stores nothing. The discoveries a round makes are in the round state, and the summary
   saves them.
 - The copy is in `copy.questionsPlay`, and the leads are in `copy.questionLeads`.
+
+### Secret match screens
+
+`app/games/questions/match.tsx` renders `SecretMatchProvider` and `SecretMatchScreen` from
+`features/secretMatch`. The Secret match entry of `homeEntries` opens it. The provider holds the
+engine's state in a reducer, in memory only, so leaving the route by any path unmounts it and
+discards the session. It gives screens `view` (from `viewSecretMatch`, undefined before a session
+starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them the state.
+
+- The screen keeps the intro, each pass, the handoff and the reveal as state of one route, not as
+  routes. It renders by the phase of the view. The intro has no session behind it, so it is the
+  screen before `start`.
+- `SecretMatchIntroView` has Theo covering his eyes, three how it works lines (the third says a
+  missing item can mean the partner said no), the privacy promise in an accent `Card`, the two
+  names (shared with the rest of the app through the settings provider), the level and the six
+  topics with the last one locked on. There is no category, format or length choice: the categories
+  are the level's and the engine fixes 12 items. `availableItemCount` below 3 shows the too few
+  items line and disables Start. Start passes the question ids of the `match` discoveries as
+  `avoidIds`, so a new session tries new items first.
+- `SecretMatchAnsweringView` shows the Stop pill, the count and `ProgressBar`, whose pass it is,
+  the item in a static `Card` with its category chip, and Yes, Maybe and No stacked full width.
+  An answer button never shows a chosen state, because choosing moves on at once. After Back, the
+  card shows only the player's own earlier answer as a neutral chip. The back link is not rendered
+  on the first item. The look away line names the other partner. The two names come from the
+  provider (`players`), because the rating view gives only the current player's name, and a name is
+  not private.
+- `SecretMatchHandoffView` has one button and no way back, and it names both partners.
+- `SecretMatchRevealView` lists the matches mild to bold, each in a static `Card` in its category
+  with a strength chip: accent for "You both said yes" and neutral for "Worth talking about".
+  Nothing says who said maybe. With no matches it shows a gentle empty state with no list, link or
+  saved line. The reveal's stage saves the matches once through `useDiscoveries().addDiscoveries`
+  (`useSaveMatches`), and says "Saved to discoveries" when saving is on, or that matches go when
+  they leave when it is off. It says nothing while the save is under way and nothing if it failed.
+  The "dares for you two" card shows only when the Discoveries entry on the home has a route, and
+  opens that screen. Until then it is hidden.
+- Stop, the system back button and the iOS swipe open the kit `Dialog` while a pass or the handoff
+  is showing, through `usePreventRemove`. Confirming sends `stop`, which wipes both passes, and the
+  screen goes back to the home, or replaces itself with it when it was opened by a deep link. The
+  Done button on the reveal does the same, and the system back is not held at the intro or the
+  reveal.
+- While a pass is under way and the app is not in the foreground (`AppState` inactive or
+  background, through `useIsAppHidden`), `PrivacyCover` replaces the answering view, so the item
+  is not in the tree and the app switcher picture shows nothing private. It is JavaScript only, with
+  no native module. iOS takes the picture on inactive, so inactive counts.
+- Privacy is tested by walking whole sessions through the screen. The accessibility tree of every
+  second pass step is the same whatever the first partner rated, no "Your answer" shows on an item
+  not yet rated in the pass, and the only answer ever shown is the player's own after Back.
+- The copy is in `copy.secretMatch`. Nothing here logs.
 
 ### Drink If summary
 
