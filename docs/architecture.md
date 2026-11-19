@@ -677,6 +677,19 @@ player to confirm they are 18 or over, and its wording is in `content`.
 - Decorative parts with no role, such as a depth edge or a toggle's knob, are reached in tests
   through `tailwind/hostViewsInside`, starting from the element that was found by role.
 
+## Brand assets
+
+- The app icon, the Android adaptive icon layers (foreground and monochrome), the splash image and
+  the 512 px Play store icon are made by `apps/mobile/scripts/generateBrandAssets.mjs`. The SVG
+  artwork is written in that script, with every colour read from `@getfreak/tokens`, and
+  `rsvg-convert` (`brew install librsvg`) renders it to PNG. It is a dev-time tool and CI does not
+  run it.
+- The app files go to `apps/mobile/assets/images` and are committed. The Play store icon goes to
+  `apps/mobile/store/play-icon-512.png`. It is uploaded by hand and is not bundled or referenced by
+  `app.json`.
+- The splash image is the mark alone on a transparent background, so one file serves both themes.
+  The splash background colours are in `app.json` (see Styling).
+
 ## Press feedback
 
 `apps/mobile/feedback` gives a press a sound and a haptic in one call. It sits beside `settings` and
@@ -768,8 +781,17 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
   inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
-  a test does the same for the app's CSS files. Named colours such as `red`, and colours in JSON
-  files such as `app.json`, are not checked, so review has to keep those out.
+  a test does the same for the app's CSS files. Named colours such as `red` are not checked, so
+  review has to keep those out.
+- The one exception is `apps/mobile/app.json`. The splash screen background (light and dark) and
+  the Android adaptive icon background are read by native code before any JavaScript runs, so they
+  must be written there as hex values. `apps/mobile/appConfig.test.ts` keeps them equal to the
+  tokens they stand for and fails on any colour in `app.json` that is not a token. Nothing else in
+  that file may hold a colour.
+- The window and navigation backgrounds are themed from the tokens at run time: `ThemedNavigation`,
+  at the root, reads the current theme's background token and gives it to the navigation theme
+  (`background` and `card`), so every stack, nested ones included, inherits it, and to
+  `expo-system-ui` for the native window. A gap between screens never shows the wrong theme.
 - There are two themes, light and dark, and the app follows the device's colour scheme. The Tailwind
   config writes each theme as CSS variables, the light values by default and the dark values under
   `prefers-color-scheme: dark`. A colour class is semantic and reads a variable, so a screen writes
@@ -798,6 +820,11 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   The label and caption styles also carry a little letter spacing.
 - The font files ship in the app bundle, one file per weight, and are loaded in the root layout
   before any route renders. If a font fails to load the app still renders, in the system font.
+- The splash screen stays up while the fonts and the settings load. The root layout holds it with
+  `SplashScreen.preventAutoHideAsync()`, and `SplashReveal`, inside `EntryStack`, hides it the first
+  time the stack has been laid out. A font error still lets the app render, so it still hides.
+  `SplashSafetyNet` hides it after 5 seconds regardless, so a font load or a storage read that
+  hangs never leaves it up. A refused hide is tried once more.
 - Tests in `tokens` check that both themes have the same keys and that the listed pairings meet
   their contrast thresholds: text and muted text on the background and the surface, text on the
   accent, text on each category fill, and each dark category colour on the dark background and
@@ -944,3 +971,4 @@ and pnpm 9.11.0, and the README has the steps.
 | Duplicate ids in the question list         | The engine deals the first question of an id and ignores the rest, so a repeated id cannot be dealt twice.                                                                                                                                                                                                                                        | FRK-35 |
 | Screens read a turn view                   | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
 | Pacing is shared                           | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
+| The app icon is discreet                   | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                          | FRK-19 |
