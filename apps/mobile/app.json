@@ -51,7 +51,6 @@
         "android.permission.WRITE_EXTERNAL_STORAGE",
         "android.permission.SYSTEM_ALERT_WINDOW",
         "android.permission.READ_MEDIA_IMAGES",
-        "android.permission.DETECT_SCREEN_CAPTURE",
         "com.google.android.c2dm.permission.RECEIVE",
         "android.permission.READ_APP_BADGE",
         "com.anddoes.launcher.permission.UPDATE_COUNT",

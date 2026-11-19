@@ -1902,12 +1902,14 @@ files. Agents never run `eas build` or `eas submit`.
 ships), and a privacy manifest declaring the required reason APIs the app and its libraries use.
 On Android: backups off, and `blockedPermissions` removing the permissions the app never uses.
 Those are the three the Expo template adds (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
-`SYSTEM_ALERT_WINDOW`), `READ_MEDIA_IMAGES` and `DETECT_SCREEN_CAPTURE` from `expo-screen-capture`
-(they serve its screenshot listener only), `com.google.android.c2dm.permission.RECEIVE` from the
+`SYSTEM_ALERT_WINDOW`), `READ_MEDIA_IMAGES` from `expo-screen-capture` (it serves the screenshot
+listener below Android 14 only), `com.google.android.c2dm.permission.RECEIVE` from the
 Firebase Messaging library inside `expo-notifications` (push), and the launcher badge permissions
 that the badge library inside `expo-notifications` declares. The reminder and the lock need none of
 them. `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `USE_BIOMETRIC`, `USE_FINGERPRINT`, `VIBRATE`,
-`INTERNET`, `ACCESS_NETWORK_STATE`, `WAKE_LOCK` and `MODIFY_AUDIO_SETTINGS` stay.
+`INTERNET`, `ACCESS_NETWORK_STATE`, `WAKE_LOCK` and `MODIFY_AUDIO_SETTINGS` stay. So does
+`DETECT_SCREEN_CAPTURE` from `expo-screen-capture`: on Android 14 and later the module registers its
+screen capture callback at startup, and blocking the permission crashes the app at launch.
 `appConfig.test.ts` guards both lists. These native changes alter the runtime version
 fingerprint, so the next build is a reinstall and updates made before it do not reach it.
 
