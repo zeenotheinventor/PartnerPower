@@ -1,4 +1,4 @@
-import { init } from '@sentry/react-native';
+import { init, setUser } from '@sentry/react-native';
 
 import { initMonitoring } from './initMonitoring';
 import { scrubBreadcrumb, scrubEvent } from './scrub';
@@ -79,13 +79,41 @@ describe('initMonitoring', () => {
     );
   });
 
-  it('should send no personal data, no sessions, no screenshots and no traces, and scrub everything else', () => {
+  it('should give every phone the same fixed user, so the native side makes no id of its own', () => {
+    initMonitoring(releaseBuild);
+
+    expect(setUser).toHaveBeenCalledTimes(1);
+    expect(setUser).toHaveBeenCalledWith({ id: 'player' });
+  });
+
+  it('should set no user when it does not start', () => {
+    initMonitoring({ ...releaseBuild, dsn: undefined });
+
+    expect(setUser).not.toHaveBeenCalled();
+  });
+
+  it('should answer false and not throw when the SDK fails to start', () => {
+    jest.mocked(init).mockImplementationOnce(() => {
+      throw new Error('SDK failure');
+    });
+
+    expect(initMonitoring(releaseBuild)).toBe(false);
+  });
+
+  it('should turn tracing on nowhere', () => {
+    initMonitoring(releaseBuild);
+
+    const options = jest.mocked(init).mock.calls[0]?.[0] ?? {};
+    expect(options).not.toHaveProperty('tracesSampleRate');
+    expect(options).not.toHaveProperty('tracesSampler');
+  });
+
+  it('should send no personal data, no sessions and no screenshots, and scrub everything else', () => {
     initMonitoring(releaseBuild);
 
     expect(init).toHaveBeenCalledWith(
       expect.objectContaining({
         sendDefaultPii: false,
-        tracesSampleRate: 0,
         enableAutoSessionTracking: false,
         sendClientReports: false,
         attachScreenshot: false,

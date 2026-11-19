@@ -229,6 +229,10 @@ describe('error reporting config', () => {
     ]);
   });
 
+  it('should apply the plugin that turns off the native tap breadcrumbs', () => {
+    expect(appConfig.expo.plugins).toContain('./plugins/withQuietSentryBreadcrumbs');
+  });
+
   // The DSN and the auth token are secrets of the build service. Neither belongs in a committed
   // file, and the repository is public.
   it('should hold no DSN and no auth token in app.json or eas.json', () => {

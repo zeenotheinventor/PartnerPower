@@ -89,7 +89,7 @@ describe('privacyPolicy', () => {
       );
     });
 
-    it('should mention the IP address, the random number on Android and where reports are kept', () => {
+    it('should mention the IP address, the random number and where reports are kept', () => {
       expect(crashText).toMatch(/IP address/);
       expect(crashText).toMatch(/random number/);
       expect(crashText).toMatch(/European Union/);

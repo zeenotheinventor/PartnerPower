@@ -1,5 +1,6 @@
 import { copy } from '@getfreak/content';
 import { fireEvent, render, screen } from '@testing-library/react-native';
+import * as SplashScreen from 'expo-splash-screen';
 import { Text } from 'react-native';
 
 import { CrashBoundary } from './CrashBoundary';
@@ -75,6 +76,37 @@ describe('CrashBoundary', () => {
 
     expect(screen.getByText('All good')).toBeOnTheScreen();
     expect(screen.queryByRole('header', { name: copy.crash.title })).not.toBeOnTheScreen();
+  });
+
+  it('should do what it is given on starting again, and keep the crash screen until that takes it away', () => {
+    shouldThrow = true;
+    const onRestart = jest.fn();
+    const onError = jest.fn();
+    render(
+      <CrashBoundary onError={onError} onRestart={onRestart}>
+        <Fragile />
+      </CrashBoundary>,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: copy.crash.restartLabel }));
+
+    expect(onRestart).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('header', { name: copy.crash.title })).toBeOnTheScreen();
+    // The failed screen was not rendered again, so it was not reported again.
+    expect(onError).toHaveBeenCalledTimes(1);
+  });
+
+  it('should take the splash screen down, so a failure during start-up can be seen', () => {
+    shouldThrow = true;
+    jest.mocked(SplashScreen.hideAsync).mockClear();
+
+    render(
+      <CrashBoundary onError={jest.fn()}>
+        <Fragile />
+      </CrashBoundary>,
+    );
+
+    expect(SplashScreen.hideAsync).toHaveBeenCalled();
   });
 
   it('should show the crash screen again if the screen fails a second time', () => {

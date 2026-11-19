@@ -1,4 +1,10 @@
-import { addBreadcrumb, captureException, close, flush } from '@sentry/react-native';
+import {
+  addBreadcrumb,
+  captureException,
+  close,
+  flush,
+  getGlobalScope,
+} from '@sentry/react-native';
 import type { ReactNativeOptions } from '@sentry/react-native';
 
 import { initMonitoring } from './initMonitoring';
@@ -47,6 +53,34 @@ jest.mock('@sentry/react-native', () => {
 const playerName = 'Alexandra';
 const cardText = 'Kiss your partner for a full minute';
 const typedDare = 'Wear the red one on Friday';
+// A stand-in for the id the native side of a phone makes once for each install.
+const installId = '7c1d3a52-install-id';
+
+// There is no phone here, so the native side is off. On a phone the SDK merges what the native
+// side holds into every event before `beforeSend` runs: a user and a device id made from the
+// install id, native tags and extras, and native breadcrumbs. This adds the same things at the
+// same point, so the test checks that the scrubbing removes them from what is sent.
+function mergeWhatAPhoneWouldAdd() {
+  getGlobalScope().addEventProcessor((event) => ({
+    ...event,
+    user: { id: installId },
+    tags: { ...event.tags, 'native.install': installId },
+    extra: { ...event.extra, native: installId },
+    contexts: {
+      ...event.contexts,
+      device: {
+        id: installId,
+        name: `${playerName}'s Pixel`,
+        boot_time: '2026-11-19T08:00:00Z',
+        model: 'Pixel 9',
+      },
+    },
+    breadcrumbs: [
+      ...(event.breadcrumbs ?? []),
+      { category: 'ui.click', message: cardText, data: { 'view.id': 'done_button' } },
+    ],
+  }));
+}
 
 describe('what the SDK would send', () => {
   beforeAll(() => {
@@ -59,6 +93,7 @@ describe('what the SDK would send', () => {
       updateId: 'update-1',
       channel: 'production',
     });
+    mergeWhatAPhoneWouldAdd();
   });
 
   afterAll(async () => {
@@ -100,11 +135,27 @@ describe('what the SDK would send', () => {
     expect(sent).not.toContain(playerName);
   });
 
+  it('should send nothing the native side of a phone adds that follows one phone', async () => {
+    captureException(new Error('boom'));
+    await flush();
+
+    const sent = mockSentEnvelopes.join('\n');
+    expect(mockSentItemTypes).toEqual(['event']);
+    // The model is the kind of phone, which is kept, so the merge above did run.
+    expect(sent).toContain('Pixel 9');
+    expect(sent).not.toContain(installId);
+    expect(sent).not.toContain('boot_time');
+    expect(sent).not.toContain('ui.click');
+    expect(sent).not.toContain('done_button');
+    [playerName, cardText].forEach((text) => expect(sent).not.toContain(text));
+  });
+
   it('should send the text of a thrown value that is not an error nowhere', async () => {
     captureException({ card: cardText, writtenBy: playerName });
     await flush();
 
     const sent = mockSentEnvelopes.join('\n');
+    expect(mockSentItemTypes).toEqual(['event']);
     [playerName, cardText].forEach((text) => expect(sent).not.toContain(text));
   });
 

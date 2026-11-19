@@ -1,5 +1,6 @@
 import { Stack } from 'expo-router';
 
+import { ScreenCrashBoundary } from '../../monitoring';
 import { useSettings } from '../../settings';
 import { SplashReveal } from '../SplashReveal';
 
@@ -8,7 +9,8 @@ import { SplashReveal } from '../SplashReveal';
  * decide which screens exist. Until the player has confirmed, `welcome` is the only screen, and
  * once they have it is the one screen that is closed. Every other route belongs in the second
  * group, and a test fails if a route file is left out of it. The splash screen stays up until the
- * stack has been laid out.
+ * stack has been laid out. Every screen sits inside a crash boundary, so a screen that fails shows
+ * the crash screen while the navigator stays mounted, and the player can leave it.
  */
 export function EntryStack() {
   const { isLoading, hasConfirmedEntry } = useSettings();
@@ -17,7 +19,10 @@ export function EntryStack() {
 
   return (
     <SplashReveal>
-      <Stack screenOptions={{ headerShown: false }}>
+      <Stack
+        screenOptions={{ headerShown: false }}
+        screenLayout={({ children }) => <ScreenCrashBoundary>{children}</ScreenCrashBoundary>}
+      >
         <Stack.Protected guard={!hasConfirmedEntry}>
           <Stack.Screen name="welcome" />
         </Stack.Protected>

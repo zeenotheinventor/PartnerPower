@@ -57,8 +57,8 @@ export const privacyPolicy: PrivacyPolicy = {
       heading: 'Crash reports',
       paragraphs: [
         'If the app hits an error, it sends a crash report to Sentry, the service we use to find and fix bugs. The report says what kind of error it was, where in our code it happened, the names of the screens you had opened, and technical details such as your phone model and system version.',
-        'A crash report never includes anything you type or play, your player names, your cards or your answers. We remove the wording of every error before it is sent, in case it quotes something from the app.',
-        "Like any request over the internet, a crash report shows Sentry your IP address, and we have set Sentry not to store it. On Android, a report can include a random number made when the app was installed. It does not identify you. Sentry keeps these reports in the European Union, and Sentry's own privacy policy covers what it receives.",
+        'A crash report never includes anything you type or play, your player names, your cards or your answers. The app removes the wording of its own errors before a report is sent, in case it quotes something from the app.',
+        "Like any request over the internet, a crash report shows Sentry your IP address, and we have set Sentry not to store it. A report can include a random number made when the app was installed. It does not identify you. Sentry keeps these reports in the European Union, and Sentry's own privacy policy covers what it receives.",
         'If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may also pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
       ],
     },

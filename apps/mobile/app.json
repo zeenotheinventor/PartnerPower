@@ -129,7 +129,8 @@
           "organization": "sojisoft-limited",
           "project": "getfreak-mobile"
         }
-      ]
+      ],
+      "./plugins/withQuietSentryBreadcrumbs"
     ],
     "extra": {
       "eas": {

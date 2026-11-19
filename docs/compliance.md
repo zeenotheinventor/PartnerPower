@@ -365,10 +365,13 @@ sign-in, and not a news, government, financial or health app (FRK-73).
   and update id, and the phone's model and system version. The app removes every error message, the
   user, and anything else not on its allowlist before sending, so no player name, card text or
   typed text is in it. It sends no sessions, no traces and no screenshots. The request reveals the
-  phone's IP address to Sentry, and the organisation is set not to store it. A crash in native
-  code is sent by the native SDK without passing through the app's scrubbing. It holds no app text,
-  and on Android it can hold a random install id made by the SDK. This settles the crash data
-  answer below: crash data is collected whether or not updates are on.
+  phone's IP address to Sentry, and the organisation is set not to store it. A report the native
+  side sends by itself, which is a crash in native code, an Android "app not responding" report or
+  an iOS app hang, does not pass through the app's scrubbing. It holds no text from the app's
+  screens but keeps the native error's own message. On Android it holds an id made once for each
+  install, as the device id, until the scrubbing rule in the runbook removes it in Sentry. So the
+  answers below count a device id as collected. This settles the crash data answer: crash data is
+  collected whether or not updates are on.
 - **App Store privacy label: probably "Crash Data" and "Device or Other ID", not linked to the user
   and not used for tracking.** Apple defines "collect" as "transmitting data off the device in a
   way that allows you and/or your third-party partners to access it", and "Data that is processed

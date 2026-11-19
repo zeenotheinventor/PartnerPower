@@ -62,5 +62,6 @@ jest.mock('@sentry/react-native', () => ({
   init: jest.fn(),
   captureException: jest.fn(),
   addBreadcrumb: jest.fn(),
+  setUser: jest.fn(),
   breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
 }));

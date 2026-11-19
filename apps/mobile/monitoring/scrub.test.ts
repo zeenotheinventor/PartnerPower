@@ -29,6 +29,48 @@ describe('scrubEvent', () => {
     expectNoPlayerText(scrubbed);
   });
 
+  it('should send nothing at the top level of an event that is not on the list', () => {
+    const event = {
+      type: undefined,
+      release: 'abc1234',
+      transaction: `/decks/${typedDare}`,
+      fingerprint: [playerName],
+      modules: { deck: cardText },
+    } satisfies ErrorEvent;
+
+    expect(scrubEvent(event)).toEqual({ type: undefined, release: 'abc1234' });
+  });
+
+  it('should remove everything that follows one phone from the device context', () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      contexts: {
+        device: {
+          id: 'install-id-1',
+          name: `${playerName}'s Pixel`,
+          boot_time: '2026-11-19T08:00:00Z',
+          timezone: 'Europe/London',
+          locale: 'en_GB',
+          model: 'Pixel 9',
+          manufacturer: 'Google',
+        },
+        app: { app_version: '1.0.0', device_app_hash: 'hash-1', app_start_time: '2026-11-19' },
+        culture: { locale: 'en_GB', timezone: 'Europe/London' },
+        ota_updates: { channel: 'preview', emergency_launch_reason: `Failed on ${cardText}` },
+      },
+    };
+
+    const scrubbed = scrubEvent(event);
+
+    expect(scrubbed.contexts).toEqual({
+      device: { model: 'Pixel 9', manufacturer: 'Google' },
+      app: { app_version: '1.0.0' },
+      ota_updates: { channel: 'preview' },
+    });
+    expect(JSON.stringify(scrubbed)).not.toContain('install-id-1');
+    expectNoPlayerText(scrubbed);
+  });
+
   it('should remove the event message, the log entry and the extra data', () => {
     const event: ErrorEvent = {
       type: undefined,
@@ -107,8 +149,13 @@ describe('scrubEvent', () => {
     expectNoPlayerText(scrubbed);
   });
 
-  it('should leave an event with none of these parts as it is', () => {
-    const event: ErrorEvent = { type: undefined, release: 'abc123', dist: 'update-1' };
+  it('should keep the release, the dist and the environment', () => {
+    const event: ErrorEvent = {
+      type: undefined,
+      release: 'abc123',
+      dist: 'update-1',
+      environment: 'preview',
+    };
 
     expect(scrubEvent(event)).toEqual(event);
   });
@@ -150,6 +197,15 @@ describe('scrubBreadcrumb', () => {
     };
 
     expect(scrubBreadcrumb(breadcrumb)).toEqual({ category: 'navigation', data: {} });
+  });
+
+  it('should send nothing on a breadcrumb that is not on the list', () => {
+    const breadcrumb: Breadcrumb = Object.assign(
+      { category: 'navigation', timestamp: 1 },
+      { event_id: playerName, origin: cardText },
+    );
+
+    expect(scrubBreadcrumb(breadcrumb)).toEqual({ category: 'navigation', timestamp: 1 });
   });
 
   it('should keep a listed breadcrumb that has no data', () => {

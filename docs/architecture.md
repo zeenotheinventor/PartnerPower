@@ -1354,26 +1354,41 @@ live.
 - A report is tagged so it can be traced. The release is the commit the JavaScript was built from
   (`EXPO_PUBLIC_COMMIT_SHA`), or the runtime version when the build was given no commit. The dist is
   the id of the running update. The environment is the update channel.
-- `scrubEvent` and `scrubBreadcrumb` are the SDK's `beforeSend` and `beforeBreadcrumb`. Both are
-  allowlists. A report keeps the error type and the stack. It loses every message, the user, the
-  request, extra data, any tag the app did not set and any context the phone did not supply.
+- `scrubEvent` and `scrubBreadcrumb` are the SDK's `beforeSend` and `beforeBreadcrumb`. Every level
+  is an allowlist: the event, each context, the tags and each breadcrumb. A report keeps the error
+  type and the stack. It loses every message, the user, the request, extra data and any tag the app
+  did not set. On a phone the SDK merges in what the native side holds, which includes an id made
+  once for each install, as the user and as the device id. The device context keeps only what
+  describes the kind of phone, such as the model, so that id is not sent.
 - Breadcrumbs are a trail of route names and the app going to the background or coming back.
   `RouteTrail` records the route from Expo Router's segments, so a dynamic part stays as its
   placeholder, such as `[deckId]`, and no id or typed value is recorded. Tap and console breadcrumbs
   are dropped, because both are worded from what is on screen.
 - Sessions, client reports, traces, screenshots, the view hierarchy and session replay are all off.
 - `app/dev/test-error` throws `TestReportError` on purpose in a build that listens to the preview
-  or the development channel, so the owner can check that a report arrives. A store build is sent
-  to the first screen.
+  channel, so the owner can check that a report arrives. A store build is sent to the first
+  screen, and so is a development build, which never reports.
 - Each build profile in `eas.json` names its environment, so the DSN reaches only the builds whose
   environment has it.
-- `CrashBoundary` wraps everything below the fonts in the root layout. When a screen throws while
-  rendering, it reports the error and shows the crash screen. "Start again" mounts everything below
-  it afresh, which lands on the first screen. What the player saved is untouched.
-- A crash in native code is reported by the native SDK and does not pass through `scrubEvent`. It
-  carries no app text, since the app's text lives in JavaScript. On Android it can carry a random
-  install id that the SDK makes. The organisation's server-side scrubbing in Sentry covers these
-  reports, and the runbook lists the settings.
+- Every screen of the root navigator sits inside a `ScreenCrashBoundary`, through the navigator's
+  `screenLayout`. When a screen throws while rendering, it reports the error and shows the crash
+  screen, and the navigator stays mounted. "Start again" leaves the failed screen for the first
+  one, also when the failed screen is the one the app was opened at. On the first screen or the
+  welcome screen there is nowhere better to go, so it tries that screen again. What the player
+  saved is untouched.
+- A second `CrashBoundary` wraps everything below the fonts in the root layout, for a failure
+  outside any screen, such as in a provider. Starting again there mounts everything below afresh.
+- The crash screen takes the splash screen down, so a failure during start-up can be seen.
+- Reports the native side sends by itself do not pass through `scrubEvent`. These are a crash in
+  native code, an Android "app not responding" report and an iOS app hang. They hold no text from
+  the app's screens, since that lives in JavaScript, but they keep the native error's own message.
+  Three things limit what they hold:
+  - `initMonitoring` sets the same fixed user, `player`, on every phone. With no user set, the
+    native SDKs on both platforms fill in the install id, and with one set they do not.
+  - `plugins/withQuietSentryBreadcrumbs` turns off the native tap breadcrumbs on Android, which
+    hold the class and id of the view pressed.
+  - On Android a native report still holds the install id as the device id, and the app cannot
+    remove it. The runbook gives the scrubbing rule to add in Sentry that removes it on arrival.
 - Source maps are uploaded by the Sentry build step in a `production` build, which needs
   `SENTRY_AUTH_TOKEN` in the build service. The `development` and `preview` profiles set
   `SENTRY_DISABLE_AUTO_UPLOAD`, so they build without the token. For an update, the README gives the

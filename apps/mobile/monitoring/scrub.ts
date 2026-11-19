@@ -5,10 +5,31 @@ import type { Breadcrumb, ErrorEvent } from '@sentry/react-native';
  * something a player wrote, so no message text is sent at all. A report keeps the error type and
  * the stack, which is enough to find the line that threw.
  *
- * Everything here is an allowlist: what is not named is not sent.
+ * Every level here is an allowlist: the event, each context, the tags, and each breadcrumb. What is
+ * not named is not sent. That matters because the SDK merges in whatever the native side of the
+ * phone holds, such as an install id on the device and a user made from the same id.
  */
 
-// The only breadcrumbs sent. Both are built by code of ours or by the SDK from fixed words: the
+// The parts of an event that are sent. There is no `message`, `logentry`, `extra`, `user`,
+// `request` or `server_name` here, so none of those leave.
+const eventKeysSent = [
+  'event_id',
+  'timestamp',
+  'platform',
+  'level',
+  'type',
+  'release',
+  'dist',
+  'environment',
+  'sdk',
+  'debug_meta',
+  'exception',
+  'contexts',
+  'tags',
+  'breadcrumbs',
+] as const satisfies readonly (keyof ErrorEvent)[];
+
+// The only breadcrumbs sent, and the data each may carry. Both are built from fixed words: the
 // route the player moved to, as folder names with no parameter values, and the app coming forward
 // or going away. A tap breadcrumb is worded from the label of what was pressed, and a console
 // breadcrumb from whatever was logged, so neither is listed.
@@ -17,20 +38,49 @@ const breadcrumbDataKeysSent: Record<string, readonly string[]> = {
   'app.lifecycle': ['state'],
 };
 
-// The contexts the SDK builds from the phone and the running update, never from what a player did.
-const contextKeysSent = [
-  'trace',
-  'os',
-  'device',
-  'app',
-  'culture',
-  'runtime',
-  'ota_updates',
-  'react_native_context',
-];
+const breadcrumbKeysSent = [
+  'category',
+  'type',
+  'level',
+  'timestamp',
+] as const satisfies readonly (keyof Breadcrumb)[];
+
+// The contexts that are sent, and the keys of each. They describe the kind of phone and the running
+// update. The device has no `id`, `name`, `boot_time`, `timezone` or `locale`, each of which
+// follows one phone or one person. An update's emergency launch reason is free text, so it is left
+// out too.
+const contextKeysSent: Record<string, readonly string[]> = {
+  os: ['name', 'version', 'build', 'kernel_version', 'rooted'],
+  device: ['family', 'model', 'model_id', 'manufacturer', 'brand', 'arch', 'simulator'],
+  app: ['app_version', 'app_build', 'app_identifier', 'in_foreground'],
+  runtime: ['name', 'version'],
+  ota_updates: [
+    'channel',
+    'runtime_version',
+    'update_id',
+    'is_enabled',
+    'is_embedded_launch',
+    'is_emergency_launch',
+  ],
+  react_native_context: [
+    'js_engine',
+    'hermes_version',
+    'react_native_version',
+    'expo_sdk_version',
+    'turbo_module',
+    'fabric',
+  ],
+  trace: ['trace_id', 'span_id', 'parent_span_id'],
+};
 
 // The tags this app sets itself. See initMonitoring.
 const tagKeysSent = ['runtimeVersion'];
+
+function pick<Source extends object>(source: Source, keys: readonly string[]): Partial<Source> {
+  return Object.fromEntries(
+    Object.entries(source).filter(([key, value]) => keys.includes(key) && value !== undefined),
+  ) as Partial<Source>;
+}
 
 export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
   const { category, data } = breadcrumb;
@@ -38,8 +88,7 @@ export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
   if (dataKeysSent === undefined) return null;
 
   // A message is worded from what happened on screen, so none is sent.
-  const scrubbed: Breadcrumb = { ...breadcrumb };
-  delete scrubbed.message;
+  const scrubbed: Breadcrumb = pick(breadcrumb, breadcrumbKeysSent);
   if (data === undefined) return scrubbed;
 
   scrubbed.data = Object.fromEntries(
@@ -54,35 +103,21 @@ export function scrubBreadcrumb(breadcrumb: Breadcrumb): Breadcrumb | null {
 type Contexts = NonNullable<ErrorEvent['contexts']>;
 
 function scrubContexts(contexts: Contexts): Contexts {
-  const sent: Contexts = Object.fromEntries(
-    Object.entries(contexts).filter(([key]) => contextKeysSent.includes(key)),
+  return Object.fromEntries(
+    Object.entries(contextKeysSent).flatMap(([name, keys]) => {
+      const context = contexts[name];
+      return context === undefined ? [] : [[name, pick(context, keys)]];
+    }),
   );
-
-  if (sent.device !== undefined) {
-    // The name the owner gave the phone, which is often their own name.
-    const device = { ...sent.device };
-    delete device.name;
-    sent.device = device;
-  }
-  return sent;
 }
 
 export function scrubEvent(event: ErrorEvent): ErrorEvent {
-  const scrubbed: ErrorEvent = { ...event };
-
-  delete scrubbed.message;
-  delete scrubbed.logentry;
-  // Where the SDK puts a thrown value that is not an Error, serialised in full.
-  delete scrubbed.extra;
-  // There are no accounts, and nothing may follow a person or a phone.
-  delete scrubbed.user;
-  delete scrubbed.request;
-  delete scrubbed.server_name;
+  const scrubbed: ErrorEvent = { ...pick(event, eventKeysSent), type: undefined };
 
   if (event.exception?.values !== undefined) {
     scrubbed.exception = {
-      ...event.exception,
       values: event.exception.values.map((exception) => {
+        // The value is the error's message.
         const withoutMessage = { ...exception };
         delete withoutMessage.value;
         return withoutMessage;
@@ -90,15 +125,8 @@ export function scrubEvent(event: ErrorEvent): ErrorEvent {
     };
   }
 
-  if (event.tags !== undefined) {
-    scrubbed.tags = Object.fromEntries(
-      Object.entries(event.tags).filter(([key]) => tagKeysSent.includes(key)),
-    );
-  }
-
-  if (event.contexts !== undefined) {
-    scrubbed.contexts = scrubContexts(event.contexts);
-  }
+  if (event.tags !== undefined) scrubbed.tags = pick(event.tags, tagKeysSent);
+  if (event.contexts !== undefined) scrubbed.contexts = scrubContexts(event.contexts);
 
   if (event.breadcrumbs !== undefined) {
     scrubbed.breadcrumbs = event.breadcrumbs.flatMap(

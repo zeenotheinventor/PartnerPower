@@ -7,7 +7,8 @@ import {
 
 import { copy } from '@getfreak/content';
 import { addBreadcrumb, captureException } from '@sentry/react-native';
-import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { router } from 'expo-router';
+import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
 // The first screen is replaced by one that fails on demand.
 let mockShouldFail = false;
@@ -23,6 +24,25 @@ jest.mock('../features/hub/HubScreen', () => {
   };
 });
 
+// The settings screen is replaced by one that fails on demand too. It stands for any screen that
+// is not the first one.
+let mockShouldSettingsFail = false;
+const mockSettingsFailure = new Error('settings screen failed');
+jest.mock('../features/settings/SettingsScreen', () => {
+  const { Text } = jest.requireActual<typeof import('react-native')>('react-native');
+  return {
+    SettingsScreen: () => {
+      if (mockShouldSettingsFail) throw mockSettingsFailure;
+      return <Text accessibilityRole="header">Settings stand-in</Text>;
+    },
+  };
+});
+
+async function confirmEntry() {
+  fireEvent.press(screen.getByRole('button', { name: copy.welcome.confirmLabel }));
+  await waitFor(() => expect(currentPathname()).toBe('/'));
+}
+
 function recordedRoutes() {
   return jest
     .mocked(addBreadcrumb)
@@ -33,6 +53,7 @@ describe('a screen that fails', () => {
   beforeEach(async () => {
     await backend.clear();
     mockShouldFail = false;
+    mockShouldSettingsFail = false;
     jest.clearAllMocks();
     // React logs a caught render error to the console. That is expected here.
     jest.spyOn(console, 'error').mockImplementation(() => {});
@@ -61,6 +82,45 @@ describe('a screen that fails', () => {
     expect(currentPathname()).toBe('/');
   });
 
+  it('should leave a failed screen for the first screen, and report the error once', async () => {
+    await launch('/');
+    await confirmEntry();
+    mockShouldSettingsFail = true;
+
+    act(() => router.push('/settings'));
+
+    await waitFor(() =>
+      expect(screen.getByRole('header', { name: copy.crash.title })).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByRole('button', { name: copy.crash.restartLabel }));
+
+    await waitFor(() => expect(currentPathname()).toBe('/'));
+    expect(screen.getByRole('header', { name: copy.appName })).toBeOnTheScreen();
+    expect(screen.queryByRole('header', { name: copy.crash.title })).not.toBeOnTheScreen();
+    expect(captureException).toHaveBeenCalledTimes(1);
+    expect(captureException).toHaveBeenCalledWith(mockSettingsFailure);
+  });
+
+  it('should leave a failed screen that the app was opened at, and not fail again', async () => {
+    const firstLaunch = await launch('/');
+    await confirmEntry();
+    firstLaunch.unmount();
+    jest.clearAllMocks();
+    mockShouldSettingsFail = true;
+
+    await launch('/settings');
+
+    await waitFor(() =>
+      expect(screen.getByRole('header', { name: copy.crash.title })).toBeOnTheScreen(),
+    );
+    fireEvent.press(screen.getByRole('button', { name: copy.crash.restartLabel }));
+
+    await waitFor(() => expect(currentPathname()).toBe('/'));
+    expect(screen.getByRole('header', { name: copy.appName })).toBeOnTheScreen();
+    expect(screen.queryByRole('header', { name: copy.crash.title })).not.toBeOnTheScreen();
+    expect(captureException).toHaveBeenCalledTimes(1);
+  });
+
   it('should report nothing when no screen fails', async () => {
     await launch('/');
 
@@ -75,6 +135,7 @@ describe('the route trail', () => {
   beforeEach(async () => {
     await backend.clear();
     mockShouldFail = false;
+    mockShouldSettingsFail = false;
     jest.clearAllMocks();
   });
 

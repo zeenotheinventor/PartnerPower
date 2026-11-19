@@ -6,9 +6,9 @@ import type { CrashBoundaryProps } from './types';
 type CrashBoundaryState = { hasCrashed: boolean };
 
 /**
- * Catches an error thrown while a screen below it renders. It reports the error and shows the crash
- * screen in place of a blank one. Starting again mounts everything below afresh, which takes the
- * player back to the first screen.
+ * Catches an error thrown while something below it renders. It reports the error and shows the
+ * crash screen in place of a blank one. Starting again mounts everything below afresh, unless
+ * `onRestart` says to do something else, such as leaving the failed screen.
  */
 export class CrashBoundary extends Component<CrashBoundaryProps, CrashBoundaryState> {
   override state: CrashBoundaryState = { hasCrashed: false };
@@ -22,6 +22,10 @@ export class CrashBoundary extends Component<CrashBoundaryProps, CrashBoundarySt
   }
 
   restart = () => {
+    if (this.props.onRestart !== undefined) {
+      this.props.onRestart();
+      return;
+    }
     this.setState({ hasCrashed: false });
   };
 

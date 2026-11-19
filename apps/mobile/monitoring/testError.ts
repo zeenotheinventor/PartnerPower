@@ -8,12 +8,11 @@ export class TestReportError extends Error {
   }
 }
 
-const channelsThatAllowATestError: readonly unknown[] = ['preview', 'development'];
-
 /**
- * Whether this build may throw a test error. Only builds that listen to the preview or the
- * development channel may. A store build, and a launch with no channel, may not.
+ * Whether this build may throw a test error. Only a build that listens to the preview channel may.
+ * A store build may not, and neither may a development build, which never reports, or a launch
+ * with no channel.
  */
 export function isTestErrorAllowed(channel: unknown = Updates.channel): boolean {
-  return channelsThatAllowATestError.includes(channel);
+  return channel === 'preview';
 }

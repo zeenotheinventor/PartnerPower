@@ -3,11 +3,11 @@ import { isTestErrorAllowed, TestReportError } from './testError';
 jest.mock('expo-updates', () => ({ channel: null }));
 
 describe('isTestErrorAllowed', () => {
-  it.each(['preview', 'development'])('should allow a test error on the %s channel', (channel) => {
-    expect(isTestErrorAllowed(channel)).toBe(true);
+  it('should allow a test error on the preview channel', () => {
+    expect(isTestErrorAllowed('preview')).toBe(true);
   });
 
-  it.each(['production', '', null, undefined, 5])(
+  it.each(['production', 'development', '', null, undefined, 5])(
     'should not allow a test error when the channel is %p',
     (channel) => {
       expect(isTestErrorAllowed(channel)).toBe(false);
