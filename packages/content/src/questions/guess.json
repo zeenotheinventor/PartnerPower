@@ -115,7 +115,7 @@
       "options": [
         {
           "id": "a",
-          "text": "Being ignored for a phone"
+          "text": "Being talked over"
         },
         {
           "id": "b",
@@ -293,7 +293,7 @@
       "format": "guess",
       "category": "c1",
       "topic": "t5",
-      "text": "As a teenager, how did you show a crush you liked them?",
+      "text": "How have you shown someone you had a crush on them?",
       "options": [
         {
           "id": "a",
@@ -613,7 +613,7 @@
         },
         {
           "id": "b",
-          "text": "Your partner in just underwear"
+          "text": "Your partner in a robe and nothing else"
         },
         {
           "id": "c",
@@ -709,7 +709,7 @@
       "format": "guess",
       "category": "c2",
       "topic": "t5",
-      "text": "Where did you most often make out when you were younger?",
+      "text": "Where have you most often made out, apart from at home?",
       "options": [
         {
           "id": "a",
@@ -721,7 +721,7 @@
         },
         {
           "id": "c",
-          "text": "At home when nobody was in"
+          "text": "At the cinema"
         },
         {
           "id": "d",
@@ -1281,7 +1281,7 @@
       "format": "guess",
       "category": "c4",
       "topic": "t1",
-      "text": "What is your favourite position for fucking?",
+      "text": "What is your favourite position for sex?",
       "options": [
         {
           "id": "a",
@@ -1385,7 +1385,7 @@
       "format": "guess",
       "category": "c4",
       "topic": "t2",
-      "text": "What do you most like to hear while you fuck?",
+      "text": "What do you most like to hear during sex?",
       "options": [
         {
           "id": "a",
@@ -1427,7 +1427,7 @@
         },
         {
           "id": "d",
-          "text": "Slow deep fucking"
+          "text": "Slow deep sex"
         }
       ],
       "source": "shipped"
@@ -1437,7 +1437,7 @@
       "format": "guess",
       "category": "c4",
       "topic": "t3",
-      "text": "Where would you most like to fuck that you never have?",
+      "text": "Where have you never had sex that you would most like to?",
       "options": [
         {
           "id": "a",
@@ -1541,7 +1541,7 @@
       "format": "guess",
       "category": "c4",
       "topic": "t4",
-      "text": "Which role do you most like when you fuck?",
+      "text": "Which role do you most like during sex?",
       "options": [
         {
           "id": "a",
@@ -1619,7 +1619,7 @@
       "format": "guess",
       "category": "c4",
       "topic": "t6",
-      "text": "What would you most like your partner to do while you fuck?",
+      "text": "What would you most like your partner to do during sex?",
       "options": [
         {
           "id": "a",

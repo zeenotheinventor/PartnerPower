@@ -84,6 +84,25 @@ describe.each(choiceFormats)('%s question library', (format) => {
     expect(offending.map((question) => question.id)).toEqual([]);
   });
 
+  it('should name option ids a, b, c and d in order', () => {
+    const offending = questions.filter(
+      (question) =>
+        optionsOf(question)
+          .map((option) => option.id)
+          .join('') !== 'abcd'.slice(0, optionsOf(question).length),
+    );
+
+    expect(offending.map((question) => question.id)).toEqual([]);
+  });
+
+  it('should keep the strongest swear word out of every text and option', () => {
+    const offending = questions.filter((question) =>
+      [question.text ?? '', ...optionTextsOf(question)].some((value) => /fuck/i.test(value)),
+    );
+
+    expect(offending.map((question) => question.id)).toEqual([]);
+  });
+
   it('should keep dashes and semicolons out of every text and option', () => {
     const offending = questions.filter((question) =>
       [question.text ?? '', ...optionTextsOf(question)].some(
