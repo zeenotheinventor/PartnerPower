@@ -15,3 +15,14 @@ jest.mock('expo-haptics', () => ({
   NotificationFeedbackType: {},
   AndroidHaptics: {},
 }));
+
+// The splash screen and the system UI are native modules too. A test that checks what was asked of
+// them reads these mocks.
+jest.mock('expo-splash-screen', () => ({
+  preventAutoHideAsync: jest.fn(() => Promise.resolve(true)),
+  hideAsync: jest.fn(() => Promise.resolve()),
+}));
+
+jest.mock('expo-system-ui', () => ({
+  setBackgroundColorAsync: jest.fn(() => Promise.resolve()),
+}));
