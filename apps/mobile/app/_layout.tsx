@@ -10,6 +10,7 @@ import { ThemedNavigation } from '../components/ThemedNavigation';
 import { FeedbackProvider } from '../feedback/FeedbackProvider';
 import { PersonalDataProvider } from '../personal';
 import { SettingsProvider } from '../settings';
+import { UpdateToastHost } from '../updates/UpdateToastHost';
 
 // Holds the splash screen from the first moment. SplashReveal hides it once the fonts and the
 // settings are ready and the first screen has been laid out.
@@ -27,6 +28,7 @@ export default function RootLayout() {
             <FeedbackProvider>
               <StatusBar style="auto" />
               <EntryStack />
+              <UpdateToastHost />
             </FeedbackProvider>
           </PersonalDataProvider>
         </SettingsProvider>

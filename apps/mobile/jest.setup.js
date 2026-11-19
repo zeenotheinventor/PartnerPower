@@ -7,6 +7,16 @@ jest.mock('expo-audio', () => ({
   setAudioModeAsync: () => Promise.resolve(),
 }));
 
+// Reanimated needs its native runtime, which Jest does not have. These are the mocks its own Jest
+// guide gives. Under the mock an animation jumps to its end value at once and never runs, so a test
+// checks what is on the screen and not the frames. The mock has no `useReducedMotion`, so this one
+// is a Jest mock that answers false. A test sets it with `jest.mocked(useReducedMotion)`.
+jest.mock('react-native-worklets', () => require('react-native-worklets/src/mock'));
+jest.mock('react-native-reanimated', () => ({
+  ...require('react-native-reanimated/mock'),
+  useReducedMotion: jest.fn(() => false),
+}));
+
 jest.mock('expo-haptics', () => ({
   impactAsync: () => Promise.resolve(),
   notificationAsync: () => Promise.resolve(),
@@ -26,3 +36,7 @@ jest.mock('expo-splash-screen', () => ({
 jest.mock('expo-system-ui', () => ({
   setBackgroundColorAsync: jest.fn(() => Promise.resolve()),
 }));
+
+// There is no update system under Jest. Every test gets an app that launched from its installed
+// build, so no update is announced. A test that needs another launch replaces this with its own mock.
+jest.mock('expo-updates', () => ({ isEmbeddedLaunch: true, updateId: null }));

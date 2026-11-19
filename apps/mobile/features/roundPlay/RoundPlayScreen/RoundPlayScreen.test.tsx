@@ -12,10 +12,13 @@ import {
 } from '@getfreak/core';
 import { colorThemes } from '@getfreak/tokens';
 import { act, fireEvent, screen, within } from 'nativewind/test';
-import { StyleSheet } from 'react-native';
-import { useEffect, type ReactNode } from 'react';
+import { StyleSheet, View } from 'react-native';
+import { useReducedMotion } from 'react-native-reanimated';
+import { Children, isValidElement, useEffect, type ReactNode } from 'react';
 
+import { Button } from '../../../components/ui';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { effectDuration } from '../pressEffect/motion';
 import { RoundProvider, useRound } from '../../round/RoundProvider';
 import { RoundPlayScreen } from './RoundPlayScreen';
 
@@ -33,6 +36,19 @@ jest.mock('expo-router/react-navigation', () => ({
     mockOnRemovePrevented = callback;
   },
 }));
+
+// Counts how many times a burst is mounted, which is how a test sees a layer being replaced.
+const mockStarburstMounted = jest.fn();
+jest.mock('../pressEffect/Starburst', () => {
+  const { useEffect } = jest.requireActual('react');
+  const { Starburst: ActualStarburst } = jest.requireActual('../pressEffect/Starburst');
+  return {
+    Starburst: (props: { category: string }) => {
+      useEffect(() => mockStarburstMounted(), []);
+      return ActualStarburst(props);
+    },
+  };
+});
 
 const summaryRoute = '/games/dares/summary';
 const setupRoute = '/games/dares/setup';
@@ -964,6 +980,241 @@ describe('RoundPlayScreen', () => {
       await renderPlay(twoCategories, deckWithNoCards);
 
       expect(mockPreventsRemove).toBe(false);
+    });
+  });
+  describe('the effect of the answer buttons', () => {
+    // The first measurement of a press is the answer button, and the second is the view that holds
+    // the effect layer, as the screen asks for them. Both answer at once.
+    const buttonBounds = { x: 20, y: 300, width: 160, height: 56 };
+    const hostBounds = { x: 0, y: 40 };
+    const hidden = { includeHiddenElements: true };
+
+    // The answer button sits in a wrapper whose only child is the Button. Any other measured view
+    // is the screen view that holds the effect layer.
+    function measureWindowAsDevice() {
+      jest.spyOn(View.prototype, 'measureInWindow').mockImplementation(function (
+        this: View,
+        callback,
+      ) {
+        const child: unknown = Children.toArray(this.props.children)[0];
+        const isButtonWrapper =
+          Children.count(this.props.children) === 1 &&
+          isValidElement(child) &&
+          child.type === Button;
+        if (isButtonWrapper) {
+          callback(buttonBounds.x, buttonBounds.y, buttonBounds.width, buttonBounds.height);
+        } else {
+          callback(hostBounds.x, hostBounds.y, 390, 800);
+        }
+      });
+    }
+
+    const layers = () => screen.queryAllByTestId('press-effect-layer', hidden);
+    const burstCores = () => screen.queryAllByTestId('burst-core', hidden);
+    const splashRings = () => screen.queryAllByTestId('splash-ring', hidden);
+
+    beforeEach(() => {
+      jest.useFakeTimers();
+      jest.mocked(useReducedMotion).mockReturnValue(false);
+      measureWindowAsDevice();
+    });
+
+    afterEach(() => {
+      jest.restoreAllMocks();
+      jest.useRealTimers();
+    });
+
+    it('should draw nothing before a button is pressed', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      expect(layers()).toHaveLength(0);
+    });
+
+    it('should play the Done burst when Done is pressed', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      pressDone();
+
+      expect(burstCores()).toHaveLength(1);
+      expect(splashRings()).toHaveLength(0);
+    });
+
+    it('should colour the burst by the category of the card in play', async () => {
+      await renderPlay(middleCategoryOnly);
+      takeThePhone();
+
+      pressDone();
+
+      const fills = new Set<string>();
+      for (const node of screen.getByTestId('press-effect-layer', hidden).findAll(() => true)) {
+        const fill = StyleSheet.flatten(node.props.style)?.backgroundColor;
+        if (typeof fill === 'string') fills.add(fill.toLowerCase());
+      }
+      expect([...fills]).toEqual([colorThemes.light.category.c2.toLowerCase()]);
+    });
+
+    it('should play the Pass splash when Pass is pressed', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      pressPass();
+
+      expect(splashRings()).toHaveLength(1);
+      expect(burstCores()).toHaveLength(0);
+    });
+
+    it('should play the Done burst for the together answer as well', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      press(copy.roundPlay.togetherDone);
+
+      expect(burstCores()).toHaveLength(1);
+    });
+
+    it('should play the Pass splash for the together pass as well', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      press(copy.roundPlay.togetherPass);
+
+      expect(splashRings()).toHaveLength(1);
+    });
+
+    it('should give the answer at once, with the effect still playing', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      pressDone();
+
+      expect(roundNow().history).toHaveLength(1);
+      expect(burstCores()).toHaveLength(1);
+      expect(screen.getByRole('button', { name: copy.roundPlay.handoffButton })).toBeOnTheScreen();
+    });
+
+    it('should still give the answer when the button cannot be measured', async () => {
+      jest.spyOn(View.prototype, 'measureInWindow').mockImplementation(() => {});
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      pressDone();
+
+      expect(roundNow().history).toHaveLength(1);
+      expect(layers()).toHaveLength(0);
+    });
+
+    it('should leave the buttons and the effect out of what a screen reader sees', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+
+      pressPass();
+
+      expect(layers()).toHaveLength(1);
+      expect(screen.queryByTestId('press-effect-layer')).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: copy.roundPlay.handoffButton })).toBeOnTheScreen();
+    });
+
+    it('should take the effect away when it ends', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+
+      act(() => jest.advanceTimersByTime(effectDuration.done - 1));
+      expect(layers()).toHaveLength(1);
+      act(() => jest.advanceTimersByTime(1));
+
+      expect(layers()).toHaveLength(0);
+    });
+
+    it('should replace an effect that is still playing and not stack a second one', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+      takeThePhone();
+
+      pressPass();
+
+      expect(layers()).toHaveLength(1);
+      expect(burstCores()).toHaveLength(0);
+      expect(splashRings()).toHaveLength(1);
+      expect(screen.queryAllByTestId('splash-drop', hidden)).toHaveLength(6);
+    });
+
+    it('should replay the burst on a second press of the same kind', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+      takeThePhone();
+      mockStarburstMounted.mockClear();
+
+      pressDone();
+
+      // A fresh layer mounts the burst again, so its animations start again. A reused layer would
+      // keep the particles of the first press and play nothing.
+      expect(mockStarburstMounted).toHaveBeenCalledTimes(1);
+    });
+
+    it('should not stack two bursts of the same kind', async () => {
+      await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+      takeThePhone();
+
+      pressDone();
+
+      expect(layers()).toHaveLength(1);
+      expect(screen.queryAllByTestId('burst-particle', hidden)).toHaveLength(12);
+    });
+
+    it('should leave no timer behind when the screen is left mid effect', async () => {
+      const { unmount } = await renderPlay(twoCategories);
+      takeThePhone();
+      pressDone();
+
+      expect(jest.getTimerCount()).toBeGreaterThan(0);
+      unmount();
+
+      expect(jest.getTimerCount()).toBe(0);
+    });
+
+    describe('with reduce motion on', () => {
+      beforeEach(() => {
+        jest.mocked(useReducedMotion).mockReturnValue(true);
+      });
+
+      it.each([
+        ['Done', pressDone],
+        ['Pass', pressPass],
+      ])('should show a ring and no particles when %s is pressed', async (_name, pressAnswer) => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+
+        pressAnswer();
+
+        expect(screen.getAllByTestId('reduced-motion-ring', hidden)).toHaveLength(1);
+        expect(burstCores()).toHaveLength(0);
+        expect(screen.queryAllByTestId('burst-particle', hidden)).toHaveLength(0);
+        expect(splashRings()).toHaveLength(0);
+        expect(screen.queryAllByTestId('splash-drop', hidden)).toHaveLength(0);
+      });
+
+      it('should draw the ring around the button, from the corner of the screen view', async () => {
+        await renderPlay(twoCategories);
+        takeThePhone();
+
+        pressDone();
+
+        const ring = StyleSheet.flatten(
+          screen.getByTestId('reduced-motion-ring', hidden).props.style,
+        );
+        expect(ring).toMatchObject({ width: 176, height: 72 });
+        expect(ring.transform).toEqual([
+          { translateX: buttonBounds.x - 8 },
+          { translateY: buttonBounds.y - hostBounds.y - 8 },
+        ]);
+      });
     });
   });
 });
