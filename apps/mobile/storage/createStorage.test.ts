@@ -88,6 +88,23 @@ describe('storage', () => {
   });
 });
 
+describe('storage question preferences', () => {
+  const preferencesSchema = z.object({ saveDiscoveries: z.boolean() });
+
+  it('should read back the preferences it wrote, and lose them on clearAll', async () => {
+    const storage = createStorage(createInMemoryBackend());
+    await storage.set('questionPreferences', { saveDiscoveries: false });
+
+    expect(await storage.get('questionPreferences', preferencesSchema)).toEqual({
+      saveDiscoveries: false,
+    });
+
+    await storage.clearAll();
+
+    expect(await storage.get('questionPreferences', preferencesSchema)).toBeUndefined();
+  });
+});
+
 describe('storage clearAll with a personal store', () => {
   it('should clear the personal store as well as the key-value entries', async () => {
     const backend = createInMemoryBackend();

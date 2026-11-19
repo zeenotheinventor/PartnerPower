@@ -1,7 +1,9 @@
 import {
   entryConfirmationSchema,
   hapticsOnSchema,
+  defaultSaveDiscoveries,
   playerNamesSchema,
+  questionPreferencesSchema,
   soundOnSchema,
 } from './settings';
 
@@ -50,5 +52,23 @@ describe.each([
 
   it.each(['true', 1, null, {}])('should reject %p', (value) => {
     expect(schema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('questionPreferencesSchema', () => {
+  it('should accept the switch for saving discoveries', () => {
+    expect(questionPreferencesSchema.parse({ saveDiscoveries: false })).toEqual({
+      saveDiscoveries: false,
+    });
+  });
+
+  it.each([{}, { saveDiscoveries: 'yes' }, null, true])('should reject %p', (value) => {
+    expect(questionPreferencesSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('defaultSaveDiscoveries', () => {
+  it('should be on until the owner decides otherwise (FRK-33)', () => {
+    expect(defaultSaveDiscoveries).toBe(true);
   });
 });

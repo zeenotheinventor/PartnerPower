@@ -22,6 +22,7 @@ jest.mock('../../../storage/personal/nativePersonalStore', () => {
   const createEmpty = () =>
     createInMemoryPersonalRepository({
       getShippedCards: () => [],
+      getShippedQuestions: () => [],
       randomUUID: () => '00000000-0000-4000-8000-000000000001',
       now: () => 1,
     });

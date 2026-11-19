@@ -10,3 +10,9 @@ export type PlayerNames = z.infer<typeof playerNamesSchema>;
 // The press feedback switches. Both are on until the player turns them off.
 export const soundOnSchema = z.boolean();
 export const hapticsOnSchema = z.boolean();
+
+/** Whether Drink If keeps what both partners saw. On until the owner decides otherwise (FRK-33). */
+export const defaultSaveDiscoveries = true;
+
+export const questionPreferencesSchema = z.object({ saveDiscoveries: z.boolean() });
+export type QuestionPreferences = z.infer<typeof questionPreferencesSchema>;
