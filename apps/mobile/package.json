@@ -16,6 +16,7 @@
     "@getfreak/content": "workspace:^",
     "@getfreak/core": "workspace:^",
     "@getfreak/tokens": "workspace:^",
+    "@sentry/react-native": "~7.11.0",
     "expo": "~57.0.33",
     "expo-application": "~57.0.3",
     "expo-asset": "~57.0.21",

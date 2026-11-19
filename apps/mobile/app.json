@@ -121,7 +121,16 @@
             "backgroundColor": "#231340"
           }
         }
-      ]
+      ],
+      [
+        "@sentry/react-native/expo",
+        {
+          "url": "https://de.sentry.io/",
+          "organization": "sojisoft-limited",
+          "project": "getfreak-mobile"
+        }
+      ],
+      "./plugins/withQuietSentryBreadcrumbs"
     ],
     "extra": {
       "eas": {

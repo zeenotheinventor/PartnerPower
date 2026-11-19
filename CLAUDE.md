@@ -35,6 +35,10 @@ asking again.
   or by changing branch protection. If a pull request cannot pass the check, say so and stop.
 - Merge in dependency order, and start the next ticket from `main` once the ticket it depends on
   has merged, so branches do not need stacking.
+- **No preview stage.** Work goes straight to `main` and to the live app. Do not plan, build or
+  document a preview or staging step, and do not ask the owner to test on one. Decided by the owner
+  on 2026-11-19. The build profile and update channel named `preview` are from before this
+  decision. FRK-84 retires them.
 - After a merge, move the ticket to Done. The pull request description still says what to check on
   a real device and which decisions the ticket did not cover.
 
