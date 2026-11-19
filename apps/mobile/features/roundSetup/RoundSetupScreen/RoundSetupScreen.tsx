@@ -97,8 +97,11 @@ export function RoundSetupScreen() {
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  // The route can open setup with Your matches chosen. The effect runs once, when the screen opens,
-  // so a deck chosen afterwards is not overridden by a param that is still on the route.
+  // The route can open setup with Your matches chosen. The effect runs only when the screen opens,
+  // because its dependencies are stable (the param is fixed for this screen and chooseDeck is a
+  // state setter), so a deck chosen afterwards is not overridden by the param left on the route. It
+  // runs on the first commit, while the dares are still being read, and Start waits for those, so
+  // the starter deck is never ready to start in the frame before the choice changes.
   useEffect(() => {
     if (deckParam === matchesDeckParam) chooseDeck('matches');
   }, [deckParam, chooseDeck]);

@@ -1,5 +1,6 @@
 import { copy, fillCopy } from '@getfreak/content';
 import {
+  canOfferMatchesDeck,
   isRoundOver,
   summarise,
   type CustomDeck,
@@ -96,8 +97,10 @@ export function RoundSummaryScreen() {
         customDecks,
         matchedItems,
       });
-      // Setup holds Start when nothing is in play, and so does this. Setup says why.
-      if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
+      // Setup holds Start when nothing is in play, and so does this. Setup says why. Your matches
+      // also needs enough cards to be offered, and setup falls back to the starter deck without.
+      const isTooSmall = deckChoice === 'matches' && !canOfferMatchesDeck(deck.cards);
+      if (isTooSmall || countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
         hasStarted.current = false;
         router.replace(setupRoute);
         return;

@@ -445,6 +445,22 @@ describe('RoundSummaryScreen', () => {
     const storeMatch = (questionId: string) =>
       personalRepository.addDiscoveries([{ kind: 'match', questionId, strength: 'yes' }]);
 
+    // The deck setup deals from has 8 dares: five tagged for the first item, three for the second.
+    beforeEach(() => {
+      mockDecks.splice(0, mockDecks.length, {
+        id: 'matches-source',
+        version: 1,
+        cards: Array.from({ length: 8 }, (_, index) => ({
+          id: `card-${index + 1}`,
+          category: 'c2' as const,
+          kind: 'solo' as const,
+          text: `Card ${index + 1}`,
+          source: 'shipped' as const,
+          tags: [index < 5 ? 'tag-a' : 'tag-b'],
+        })),
+      });
+    });
+
     async function playAgainFromMatches(change: () => Promise<void>) {
       chosenDeck = 'matches';
       await storeMatch('m-1');
@@ -458,14 +474,14 @@ describe('RoundSummaryScreen', () => {
     it('should deal the matches as they are now, not as they were when the round started', async () => {
       await playAgainFromMatches(() => storeMatch('m-2'));
 
-      expect(dealtIds()).toEqual(['card-1', 'card-2', 'card-3', 'card-4']);
+      expect(dealtIds()).toEqual([1, 2, 3, 4, 5, 6, 7, 8].map((number) => `card-${number}`));
       expect(latestRound?.lastStart?.deck.id).toBe('matches');
     });
 
     it('should deal the dares of the matches that are stored, and no others', async () => {
       await playAgainFromMatches(async () => {});
 
-      expect(dealtIds()).toEqual(['card-1', 'card-2']);
+      expect(dealtIds()).toEqual([1, 2, 3, 4, 5].map((number) => `card-${number}`));
     });
 
     it('should keep the settings, take a new seed and open play', async () => {
@@ -481,6 +497,17 @@ describe('RoundSummaryScreen', () => {
       expect(latestRound?.lastStart?.deck).toBe(deck);
       expect(latestRound?.lastStart?.setup.seed).toBe(setup.seed);
       expect(mockReplace).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/setup');
+    });
+
+    it('should send the player to setup when the matches have dropped under the floor of 5', async () => {
+      // Only the second item is matched, which is 3 dares: under the floor, though in play.
+      await playAgainFromMatches(async () => {
+        await personalRepository.clearDiscoveries();
+        await storeMatch('m-2');
+      });
+
+      expect(latestRound?.lastStart?.deck).toBe(deck);
       expect(mockReplace).toHaveBeenCalledWith('/games/dares/setup');
     });
 
