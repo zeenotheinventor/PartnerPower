@@ -5,6 +5,7 @@
     "tailwind/rawColorGuard.test.ts",
     "features/welcome/routeCoverage.test.tsx",
     "feedback/sounds.test.ts",
+    "storage/personal/**/*.node.test.ts",
     "nativewind-env.d.ts",
     "assets.d.ts"
   ],

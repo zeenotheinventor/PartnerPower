@@ -8,6 +8,7 @@ import { FontGate } from '../components/FontGate';
 import { SplashSafetyNet } from '../components/SplashSafetyNet';
 import { ThemedNavigation } from '../components/ThemedNavigation';
 import { FeedbackProvider } from '../feedback/FeedbackProvider';
+import { PersonalDataProvider } from '../personal';
 import { SettingsProvider } from '../settings';
 
 // Holds the splash screen from the first moment. SplashReveal hides it once the fonts and the
@@ -22,10 +23,12 @@ export default function RootLayout() {
       <SplashSafetyNet />
       <FontGate>
         <SettingsProvider>
-          <FeedbackProvider>
-            <StatusBar style="auto" />
-            <EntryStack />
-          </FeedbackProvider>
+          <PersonalDataProvider>
+            <FeedbackProvider>
+              <StatusBar style="auto" />
+              <EntryStack />
+            </FeedbackProvider>
+          </PersonalDataProvider>
         </SettingsProvider>
       </FontGate>
     </ThemedNavigation>

@@ -1,7 +1,7 @@
 import * as SplashScreen from 'expo-splash-screen';
 
-import '../features/welcome/testing/appEnvironment';
-import './_layout';
+import './testing/appEnvironment';
+import '../../app/_layout';
 
 describe('root layout', () => {
   it('should keep the splash screen up from the moment the app starts', () => {

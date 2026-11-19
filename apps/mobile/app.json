@@ -20,8 +20,18 @@
       }
     },
     "plugins": [
-      ["expo-router", { "sitemap": false }],
-      "expo-sqlite",
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
       [
         "expo-audio",
         {
@@ -31,6 +41,12 @@
         }
       ],
       "expo-asset",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
       [
         "expo-splash-screen",
         {
