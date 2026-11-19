@@ -6,7 +6,12 @@ import type { ZodType } from 'zod';
  * existing key, because the string is what is written to the device.
  */
 export type StorageKey =
-  'entryConfirmation' | 'playerNames' | 'soundOn' | 'hapticsOn' | 'lastShownUpdateId';
+  | 'entryConfirmation'
+  | 'playerNames'
+  | 'soundOn'
+  | 'hapticsOn'
+  | 'questionPreferences'
+  | 'lastShownUpdateId';
 
 export type StorageBackend = {
   getItem(key: string): Promise<string | null>;
