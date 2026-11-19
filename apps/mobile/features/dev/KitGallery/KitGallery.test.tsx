@@ -52,6 +52,15 @@ describe('KitGallery', () => {
     ).toBeOnTheScreen();
   });
 
+  it('should show a favourite toggle in both states, and turn the off one on when pressed', async () => {
+    await renderThemed(<KitGallery />);
+    expect(screen.getAllByRole('switch', { name: 'Favourite', checked: true })).toHaveLength(1);
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Favourite', checked: false }));
+
+    expect(screen.getAllByRole('switch', { name: 'Favourite', checked: true })).toHaveLength(2);
+  });
+
   it('should show a locked switch that stays on and says why', async () => {
     await renderThemed(<KitGallery />);
 
@@ -77,6 +86,12 @@ describe('KitGallery', () => {
 
     expect(screen.getByRole('group', { name: /Accent card/ })).toBeOnTheScreen();
     expect(screen.getByRole('text', { name: 'Accent chip' })).toBeOnTheScreen();
+  });
+
+  it('should show a face down card named by its label', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('img', { name: 'Face down card' })).toBeOnTheScreen();
   });
 
   it('should show a toast when asked, and not before', async () => {

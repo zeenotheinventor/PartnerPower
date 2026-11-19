@@ -10,6 +10,7 @@ import { ThemedNavigation } from '../components/ThemedNavigation';
 import { FeedbackProvider } from '../feedback/FeedbackProvider';
 import { PersonalDataProvider } from '../personal';
 import { SettingsProvider } from '../settings';
+import { InstallMarkerGate, RootRemount } from '../storage';
 import { UpdateToastHost } from '../updates/UpdateToastHost';
 
 // Holds the splash screen from the first moment. SplashReveal hides it once the fonts and the
@@ -23,15 +24,19 @@ export default function RootLayout() {
     <ThemedNavigation>
       <SplashSafetyNet />
       <FontGate>
-        <SettingsProvider>
-          <PersonalDataProvider>
-            <FeedbackProvider>
-              <StatusBar style="auto" />
-              <EntryStack />
-              <UpdateToastHost />
-            </FeedbackProvider>
-          </PersonalDataProvider>
-        </SettingsProvider>
+        <InstallMarkerGate>
+          <RootRemount>
+            <SettingsProvider>
+              <PersonalDataProvider>
+                <FeedbackProvider>
+                  <StatusBar style="auto" />
+                  <EntryStack />
+                  <UpdateToastHost />
+                </FeedbackProvider>
+              </PersonalDataProvider>
+            </SettingsProvider>
+          </RootRemount>
+        </InstallMarkerGate>
       </FontGate>
     </ThemedNavigation>
   );

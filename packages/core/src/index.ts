@@ -12,6 +12,20 @@ export {
   soundOnSchema,
 } from './settings';
 export type { EntryConfirmation, PlayerNames, QuestionPreferences } from './settings';
+export {
+  backgroundLockDelayMilliseconds,
+  biometricsChoiceSchema,
+  countsAsBackground,
+  isValidPin,
+  lockAttemptsSchema,
+  maximumWaitMilliseconds,
+  pinHashSchema,
+  pinLength,
+  remainingWaitMilliseconds,
+  shouldLock,
+  waitAfterFailureMilliseconds,
+} from './lock';
+export type { LockAttempts, PinHash } from './lock';
 export { checkCardText, limits, tidyCardText } from './cardText';
 export type { CardTextProblem } from './cardText';
 export {

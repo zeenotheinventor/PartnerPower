@@ -8,6 +8,7 @@ import { Button, Character, Screen, SpeechBubble } from '../../../components/ui'
 import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { useRound } from '../../round/RoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
+import { PlayedCards } from '../PlayedCards';
 import { PlayerScore } from '../PlayerScore';
 
 const hubRoute = '/';
@@ -20,8 +21,8 @@ const celebratedRounds = new WeakSet<RoundState>();
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
 
 /**
- * The end of round summary: each player's dares done and drinks, who was boldest, and ways to go
- * on. Nothing here is stored or logged. The round and the setup it came from live in the round
+ * The end of round summary: each player's dares done and drinks, who was boldest, ways to go on,
+ * and the cards played, which can be kept as favourites. Nothing else here is stored or logged. The round and the setup it came from live in the round
  * context, which leaving the route group discards.
  */
 export function RoundSummaryScreen() {
@@ -124,8 +125,6 @@ export function RoundSummaryScreen() {
         </>
       ) : null}
 
-      <View className="flex-1" />
-
       <View className="gap-12">
         <Button
           label={copy.roundSummary.playAgain}
@@ -147,6 +146,10 @@ export function RoundSummaryScreen() {
           </View>
         </View>
       </View>
+
+      {round && lastStart ? (
+        <PlayedCards history={round.history} deck={lastStart.deck} players={round.players} />
+      ) : null}
     </Screen>
   );
 }

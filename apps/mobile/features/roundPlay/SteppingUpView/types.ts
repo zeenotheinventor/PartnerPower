@@ -12,6 +12,8 @@ export type SteppingUpViewProps = {
   categoryName: string;
   /** What passing costs in the new category. */
   penalty: number;
+  /** A line to confirm what just happened, shown first on the screen. */
+  notice?: string;
   /** What the character says. It is the Freak or Drink line by default. */
   line?: string;
   /** What the new category costs. It says what passing costs by default. */

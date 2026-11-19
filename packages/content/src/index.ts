@@ -10,6 +10,7 @@ export {
   displayNames,
   levelNames,
   questionFormatNames,
+  surpriseNames,
   topicNames,
 } from './displayNames';
 export type { CharacterDisplayName, GameDisplayName } from './displayNames';
