@@ -28,6 +28,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | App            | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
 | Navigation     | Expo Router, file-based                                                                                                      |
 | Press feedback | `expo-audio` for the button sounds and `expo-haptics` for the haptics. Both are native modules.                              |
+| Press effects  | `react-native-reanimated`, with plain views for every shape. No other native module.                                         |
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
 | Storage        | `expo-sqlite`, through its key-value store                                                                                   |
@@ -425,7 +426,7 @@ apps/mobile/
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen
-  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
+  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen and the player score block
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
@@ -628,6 +629,39 @@ player to confirm they are 18 or over, and its wording is in `content`.
   asked of them mocks them itself. Route tests replace the native device with one recording device,
   `feedbackDevice` in `features/welcome/testing/appEnvironment`.
 
+## Press effects
+
+Pressing Done or Pass on the turn screen plays a short effect from the button. They live in
+`features/roundPlay/pressEffect`. They are decoration only.
+
+- **Done** is a starburst of 590 ms: a core star and twelve stars, diamonds and dots fanning up from
+  the top edge of the button, in the colour of the card's category (together cards too). **Pass** is
+  a splash of 700 ms: a muted ring and six drops that jump and fall back under gravity. They differ
+  in shape, direction and colour, so they can be told apart with the sound off.
+- Every shape is a plain view in token classes, because the app has no svg library. A star is two
+  stretched squares, a diamond is a turned square and a dot is a pill.
+- `motion.ts` holds every duration, easing, angle and distance in typed constants, with the per
+  particle tables from the design. `effectDuration` is derived from them.
+- The effect is hosted in `RoundPlayScreen`, not in the button, because answering replaces the
+  buttons at once. `TurnView` measures the pressed button with `measureInWindow` before it calls
+  the answer, and the answer never waits for the measurement. The screen then measures its own
+  root view, shifts the bounds to that view's corner, and draws `PressEffectLayer` over the
+  current view. The effect starts at the centre of the button's top edge.
+- There is one effect at a time. A new press gives the effect a new key, which remounts the layer
+  and drops the particles of the one still playing. The layer takes itself off after the effect's
+  duration with a timer, and clears the timer if it unmounts first, so leaving the screen
+  mid effect leaves nothing behind.
+- The layer has `pointerEvents="none"`, `accessibilityElementsHidden` and
+  `importantForAccessibility="no-hide-descendants"`. The buttons keep their role and name.
+- With the system reduce motion setting on (`useReducedMotion()`), no particle is mounted. An 8 dp
+  ring around the button fades in and out instead, in the category colour for Done and muted for
+  Pass. Its timings carry `reduceMotion: ReduceMotion.Never`, or Reanimated would skip them.
+- The effects are not tied to the Settings switches. Sound and vibration have their own, and the
+  system reduce motion setting is the only control of the animation.
+- Under Jest, `jest.setup.js` mocks `react-native-worklets` and `react-native-reanimated` with their
+  own mocks, so an animation jumps to its end and never runs. Tests check what is mounted, not the
+  frames. `useReducedMotion` is a Jest mock there, set per test.
+
 ## Settings screen
 
 `features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
@@ -673,7 +707,8 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
   a test does the same for the app's CSS files. Named colours such as `red`, and colours in JSON
-  files such as `app.json`, are not checked, so review has to keep those out.
+  files such as `app.json`, are not checked, so review has to keep those out. The one allowed
+  `style` prop is an animated style on a Reanimated `Animated.View`, see Press effects.
 - There are two themes, light and dark, and the app follows the device's colour scheme. The Tailwind
   config writes each theme as CSS variables, the light values by default and the dark values under
   `prefers-color-scheme: dark`. A colour class is semantic and reads a variable, so a screen writes
@@ -839,3 +874,12 @@ and pnpm 9.11.0, and the README has the steps.
 | Error reporting and analytics              | None at launch. No SDK for either in the app. Crash data comes only from what Apple and Google collect from players who opt in.                                                                                                                                                                                                                   | FRK-56 |
 | Encryption export answer                   | `ITSAppUsesNonExemptEncryption` is `NO` until SQLCipher ships, then `YES` as an industry standard algorithm not provided by the operating system. `docs/compliance.md` gives the reasons.                                                                                                                                                         | FRK-56 |
 | Alternative forfeit mode                   | None at launch: no drink cap and no non-alcoholic mode, decided by the owner on 2026-11-18. `docs/compliance.md` lists the options if a store objects to the drink forfeit.                                                                                                                                                                       | FRK-16 |
+| Press effects library                      | `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.                                                                                                                                                                                                                  | FRK-27 |
+| Where press effects are drawn              | A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.                                                                                                                                                                     | FRK-27 |
+| Style prop for animated styles             | `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.                                                                                                                                                              | FRK-27 |
+| One press effect at a time                 | The design said to let two run. The ticket says effects must not stack, so a new press replaces the one playing, by remounting the layer with a new key.                                                                                                                                                                                          | FRK-27 |
+| Motion constants                           | Durations, easings, angles, distances and particle tables are typed constants in `pressEffect/motion.ts`, the seed for a `motion` token group if more motion arrives.                                                                                                                                                                             | FRK-27 |
+| Reduce motion effect                       | No particles are mounted. A fade only ring sits 8 dp outside the button, 400 ms for Done and 480 ms for Pass, with `ReduceMotion.Never` so Reanimated does not skip it.                                                                                                                                                                           | FRK-27 |
+| Reanimated under Jest                      | `jest.setup.js` uses the worklets and Reanimated mocks, where an animation jumps to its end, so tests check what is mounted. `useReducedMotion` is a Jest mock, because the library mock lacks it.                                                                                                                                                | FRK-27 |
+| Effect layer test ids                      | The layer is decoration with no role or name and is hidden from screen readers, so tests find it by test id with hidden elements included. This is the one case where a test id is the right query.                                                                                                                                               | FRK-27 |
+| Effect not in the kit gallery              | The layer belongs to the play screen and is not a reusable kit component, so it has no gallery entry.                                                                                                                                                                                                                                             | FRK-27 |
