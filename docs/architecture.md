@@ -31,7 +31,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | Press effects  | `react-native-reanimated`, with plain views for every shape. No other native module.                                         |
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
-| Storage        | `expo-sqlite`, through its key-value store                                                                                   |
+| Storage        | `expo-sqlite` (SQLCipher build) for what players write, its key-value store for settings, `expo-secure-store` for the key    |
 | Validation     | Zod, in the core package                                                                                                     |
 | Tests          | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
 | Checks         | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
@@ -395,6 +395,102 @@ exactly as it did for the same seed and actions. An unknown type or a repeated o
   already given is kept. `end` and `disableCategory` always apply, including to a face down mystery
   and an open choice.
 
+## Question round engine
+
+A round of the `questions` game is a reducer in `core`, in `questionRound.ts`. It follows the dares
+engine: pure, plain serialisable state, and a seeded generator in the state. The pacing rules that
+both games share are in `pacing.ts`, and `round.ts` imports them from there.
+
+```ts
+type QuestionRoundSetup = {
+  players: readonly [string, string];
+  level: LevelId;
+  enabledCategories: readonly CategoryId[];
+  enabledFormats: readonly PlayableFormat[]; // at least one of ifYou, neverHave, guess, eitherOr
+  enabledTopics: readonly TopicId[]; // at least one of t1 to t6
+  length: 10 | 20 | 'endless';
+  seed: number;
+};
+
+type QuestionRoundAction =
+  | { type: 'answer'; answers: readonly [boolean, boolean] } // yes or no per player index
+  | { type: 'pick'; optionId: string }
+  | { type: 'next' }
+  | { type: 'removeQuestion' }
+  | { type: 'disableCategory'; category: CategoryId }
+  | { type: 'end' };
+
+function startQuestionRound(
+  setup: QuestionRoundSetup,
+  questions: readonly Question[],
+): QuestionRoundState;
+function reduceQuestionRound(
+  state: QuestionRoundState,
+  action: QuestionRoundAction,
+): QuestionRoundState;
+function summariseQuestionRound(state: QuestionRoundState): QuestionRoundSummary;
+function isQuestionRoundOver(state: QuestionRoundState): boolean;
+function questionTurnView(state: QuestionRoundState): QuestionTurnView | null;
+function availableQuestionCount(setup: QuestionRoundSetup, questions: readonly Question[]): number;
+```
+
+`startQuestionRound` throws an `Error` that says what is wrong for an invalid setup, as `startRound`
+does. It also checks the formats (at least one, known, not `secretMatch`, none twice), the topics
+(at least one, known, none twice) and the length. It takes the questions as a list, so the app can
+pass shipped and player-written questions together. Only questions in the enabled categories,
+formats and topics are dealt, and each id is dealt at most once. `availableQuestionCount` counts
+what the same setup could deal, so the setup screen can say when there are fewer than the round
+length, with no rules of its own.
+
+`current` carries `question`, `holder`, `other` and `steppingUp` as for dares, plus `stage`
+(`answering`, `secondPick`, `revealed`), `firstPick` and `reveal`. The holder alternates every
+question, starting with the first player. `next` deals the following question from `revealed`.
+
+Screens read `questionTurnView(state)`, never `current.firstPick`. The view has everything a turn
+screen needs (`question`, `holder`, `other`, `steppingUp`, `stage` and `reveal`) and leaves out the
+holder's first pick, so no screen can show a private pick by mistake, including after a focus change
+or a replaced question. It adds `pickLocked`, true while the stage is `secondPick`, so the screen can
+say a pick is locked in without saying which. The first pick appears only inside `reveal`, once both
+players have picked. It is null when the round is over.
+
+Rules the engine owns:
+
+- Pacing is the dares pacing: start in the lowest enabled category, split a 10 or 20 round across
+  the enabled categories with the remainder going higher, and step up every 5 questions in an
+  endless round.
+- Formats mix evenly. The state keeps a bag of the enabled formats, shuffled with the seeded
+  generator. Each question takes the next format from the bag, and the bag is refilled with a new
+  shuffle when it is empty.
+- If the target category has no unused question in the chosen format, the engine tries the other
+  enabled formats in the same category, then the nearest higher category, then the nearest lower
+  one, trying every enabled format in each. If nothing is left anywhere the round is over.
+- A draw takes a player question with a probability of one half when it has unused player and
+  unused shipped questions of the format in the category it is looking in, as for player dares. The
+  generator is used for that only when both sources are present.
+- `ifYou` and `neverHave` are answered openly. `answer` sets a yes or no for each player, and each
+  yes drinks the category's penalty. No discovery is recorded.
+- `eitherOr`: the holder picks, then the other player picks, with the same phone. The first pick is
+  kept in `firstPick` and `reveal` stays null until both have picked. The same option means nobody
+  drinks and an `agree` discovery. Different options mean both drink.
+- `guess`: the holder answers about themselves, the phone is passed, and the other player guesses.
+  A right guess is a point for the guesser. A wrong guess costs the guesser a drink. Either way an
+  `answer` discovery is recorded for the holder.
+- Discoveries are `NewDiscovery` values, without dates. The app adds the date when it saves them.
+- A question counts as played when it is revealed, so ending the round at the reveal keeps it. A
+  question that is in play but not yet revealed is not counted.
+- `removeQuestion` replaces the question in play at no cost, with one of the same format and
+  category (falling back as the draw does), and drops any first pick. It does nothing once the
+  question is revealed. A skipped question is not played, so nobody drinks and it is not counted.
+- `disableCategory` and `end` behave as in the dares engine. A category switched off at the reveal
+  is switched off without replacing the revealed question.
+- An action that does not apply to the stage, and every action on a finished round, returns the
+  same state.
+
+`summariseQuestionRound` gives, for each player, the name, drinks, guesses right and guesses made. It
+also gives the questions played, the categories reached, how many `eitherOr` questions were played
+and how many matched, `knowsBest` (the player with more right guesses, `'tie'`, or null when no
+guess question was played) and the discoveries made in the round.
+
 ## App structure
 
 ```
@@ -416,6 +512,7 @@ apps/mobile/
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
   settings/              the settings context, including the remembered player names and the sound and vibration switches
+  personal/              the provider that gives screens the encrypted store of a couple's own dares, favourites and decks
   feedback/              the press feedback module: sound and haptic for each moment
   assets/sounds/         the button sounds, with a README about where they come from
   scripts/               `generateSounds.mjs`, which makes the sounds
@@ -540,6 +637,9 @@ player to confirm they are 18 or over, and its wording is in `content`.
   second group in `EntryStack`. A route group with its own layout, such as `games/dares`, is one
   screen in that group and its routes sit inside it. A test walks the real route files under
   `app/` and fails if any of them can be opened before confirming.
+  The same test fails if `app/` holds a test file or any other file that is not a route or layout,
+  because Expo Router bundles every file there, and a test file breaks the release bundle. Tests
+  live beside the code, outside `app/`.
 - `welcome` only stores the confirmation. The navigator reacts to the setting, sends the player to
   the first screen, and leaves nothing to go back to.
 - Declining stores nothing. The closing screen is state inside the `welcome` route, not a route of
@@ -581,6 +681,19 @@ player to confirm they are 18 or over, and its wording is in `content`.
   silently does not resolve.
 - Decorative parts with no role, such as a depth edge or a toggle's knob, are reached in tests
   through `tailwind/hostViewsInside`, starting from the element that was found by role.
+
+## Brand assets
+
+- The app icon, the Android adaptive icon layers (foreground and monochrome), the splash image and
+  the 512 px Play store icon are made by `apps/mobile/scripts/generateBrandAssets.mjs`. The SVG
+  artwork is written in that script, with every colour read from `@getfreak/tokens`, and
+  `rsvg-convert` (`brew install librsvg`) renders it to PNG. It is a dev-time tool and CI does not
+  run it.
+- The app files go to `apps/mobile/assets/images` and are committed. The Play store icon goes to
+  `apps/mobile/store/play-icon-512.png`. It is uploaded by hand and is not bundled or referenced by
+  `app.json`.
+- The splash image is the mark alone on a transparent background, so one file serves both themes.
+  The splash background colours are in `app.json` (see Styling).
 
 ## Press feedback
 
@@ -688,17 +801,83 @@ interface Storage {
 }
 ```
 
-- It is backed by the key-value store that ships with `expo-sqlite`.
+- Settings are backed by the key-value store that ships with `expo-sqlite`. It holds nothing a
+  player writes, and it is not encrypted.
 - Keys are a closed union type. Every read is validated with a schema, and a value that fails
   validation is treated as absent.
-- `clearAll` removes everything the app has stored. Tests cover it.
-  Today the expo-sqlite key-value store is the only persistence, so clearing it is enough. Any
-  later store (the encrypted database, files) must be added to `clearAll` in the same change.
+- `createStorage(backend, clearPersonalStore)` takes the way to clear the personal store. `clearAll`
+  clears both the key-value entries and the personal store. It tries both even when the first
+  fails, then reports the first failure, so a retry finishes the job. Tests cover it.
+  Any later store (files, secure items) must be added to `clearAll` in the same change.
 - Milestones 1 and 2 store only settings. Nothing from a round is kept.
 
-Later milestones store text that players write. Before that ships, the database moves to the
-SQLCipher build that `expo-sqlite` supports through its config plugin, with the key held in
-`expo-secure-store`. That is a native change and needs a new build.
+### Personal store
+
+What a couple writes lives in `personal.db`, an encrypted database with tables. It is behind one
+module, `storage/personal`, and nothing else touches it.
+
+- **Encryption.** `expo-sqlite` is built with SQLCipher through its config plugin
+  (`["expo-sqlite", { "useSQLCipher": true }]` in `app.json`). The database is opened with a random
+  256-bit key, written as 64 hex characters and given to SQLCipher in its raw form
+  (`PRAGMA key = "x'...'"`), so it runs no password derivation.
+- **The key.** It is made on first launch from `expo-crypto`'s random bytes and kept in
+  `expo-secure-store` with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, so it is readable only while the phone
+  is unlocked and never leaves this device. It is read only to open the database. It is never
+  logged.
+- **Schema.** Step 1 of the migrations makes four tables. `player_card` has `id`, `category` and
+  `kind` (checked against the core ids), `text` (checked 1 to 140 characters), `created_at` and
+  `updated_at`. `favourite` has `card_id` and `created_at`. `deck` has `id`, `name` (checked 1 to
+  30 characters), `created_at` and `updated_at`. `deck_card` has `deck_id` (deleted with its deck),
+  `card_id` and `position`, with its primary key on `deck_id` and `card_id`. Times are milliseconds
+  since 1970. A favourite or deck card id is a shipped id or a player card id, so it has no foreign
+  key.
+- **Migrations.** `migrations.ts` holds an ordered list of SQL steps. Step N takes the database from
+  version N to N + 1. Each runs in one transaction and sets `PRAGMA user_version`, so a failed step
+  leaves the earlier version. They only go forward, and a shipped step is never edited. A database
+  with a version above the last step (made by a newer app) is refused and left alone. Milestone 5
+  adds its tables as new steps. A test runs every step against `node:sqlite`, from empty and from
+  each earlier version.
+- **Repository.** `PersonalRepository` lists, saves and deletes player cards, lists and sets
+  favourites, and lists, saves and deletes decks. Saving a card tidies and checks its text with the
+  core rules (repeats are checked against the shipped cards and the other player cards) and
+  enforces the 300 card limit. Saving a deck trims the name, drops repeated card ids and enforces
+  the 20 deck and 200 card limits. Every limit comes from core `limits`. A failed save returns
+  problem codes or `limit`, and writes nothing. Deleting a card removes it from favourites and
+  decks in one transaction.
+- **Reading.** Every row is checked with the core schemas, and a row that fails is skipped, not
+  thrown. A favourite or deck card whose id is neither a shipped card nor a player card is skipped
+  when read and kept in storage, so a card that returns in a later deck version comes back. Saving
+  a deck keeps such an entry, after the cards the screen listed.
+- **Two implementations.** `createPersonalRepository` runs over a `SqlDatabase`, and
+  `createInMemoryPersonalRepository` keeps everything in memory for screen tests. One shared set of
+  tests runs against both, and the database one runs on `node:sqlite`. `node:sqlite` is not
+  encrypted, so these tests prove the schema, the migrations and the repository, not the key.
+- **Provider.** `PersonalDataProvider` and `usePersonalData` (in `apps/mobile/personal`) open the
+  database once at launch, in the same shape as the settings provider. They give `isLoading`,
+  `loadFailed`, `repository`, `recoveredFromUnreadable` and `dismissRecoveryNotice`. A failed load
+  never blocks the app. Screens see an empty in-memory store and `loadFailed`.
+- **A lost key.** If the key is missing or does not open the file, which can happen when a phone
+  restores the database from a backup without its key, the file is deleted and made again empty,
+  and the repository reports `recoveredFromUnreadable` once so the My dares screen can say so. The
+  file is deleted only when SQLite says "file is not a database". A full disk, a lock or a newer
+  schema fails the load and leaves the file and the key alone.
+- **Transactions.** A transaction is run with `BEGIN IMMEDIATE` and `COMMIT` on the one keyed
+  connection, behind a queue. `expo-sqlite`'s `withExclusiveTransactionAsync` opens a second
+  connection that does not have the key, so it cannot be used on an encrypted database.
+- **`clearAll`.** It closes the database, deletes `personal.db` and its `-journal` and `-wal` files, and deletes the key. Each step is
+  safe to run twice. A later load makes a new key and an empty database.
+- **After `clearAll`.** The repository the provider holds points at a closed database. Whatever runs
+  clear everything (FRK-53) must call `usePersonalData().reload()` after `storage.clearAll()`, or
+  remount the provider. `reload` sets `isLoading` and opens a new database with a new key.
+- **While loading.** Screens must not write while `isLoading` is true, because a write to the
+  placeholder store is dropped when the real repository arrives. The same holds after `loadFailed`,
+  where writes last for the session only.
+- **Android backup.** The `expo-secure-store` plugin sets `fullBackupContent` and
+  `dataExtractionRules` that include only shared preferences and exclude SecureStore, so the key is
+  not backed up and, with it, the database is unreadable from a backup. It does not set
+  `allowBackup`. FRK-58 should set `android.allowBackup: false`.
+- **Native build.** SQLCipher, `expo-secure-store` and `expo-crypto` are native, so this needs a
+  new build.
 
 ## Styling
 
@@ -708,9 +887,18 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
   inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
-  a test does the same for the app's CSS files. Named colours such as `red`, and colours in JSON
-  files such as `app.json`, are not checked, so review has to keep those out. The one allowed
-  `style` prop is an animated style on a Reanimated `Animated.View`, see Press effects.
+  a test does the same for the app's CSS files. Named colours such as `red` are not checked, so
+  review has to keep those out. The one allowed `style` prop is an animated style on a Reanimated
+  `Animated.View`, see Press effects.
+- The one exception is `apps/mobile/app.json`. The splash screen background (light and dark) and
+  the Android adaptive icon background are read by native code before any JavaScript runs, so they
+  must be written there as hex values. `apps/mobile/appConfig.test.ts` keeps them equal to the
+  tokens they stand for and fails on any colour in `app.json` that is not a token. Nothing else in
+  that file may hold a colour.
+- The window and navigation backgrounds are themed from the tokens at run time: `ThemedNavigation`,
+  at the root, reads the current theme's background token and gives it to the navigation theme
+  (`background` and `card`), so every stack, nested ones included, inherits it, and to
+  `expo-system-ui` for the native window. A gap between screens never shows the wrong theme.
 - There are two themes, light and dark, and the app follows the device's colour scheme. The Tailwind
   config writes each theme as CSS variables, the light values by default and the dark values under
   `prefers-color-scheme: dark`. A colour class is semantic and reads a variable, so a screen writes
@@ -739,6 +927,11 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   The label and caption styles also carry a little letter spacing.
 - The font files ship in the app bundle, one file per weight, and are loaded in the root layout
   before any route renders. If a font fails to load the app still renders, in the system font.
+- The splash screen stays up while the fonts and the settings load. The root layout holds it with
+  `SplashScreen.preventAutoHideAsync()`, and `SplashReveal`, inside `EntryStack`, hides it the first
+  time the stack has been laid out. A font error still lets the app render, so it still hides.
+  `SplashSafetyNet` hides it after 5 seconds regardless, so a font load or a storage read that
+  hangs never leaves it up. A refused hide is tried once more.
 - Tests in `tokens` check that both themes have the same keys and that the listed pairings meet
   their contrast thresholds: text and muted text on the background and the surface, text on the
   accent, text on each category fill, and each dark category colour on the dark background and
@@ -799,7 +992,11 @@ and pnpm 9.11.0, and the README has the steps.
   Clear everything.
 - A change that adds a network call, an SDK that sends data, a push token, or a new kind of stored
   data updates `docs/compliance.md` and `privacyPolicy` in the same pull request.
-- Never log player names, card text or anything a player typed.
+- Never log player names, card text or anything a player typed. That includes deck names, the
+  database key and anything read from the personal store. The storage and provider tests spy on the
+  console to check it.
+- What players write is stored in an encrypted database. The key is in the device secure store, on
+  this device only, and clearing everything deletes both. See Storage.
 - Test fixtures contain placeholder text only.
 
 ## Working conventions
@@ -817,71 +1014,93 @@ and pnpm 9.11.0, and the README has the steps.
 
 ## Decisions made
 
-| Decision                                   | Outcome                                                                                                                                                                                                                                                                                                                                           | Ticket |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                          | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                                                                                                                             | FRK-1  |
-| Colours before the tokens package          | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                                                                                                                                    | FRK-1  |
-| Themes                                     | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                                                                                                                            | FRK-3  |
-| Typefaces                                  | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                                                                                                                                  | FRK-3  |
-| Category colours in the light theme        | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                                                                                                                                     | FRK-3  |
-| Text on the accent colour                  | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                                                                                                                             | FRK-3  |
-| Small text on the accent colour            | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.                                                                                                          | FRK-13 |
-| Together card tint                         | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                                                                                                                              | FRK-13 |
-| Spacing and radius utility names           | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                                                                                                                               | FRK-3  |
-| Role and name for the screen shell         | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves.                                                                                                       | FRK-4  |
-| Depth edge                                 | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                                                                                                                                   | FRK-4  |
-| Design sizes off the scales                | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                                                                                                                        | FRK-4  |
-| Entry guard mechanism                      | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.                                                                                                        | FRK-6  |
-| Declining the entry confirmation           | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                                                                                                                                 | FRK-6  |
-| A failed write when confirming             | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                                                                                                                              | FRK-6  |
-| Built-in sitemap route                     | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                                                                                                                                | FRK-6  |
-| Game tiles on the hub                      | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                                                                                                                               | FRK-7  |
-| Round setup before its ticket              | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                                                                                                                                | FRK-7  |
-| Node version                               | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                                                                                                                              | FRK-1  |
-| App name and identifiers                   | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                                                                                                                                | FRK-1  |
-| Not this one is not a penalty              | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.                                                                                                                | FRK-14 |
-| Staging after a replacement                | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                                                                                                                           | FRK-14 |
-| Switched off categories stay off           | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                                                                                                                      | FRK-14 |
-| Sheet frame, skip row                      | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                                                                                                                              | FRK-14 |
-| Sheet frame, shape and spacing             | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                                                                                                                                 | FRK-14 |
-| Sheet frame, quiet control                 | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                                                                                                                        | FRK-14 |
-| Sheet frame, last category hint            | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                                                                                                                       | FRK-14 |
-| For your partner means a solo card         | A player-written dare marked for your partner is a `solo` card, dealt to whoever's turn it is, as FRK-8 defines a card for one partner. Addressing a dare to one named partner is a separate product question.                                                                                                                                    | FRK-39 |
-| Same base rules, different editorial rules | Player text follows the same length and repeat rules as shipped text, through `checkCardText`. The house style rules stay on shipped cards, because a couple writing for themselves know who they are.                                                                                                                                            | FRK-39 |
-| Duplicates checked against shipped text    | A player cannot add a card the deck already has.                                                                                                                                                                                                                                                                                                  | FRK-39 |
-| Mixing ratio of one half                   | With 30 or more shipped cards per category, a plain shuffle would rarely deal a couple's own dares in a 10 card round. One half shows them without crowding out the deck.                                                                                                                                                                         | FRK-39 |
-| Timer cards are surprise only              | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                                                                                                                             | FRK-39 |
-| Shipped timer cards run 15 to 60 seconds   | FRK-46 sets the shipped range, tighter than the schema's 5 to 120, rising with the category. The schema stays wide for custom decks.                                                                                                                                                                                                              | FRK-46 |
-| Limits live in `cardText.ts`               | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                                                                                                                            | FRK-39 |
-| Player card text is stored tidied          | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                                                                                                                        | FRK-39 |
-| Press feedback libraries                   | `expo-audio` and `expo-haptics`, installed with `expo install` for SDK 57. Both need a new native build.                                                                                                                                                                                                                                          | FRK-26 |
-| Button sounds are generated                | The three sounds are synthesised by `scripts/generateSounds.mjs`, so they are original and the project owns them, with no licence to record. Variant A ships, and two alternatives sit in `assets/sounds/alternatives` for the owner to swap in.                                                                                                  | FRK-26 |
-| Audio session                              | Mix with other audio and respect the iOS silent switch, so a sound never stops or lowers music. The `expo-audio` plugin adds no microphone or background permissions.                                                                                                                                                                             | FRK-26 |
-| Where press feedback lives                 | A top level `feedback` module beside `settings` and `storage`, not under `features`, because the UI kit `Button` depends on it and the kit should not import from a feature.                                                                                                                                                                      | FRK-26 |
-| Button feedback option                     | `Button` has one `feedback` prop, `tap`, `done`, `pass` or `none`, that picks the sound and the haptic together. They are not set apart, so a moment never has a sound with the wrong haptic. Only the kit `Button` gives feedback.                                                                                                               | FRK-26 |
-| Feedback with no provider                  | Calls do nothing, so a component renders alone. The route tests prove the real root layout wires the provider.                                                                                                                                                                                                                                    | FRK-26 |
-| Android haptics                            | The view haptic effects, not the vibrator, so the phone's touch feedback setting is respected and no permission is needed. iOS uses its system generators, which follow System Haptics.                                                                                                                                                           | FRK-28 |
-| Round complete haptic                      | A run of four pulses over about half a second, fired once from the summary screen when it first shows. The summary is where both ways of ending a round meet, so one guard gives once only.                                                                                                                                                       | FRK-28 |
-| Settings screen captions                   | The kit `Toggle` has an optional `description`, drawn under the label and given as the switch's accessibility hint. The settings rows use it.                                                                                                                                                                                                     | FRK-26 |
-| Format on the question                     | A question carries its own `format` and a deck can hold any mix. The content package ships one file per format, and a test checks that each file holds only its own format.                                                                                                                                                                       | FRK-34 |
-| Discovery date format                      | An ISO date and time string, checked by the schema. Storage can keep it as text.                                                                                                                                                                                                                                                                  | FRK-34 |
-| Surprise plan has its own generator        | The plan draws offsets and shuffles from a stream seeded from the round seed, so a round with surprises off deals exactly as before.                                                                                                                                                                                                              | FRK-43 |
-| Stall rule                                 | A type with no eligible card for the rest of the round is dropped from the plan, so later blocks still get other types. A type that only does not fit this block, such as a jump at the top category, stays in the bag. Eligibility is checked against every enabled category, so it is conservative and never drops a type that could still fit. | FRK-43 |
-| Free pass is given when dealt              | The pass is held from the moment the card is dealt, so it can be used on that card or kept. A skip or a category switch-off drops the surprise but keeps the pass.                                                                                                                                                                                | FRK-43 |
-| Free pass waits for a choice               | `useFreePass` does nothing on an open choice, as on an unflipped mystery, because the card is not yet known.                                                                                                                                                                                                                                      | FRK-43 |
-| Timer surprise needs a solo card           | The timer surprise only deals a solo timer card, as every surprise goes on a solo card.                                                                                                                                                                                                                                                           | FRK-43 |
-| Turn moves only for the holder of the turn | A solo card moves the turn only when the player who played it is the one whose turn it was. A swap does not move it, and a swap dropped by a skip still keeps the alternation.                                                                                                                                                                    | FRK-43 |
-| Replacement keeps the player               | `removeCard` and `disableCategory` keep the player who held the phone, so a dropped swap card is still played by the swapped partner.                                                                                                                                                                                                             | FRK-43 |
-| Mystery cost in the history                | A passed mystery is recorded with its surprise and `summarise` adds one to its penalty, so no extra field is needed.                                                                                                                                                                                                                              | FRK-43 |
-| Error reporting and analytics              | None at launch. No SDK for either in the app. Crash data comes only from what Apple and Google collect from players who opt in.                                                                                                                                                                                                                   | FRK-56 |
-| Encryption export answer                   | `ITSAppUsesNonExemptEncryption` is `NO` until SQLCipher ships, then `YES` as an industry standard algorithm not provided by the operating system. `docs/compliance.md` gives the reasons.                                                                                                                                                         | FRK-56 |
-| Alternative forfeit mode                   | None at launch: no drink cap and no non-alcoholic mode, decided by the owner on 2026-11-18. `docs/compliance.md` lists the options if a store objects to the drink forfeit.                                                                                                                                                                       | FRK-16 |
-| Press effects library                      | `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.                                                                                                                                                                                                                  | FRK-27 |
-| Where press effects are drawn              | A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.                                                                                                                                                                     | FRK-27 |
-| Style prop for animated styles             | `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.                                                                                                                                                              | FRK-27 |
-| One press effect at a time                 | The design said to let two run. The ticket says effects must not stack, so a new press replaces the one playing, by remounting the layer with a new key.                                                                                                                                                                                          | FRK-27 |
-| Motion constants                           | Durations, easings, angles, distances and particle tables are typed constants in `pressEffect/motion.ts`, the seed for a `motion` token group if more motion arrives.                                                                                                                                                                             | FRK-27 |
-| Reduce motion effect                       | No particles are mounted. A fade only ring sits 8 dp outside the button, 400 ms for Done and 480 ms for Pass, with `ReduceMotion.Never` so Reanimated does not skip it.                                                                                                                                                                           | FRK-27 |
-| Reanimated under Jest                      | `jest.setup.js` uses the worklets and Reanimated mocks, where an animation jumps to its end, so tests check what is mounted. `useReducedMotion` is a Jest mock. A spy on `withTiming` covers the ignored `reduceMotion` option.                                                                                                                   | FRK-27 |
-| Effect layer test ids                      | The layer is decoration with no role or name and is hidden from screen readers, so tests find it by test id with hidden elements included. This is the one case where a test id is the right query.                                                                                                                                               | FRK-27 |
-| Effect not in the kit gallery              | The layer belongs to the play screen and is not a reusable kit component, so it has no gallery entry.                                                                                                                                                                                                                                             | FRK-27 |
+| Decision                                             | Outcome                                                                                                                                                                                                                                                                                                                                           | Ticket |
+| ---------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                                    | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                                                                                                                             | FRK-1  |
+| Colours before the tokens package                    | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                                                                                                                                    | FRK-1  |
+| Themes                                               | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                                                                                                                            | FRK-3  |
+| Typefaces                                            | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                                                                                                                                  | FRK-3  |
+| Category colours in the light theme                  | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                                                                                                                                     | FRK-3  |
+| Text on the accent colour                            | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                                                                                                                             | FRK-3  |
+| Small text on the accent colour                      | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.                                                                                                          | FRK-13 |
+| Together card tint                                   | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                                                                                                                              | FRK-13 |
+| Spacing and radius utility names                     | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                                                                                                                               | FRK-3  |
+| Role and name for the screen shell                   | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves.                                                                                                       | FRK-4  |
+| Depth edge                                           | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                                                                                                                                   | FRK-4  |
+| Design sizes off the scales                          | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                                                                                                                        | FRK-4  |
+| Entry guard mechanism                                | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.                                                                                                        | FRK-6  |
+| Declining the entry confirmation                     | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                                                                                                                                 | FRK-6  |
+| A failed write when confirming                       | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                                                                                                                              | FRK-6  |
+| Built-in sitemap route                               | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                                                                                                                                | FRK-6  |
+| Game tiles on the hub                                | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                                                                                                                               | FRK-7  |
+| Round setup before its ticket                        | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                                                                                                                                | FRK-7  |
+| Node version                                         | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                                                                                                                              | FRK-1  |
+| App name and identifiers                             | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                                                                                                                                | FRK-1  |
+| Not this one is not a penalty                        | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.                                                                                                                | FRK-14 |
+| Staging after a replacement                          | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                                                                                                                           | FRK-14 |
+| Switched off categories stay off                     | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                                                                                                                      | FRK-14 |
+| Sheet frame, skip row                                | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                                                                                                                              | FRK-14 |
+| Sheet frame, shape and spacing                       | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                                                                                                                                 | FRK-14 |
+| Sheet frame, quiet control                           | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                                                                                                                        | FRK-14 |
+| Sheet frame, last category hint                      | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                                                                                                                       | FRK-14 |
+| For your partner means a solo card                   | A player-written dare marked for your partner is a `solo` card, dealt to whoever's turn it is, as FRK-8 defines a card for one partner. Addressing a dare to one named partner is a separate product question.                                                                                                                                    | FRK-39 |
+| Same base rules, different editorial rules           | Player text follows the same length and repeat rules as shipped text, through `checkCardText`. The house style rules stay on shipped cards, because a couple writing for themselves know who they are.                                                                                                                                            | FRK-39 |
+| Duplicates checked against shipped text              | A player cannot add a card the deck already has.                                                                                                                                                                                                                                                                                                  | FRK-39 |
+| Mixing ratio of one half                             | With 30 or more shipped cards per category, a plain shuffle would rarely deal a couple's own dares in a 10 card round. One half shows them without crowding out the deck.                                                                                                                                                                         | FRK-39 |
+| Timer cards are surprise only                        | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                                                                                                                             | FRK-39 |
+| Shipped timer cards run 15 to 60 seconds             | FRK-46 sets the shipped range, tighter than the schema's 5 to 120, rising with the category. The schema stays wide for custom decks.                                                                                                                                                                                                              | FRK-46 |
+| Limits live in `cardText.ts`                         | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                                                                                                                            | FRK-39 |
+| Player card text is stored tidied                    | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                                                                                                                        | FRK-39 |
+| Press feedback libraries                             | `expo-audio` and `expo-haptics`, installed with `expo install` for SDK 57. Both need a new native build.                                                                                                                                                                                                                                          | FRK-26 |
+| Button sounds are generated                          | The three sounds are synthesised by `scripts/generateSounds.mjs`, so they are original and the project owns them, with no licence to record. Variant A ships, and two alternatives sit in `assets/sounds/alternatives` for the owner to swap in.                                                                                                  | FRK-26 |
+| Audio session                                        | Mix with other audio and respect the iOS silent switch, so a sound never stops or lowers music. The `expo-audio` plugin adds no microphone or background permissions.                                                                                                                                                                             | FRK-26 |
+| Where press feedback lives                           | A top level `feedback` module beside `settings` and `storage`, not under `features`, because the UI kit `Button` depends on it and the kit should not import from a feature.                                                                                                                                                                      | FRK-26 |
+| Button feedback option                               | `Button` has one `feedback` prop, `tap`, `done`, `pass` or `none`, that picks the sound and the haptic together. They are not set apart, so a moment never has a sound with the wrong haptic. Only the kit `Button` gives feedback.                                                                                                               | FRK-26 |
+| Feedback with no provider                            | Calls do nothing, so a component renders alone. The route tests prove the real root layout wires the provider.                                                                                                                                                                                                                                    | FRK-26 |
+| Android haptics                                      | The view haptic effects, not the vibrator, so the phone's touch feedback setting is respected and no permission is needed. iOS uses its system generators, which follow System Haptics.                                                                                                                                                           | FRK-28 |
+| Round complete haptic                                | A run of four pulses over about half a second, fired once from the summary screen when it first shows. The summary is where both ways of ending a round meet, so one guard gives once only.                                                                                                                                                       | FRK-28 |
+| Settings screen captions                             | The kit `Toggle` has an optional `description`, drawn under the label and given as the switch's accessibility hint. The settings rows use it.                                                                                                                                                                                                     | FRK-26 |
+| Format on the question                               | A question carries its own `format` and a deck can hold any mix. The content package ships one file per format, and a test checks that each file holds only its own format.                                                                                                                                                                       | FRK-34 |
+| Discovery date format                                | An ISO date and time string, checked by the schema. Storage can keep it as text.                                                                                                                                                                                                                                                                  | FRK-34 |
+| Surprise plan has its own generator                  | The plan draws offsets and shuffles from a stream seeded from the round seed, so a round with surprises off deals exactly as before.                                                                                                                                                                                                              | FRK-43 |
+| Stall rule                                           | A type with no eligible card for the rest of the round is dropped from the plan, so later blocks still get other types. A type that only does not fit this block, such as a jump at the top category, stays in the bag. Eligibility is checked against every enabled category, so it is conservative and never drops a type that could still fit. | FRK-43 |
+| Free pass is given when dealt                        | The pass is held from the moment the card is dealt, so it can be used on that card or kept. A skip or a category switch-off drops the surprise but keeps the pass.                                                                                                                                                                                | FRK-43 |
+| Free pass waits for a choice                         | `useFreePass` does nothing on an open choice, as on an unflipped mystery, because the card is not yet known.                                                                                                                                                                                                                                      | FRK-43 |
+| Timer surprise needs a solo card                     | The timer surprise only deals a solo timer card, as every surprise goes on a solo card.                                                                                                                                                                                                                                                           | FRK-43 |
+| Turn moves only for the holder of the turn           | A solo card moves the turn only when the player who played it is the one whose turn it was. A swap does not move it, and a swap dropped by a skip still keeps the alternation.                                                                                                                                                                    | FRK-43 |
+| Replacement keeps the player                         | `removeCard` and `disableCategory` keep the player who held the phone, so a dropped swap card is still played by the swapped partner.                                                                                                                                                                                                             | FRK-43 |
+| Mystery cost in the history                          | A passed mystery is recorded with its surprise and `summarise` adds one to its penalty, so no extra field is needed.                                                                                                                                                                                                                              | FRK-43 |
+| Error reporting and analytics                        | None at launch. No SDK for either in the app. Crash data comes only from what Apple and Google collect from players who opt in.                                                                                                                                                                                                                   | FRK-56 |
+| Encryption export answer                             | `ITSAppUsesNonExemptEncryption` is `YES` now that SQLCipher ships (FRK-41), as an industry standard algorithm not provided by the operating system. The owner files the French declaration or leaves France out of the launch countries. FRK-58 sets the flag in the iOS config. `docs/compliance.md` gives the reasons.                          | FRK-56 |
+| Alternative forfeit mode                             | None at launch: no drink cap and no non-alcoholic mode, decided by the owner on 2026-11-18. `docs/compliance.md` lists the options if a store objects to the drink forfeit.                                                                                                                                                                       | FRK-16 |
+| Personal data in a database with tables              | Deleting a dare has to reach its favourites and decks in one step, decks hold ordered card lists, and milestone 5 adds questions and discoveries to the same database by new migrations. Settings stay in the key-value store, which holds nothing a player writes.                                                                               | FRK-41 |
+| SQLCipher build with the key in the secure store     | The `expo-sqlite` plugin option `useSQLCipher`, and a random 256-bit key in `expo-secure-store`, readable only while unlocked and only on this device.                                                                                                                                                                                            | FRK-41 |
+| Forward-only migrations                              | A list of SQL steps tracked by `user_version`, one transaction per step. A database from a newer app is refused, not changed.                                                                                                                                                                                                                     | FRK-41 |
+| Lost key means an empty store                        | The data cannot be read without the key, so keeping the file helps nobody. It is deleted and made again, and the repository reports it once so the screen can say so. Only SQLite's "not a database" error counts.                                                                                                                                | FRK-41 |
+| The recovery notice is not stored                    | It lasts for the launch in which the recovery happened. A player who does not open My dares that time does not see it. Storing it would need another settings key, and the milestone 4 lock and clear everything already reset the whole store.                                                                                                   | FRK-41 |
+| Unknown ids are kept, not pruned                     | A shipped card can be withdrawn and come back in a later deck version, so a favourite or deck entry for a missing card is skipped on read and kept.                                                                                                                                                                                               | FRK-41 |
+| Player card and deck ids                             | `p-` plus a UUID from `expo-crypto`, so a player id never collides with a shipped id such as `starter-c1-01`. Decks use `d-` plus a UUID.                                                                                                                                                                                                         | FRK-41 |
+| Saving an id that is not stored                      | A card or deck saved with an id that is not stored is added as a new one with a new id. It is never written under the id it was given.                                                                                                                                                                                                            | FRK-41 |
+| Repeated card ids in a deck                          | Dropped when the deck is saved, keeping the first. The core schema rejects repeats, and a screen that lists a card twice has made a slip, not a rule.                                                                                                                                                                                             | FRK-41 |
+| Transactions without `withExclusiveTransactionAsync` | That call opens a second connection without the key. A transaction is run with `BEGIN IMMEDIATE` on the keyed connection behind a queue.                                                                                                                                                                                                          | FRK-41 |
+| Database tests on `node:sqlite`                      | Migrations and the repository run on the `node:sqlite` that ships with Node. Files that use it end in `.node.test.ts` and are type checked with Node's types, as the other Node-only tests are.                                                                                                                                                   | FRK-41 |
+| No Face ID text in this ticket                       | The `expo-secure-store` plugin is set with `faceIDPermission: false`, because this ticket stores a key and asks for no biometrics. FRK-53 adds the biometrics text through `expo-local-authentication`.                                                                                                                                           | FRK-41 |
+| Pick formats keep the phone or pass it               | `eitherOr` keeps the phone between picks and `guess` passes it, as the design decides. The engine does not model the passing: `stage` moves from `answering` to `secondPick` in both and the screen shows the handoff.                                                                                                                            | FRK-35 |
+| Answers use the player index                         | `answer` takes a yes or no per player index, not per role, so the same action works whichever player holds the phone.                                                                                                                                                                                                                             | FRK-35 |
+| Where a played question is counted                   | A question joins the history when it is revealed, so ending the round at the reveal keeps it, and a question the round ended on before the reveal is not counted.                                                                                                                                                                                 | FRK-35 |
+| Removing a revealed question                         | `removeQuestion` does nothing once revealed, because the drinks and the discovery are already recorded. Switching a category off at the reveal leaves the revealed question in place.                                                                                                                                                             | FRK-35 |
+| Fallback order for questions                         | The chosen format is tried first in each category, then the other enabled formats, as the ticket says. This differs from dares, which tries the preferred kind in every category before the other kind.                                                                                                                                           | FRK-35 |
+| Knows best after only wrong guesses                  | `knowsBest` is `'tie'` when guess questions were played and both players have the same number right, even zero. It is null only when no guess question was played.                                                                                                                                                                                | FRK-35 |
+| Duplicate ids in the question list                   | The engine deals the first question of an id and ignores the rest, so a repeated id cannot be dealt twice.                                                                                                                                                                                                                                        | FRK-35 |
+| Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
+| Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
+| The app icon is discreet                             | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                          | FRK-19 |
+| Press effects library                                | `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.                                                                                                                                                                                                                  | FRK-27 |
+| Where press effects are drawn                        | A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.                                                                                                                                                                     | FRK-27 |
+| Style prop for animated styles                       | `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.                                                                                                                                                              | FRK-27 |
+| One press effect at a time                           | The design said to let two run. The ticket says effects must not stack, so a new press replaces the one playing, by remounting the layer with a new key.                                                                                                                                                                                          | FRK-27 |
+| Motion constants                                     | Durations, easings, angles, distances and particle tables are typed constants in `pressEffect/motion.ts`, the seed for a `motion` token group if more motion arrives.                                                                                                                                                                             | FRK-27 |
+| Reduce motion effect                                 | No particles are mounted. A fade only ring sits 8 dp outside the button, 400 ms for Done and 480 ms for Pass, with `ReduceMotion.Never` so Reanimated does not skip it.                                                                                                                                                                           | FRK-27 |
+| Reanimated under Jest                                | `jest.setup.js` uses the worklets and Reanimated mocks, where an animation jumps to its end, so tests check what is mounted. `useReducedMotion` is a Jest mock. A spy on `withTiming` covers the ignored `reduceMotion` option.                                                                                                                   | FRK-27 |
+| Effect layer test ids                                | The layer is decoration with no role or name and is hidden from screen readers, so tests find it by test id with hidden elements included. This is the one case where a test id is the right query.                                                                                                                                               | FRK-27 |
+| Effect not in the kit gallery                        | The layer belongs to the play screen and is not a reusable kit component, so it has no gallery entry.                                                                                                                                                                                                                                             | FRK-27 |

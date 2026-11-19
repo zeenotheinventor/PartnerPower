@@ -7,23 +7,23 @@
       "format": "guess",
       "category": "c1",
       "topic": "t1",
-      "text": "What would your partner pick for a perfect evening in?",
+      "text": "Where do you most like to be kissed?",
       "options": [
         {
-          "id": "o1",
-          "text": "A film"
+          "id": "a",
+          "text": "On the lips"
         },
         {
-          "id": "o2",
-          "text": "A home cooked meal"
+          "id": "b",
+          "text": "On the neck"
         },
         {
-          "id": "o3",
-          "text": "A long bath"
+          "id": "c",
+          "text": "On the cheek"
         },
         {
-          "id": "o4",
-          "text": "A game night"
+          "id": "d",
+          "text": "Behind the ear"
         }
       ],
       "source": "shipped"
@@ -33,19 +33,23 @@
       "format": "guess",
       "category": "c1",
       "topic": "t1",
-      "text": "Which treat would your partner choose?",
+      "text": "How do you most like to wake up together?",
       "options": [
         {
-          "id": "o1",
-          "text": "Chocolate"
+          "id": "a",
+          "text": "A slow cuddle"
         },
         {
-          "id": "o2",
-          "text": "Ice cream"
+          "id": "b",
+          "text": "Breakfast in bed"
         },
         {
-          "id": "o3",
-          "text": "Something salty"
+          "id": "c",
+          "text": "A kiss before the alarm"
+        },
+        {
+          "id": "d",
+          "text": "Sleeping in until noon"
         }
       ],
       "source": "shipped"
@@ -54,24 +58,362 @@
       "id": "guess-c1-03",
       "format": "guess",
       "category": "c1",
-      "topic": "t5",
-      "text": "How would your partner say we first got close?",
+      "topic": "t1",
+      "text": "Which kind of date do you like best?",
       "options": [
         {
-          "id": "o1",
-          "text": "Through friends"
+          "id": "a",
+          "text": "A long dinner"
         },
         {
-          "id": "o2",
-          "text": "By chance"
+          "id": "b",
+          "text": "An outdoor adventure"
         },
         {
-          "id": "o3",
-          "text": "On purpose"
+          "id": "c",
+          "text": "A night in"
         },
         {
-          "id": "o4",
-          "text": "Online"
+          "id": "d",
+          "text": "Something completely new"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-04",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t2",
+      "text": "What makes you fall for someone fastest?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A great sense of humour"
+        },
+        {
+          "id": "b",
+          "text": "Real kindness"
+        },
+        {
+          "id": "c",
+          "text": "Quiet confidence"
+        },
+        {
+          "id": "d",
+          "text": "Being really listened to"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-05",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t2",
+      "text": "What is your biggest romantic turn off?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being talked over"
+        },
+        {
+          "id": "b",
+          "text": "Being rushed"
+        },
+        {
+          "id": "c",
+          "text": "Pushy flirting"
+        },
+        {
+          "id": "d",
+          "text": "Too much public affection"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-06",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t2",
+      "text": "Which small gesture melts you most?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A hand on your back"
+        },
+        {
+          "id": "b",
+          "text": "A look across the room"
+        },
+        {
+          "id": "c",
+          "text": "A surprise message"
+        },
+        {
+          "id": "d",
+          "text": "Being pulled in for a hug"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-07",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t3",
+      "text": "Which romantic scene would you most like to live out?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A kiss in the rain"
+        },
+        {
+          "id": "b",
+          "text": "A dance in the kitchen"
+        },
+        {
+          "id": "c",
+          "text": "A weekend somewhere remote"
+        },
+        {
+          "id": "d",
+          "text": "A proper old fashioned date"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-08",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t3",
+      "text": "What would you most love as a surprise?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A weekend away"
+        },
+        {
+          "id": "b",
+          "text": "A candlelit dinner at home"
+        },
+        {
+          "id": "c",
+          "text": "A love letter"
+        },
+        {
+          "id": "d",
+          "text": "Being swept out for the night"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-09",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t3",
+      "text": "Which holiday would you choose for the two of you?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A cabin in the woods"
+        },
+        {
+          "id": "b",
+          "text": "A beach"
+        },
+        {
+          "id": "c",
+          "text": "A city break"
+        },
+        {
+          "id": "d",
+          "text": "A road trip"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-10",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t4",
+      "text": "Which playful role would you enjoy most on a date?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being chased"
+        },
+        {
+          "id": "b",
+          "text": "Being in charge"
+        },
+        {
+          "id": "c",
+          "text": "Being teased"
+        },
+        {
+          "id": "d",
+          "text": "Being spoiled"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-11",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t4",
+      "text": "How do you like to be flirted with?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Quietly and close"
+        },
+        {
+          "id": "b",
+          "text": "With plenty of teasing"
+        },
+        {
+          "id": "c",
+          "text": "With bold compliments"
+        },
+        {
+          "id": "d",
+          "text": "With long looks"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-12",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t5",
+      "text": "How have you shown someone you had a crush on them?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Wrote them a note"
+        },
+        {
+          "id": "b",
+          "text": "Teased them"
+        },
+        {
+          "id": "c",
+          "text": "Stared from across the room"
+        },
+        {
+          "id": "d",
+          "text": "Pretended not to care"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-13",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t5",
+      "text": "How did you usually spend a first date?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Dinner out"
+        },
+        {
+          "id": "b",
+          "text": "Coffee or a walk"
+        },
+        {
+          "id": "c",
+          "text": "A film"
+        },
+        {
+          "id": "d",
+          "text": "Something active"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-14",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t6",
+      "text": "What would you most like us to do more of?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Date nights"
+        },
+        {
+          "id": "b",
+          "text": "Cuddling on the sofa"
+        },
+        {
+          "id": "c",
+          "text": "Kissing for no reason"
+        },
+        {
+          "id": "d",
+          "text": "Trips away"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-15",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t6",
+      "text": "Which romantic gift would you most like to receive?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A handwritten letter"
+        },
+        {
+          "id": "b",
+          "text": "A surprise day out"
+        },
+        {
+          "id": "c",
+          "text": "A playlist made for you"
+        },
+        {
+          "id": "d",
+          "text": "A photo album of us"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-16",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t6",
+      "text": "What would make tonight perfect?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A long kiss at the door"
+        },
+        {
+          "id": "b",
+          "text": "A bath together"
+        },
+        {
+          "id": "c",
+          "text": "A film under a blanket"
+        },
+        {
+          "id": "d",
+          "text": "A slow dance in the living room"
         }
       ],
       "source": "shipped"
@@ -80,24 +422,24 @@
       "id": "guess-c2-01",
       "format": "guess",
       "category": "c2",
-      "topic": "t2",
-      "text": "Where does your partner most like to be kissed?",
+      "topic": "t1",
+      "text": "Where do you most like to be touched?",
       "options": [
         {
-          "id": "o1",
-          "text": "The neck"
+          "id": "a",
+          "text": "The back of your neck"
         },
         {
-          "id": "o2",
-          "text": "The lips"
+          "id": "b",
+          "text": "Your lower back"
         },
         {
-          "id": "o3",
-          "text": "The shoulder"
+          "id": "c",
+          "text": "Your inner thighs"
         },
         {
-          "id": "o4",
-          "text": "The hand"
+          "id": "d",
+          "text": "Your hair"
         }
       ],
       "source": "shipped"
@@ -106,20 +448,24 @@
       "id": "guess-c2-02",
       "format": "guess",
       "category": "c2",
-      "topic": "t2",
-      "text": "What would your partner choose to set the mood?",
+      "topic": "t1",
+      "text": "What do you most like to wear to bed with your partner?",
       "options": [
         {
-          "id": "o1",
-          "text": "Candles"
+          "id": "a",
+          "text": "Nothing at all"
         },
         {
-          "id": "o2",
-          "text": "Music"
+          "id": "b",
+          "text": "An old t shirt"
         },
         {
-          "id": "o3",
-          "text": "Dim lights"
+          "id": "c",
+          "text": "Something silky"
+        },
+        {
+          "id": "d",
+          "text": "Just underwear"
         }
       ],
       "source": "shipped"
@@ -129,19 +475,361 @@
       "format": "guess",
       "category": "c2",
       "topic": "t1",
-      "text": "Which is your partner most likely to enjoy?",
+      "text": "How do you most like to be woken up?",
       "options": [
         {
-          "id": "o1",
-          "text": "A slow dance"
+          "id": "a",
+          "text": "With kisses"
         },
         {
-          "id": "o2",
-          "text": "A back rub"
+          "id": "b",
+          "text": "With a hand sliding over you"
         },
         {
-          "id": "o3",
-          "text": "A bubble bath"
+          "id": "c",
+          "text": "With a whisper"
+        },
+        {
+          "id": "d",
+          "text": "With a slow stretch together"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-04",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t2",
+      "text": "What turns you on fastest?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A kiss on the neck"
+        },
+        {
+          "id": "b",
+          "text": "A whisper in your ear"
+        },
+        {
+          "id": "c",
+          "text": "Being undressed slowly"
+        },
+        {
+          "id": "d",
+          "text": "A hand on your thigh"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-05",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t2",
+      "text": "What kills the mood fastest?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being rushed"
+        },
+        {
+          "id": "b",
+          "text": "A buzzing phone"
+        },
+        {
+          "id": "c",
+          "text": "A cold room"
+        },
+        {
+          "id": "d",
+          "text": "Not knowing what your partner wants"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-06",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t2",
+      "text": "Which sound turns you on most?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Heavy breathing"
+        },
+        {
+          "id": "b",
+          "text": "A low whisper"
+        },
+        {
+          "id": "c",
+          "text": "A soft moan"
+        },
+        {
+          "id": "d",
+          "text": "Your name said slowly"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-07",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t3",
+      "text": "Where would you most like to be pulled close and kissed hard?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Against the front door"
+        },
+        {
+          "id": "b",
+          "text": "In the kitchen"
+        },
+        {
+          "id": "c",
+          "text": "On the stairs"
+        },
+        {
+          "id": "d",
+          "text": "In a hotel corridor"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-08",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t3",
+      "text": "What would you most like to find waiting for you at home?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A candlelit bath"
+        },
+        {
+          "id": "b",
+          "text": "Your partner in a robe and nothing else"
+        },
+        {
+          "id": "c",
+          "text": "A note telling you to undress"
+        },
+        {
+          "id": "d",
+          "text": "A blindfold on the bed"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-09",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t3",
+      "text": "Which massage would you choose?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A slow oil massage"
+        },
+        {
+          "id": "b",
+          "text": "A scalp and neck massage"
+        },
+        {
+          "id": "c",
+          "text": "A full body massage with teasing"
+        },
+        {
+          "id": "d",
+          "text": "A back rub that wanders lower"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-10",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t4",
+      "text": "What do you most like to be teased with?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Fingertips"
+        },
+        {
+          "id": "b",
+          "text": "Lips and breath"
+        },
+        {
+          "id": "c",
+          "text": "A feather"
+        },
+        {
+          "id": "d",
+          "text": "Something cold"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-11",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t4",
+      "text": "Which would you most enjoy during a slow tease?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being told to keep still"
+        },
+        {
+          "id": "b",
+          "text": "Being blindfolded"
+        },
+        {
+          "id": "c",
+          "text": "Having your wrists held"
+        },
+        {
+          "id": "d",
+          "text": "Being told when you may touch"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-12",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t5",
+      "text": "Where have you most often made out, apart from at home?",
+      "options": [
+        {
+          "id": "a",
+          "text": "In a car"
+        },
+        {
+          "id": "b",
+          "text": "At a party"
+        },
+        {
+          "id": "c",
+          "text": "At the cinema"
+        },
+        {
+          "id": "d",
+          "text": "Outdoors"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-13",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t5",
+      "text": "How did you get ready for a date you hoped would end in bed?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Fresh underwear"
+        },
+        {
+          "id": "b",
+          "text": "A long shower"
+        },
+        {
+          "id": "c",
+          "text": "A new outfit"
+        },
+        {
+          "id": "d",
+          "text": "Nothing special"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-14",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t6",
+      "text": "What would you most like to be done slowly?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being undressed"
+        },
+        {
+          "id": "b",
+          "text": "Being kissed along the neck"
+        },
+        {
+          "id": "c",
+          "text": "Being touched below the waist"
+        },
+        {
+          "id": "d",
+          "text": "Being massaged"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-15",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t6",
+      "text": "How would you like an early night to start?",
+      "options": [
+        {
+          "id": "a",
+          "text": "With a bath together"
+        },
+        {
+          "id": "b",
+          "text": "With a long massage"
+        },
+        {
+          "id": "c",
+          "text": "With slow kissing on the sofa"
+        },
+        {
+          "id": "d",
+          "text": "With a dare"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-16",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t6",
+      "text": "Which would you most like to try this week?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Making out for an hour"
+        },
+        {
+          "id": "b",
+          "text": "Touching with the lights on"
+        },
+        {
+          "id": "c",
+          "text": "An undressing game"
+        },
+        {
+          "id": "d",
+          "text": "A blindfolded kiss"
         }
       ],
       "source": "shipped"
@@ -150,24 +838,24 @@
       "id": "guess-c3-01",
       "format": "guess",
       "category": "c3",
-      "topic": "t2",
-      "text": "What would your partner say is the best way to be teased?",
+      "topic": "t1",
+      "text": "Which do you love most during oral?",
       "options": [
         {
-          "id": "o1",
-          "text": "With words"
+          "id": "a",
+          "text": "Slow tongue circles"
         },
         {
-          "id": "o2",
-          "text": "With a look"
+          "id": "b",
+          "text": "Lots of suction"
         },
         {
-          "id": "o3",
-          "text": "With a touch"
+          "id": "c",
+          "text": "Soft kisses and licks"
         },
         {
-          "id": "o4",
-          "text": "With a message"
+          "id": "d",
+          "text": "A fingertip as well"
         }
       ],
       "source": "shipped"
@@ -176,20 +864,24 @@
       "id": "guess-c3-02",
       "format": "guess",
       "category": "c3",
-      "topic": "t3",
-      "text": "Which setting would your partner pick for a daydream?",
+      "topic": "t1",
+      "text": "Which position do you most like to be gone down on in?",
       "options": [
         {
-          "id": "o1",
-          "text": "A hotel"
+          "id": "a",
+          "text": "Lying on your back"
         },
         {
-          "id": "o2",
-          "text": "A beach"
+          "id": "b",
+          "text": "Standing up"
         },
         {
-          "id": "o3",
-          "text": "A cabin"
+          "id": "c",
+          "text": "Sitting on your partner's face"
+        },
+        {
+          "id": "d",
+          "text": "Propped on the edge of the bed"
         }
       ],
       "source": "shipped"
@@ -198,24 +890,388 @@
       "id": "guess-c3-03",
       "format": "guess",
       "category": "c3",
-      "topic": "t6",
-      "text": "Which would your partner most like more of?",
+      "topic": "t1",
+      "text": "What do you love most when going down on your partner?",
       "options": [
         {
-          "id": "o1",
-          "text": "Time"
+          "id": "a",
+          "text": "Their sounds"
         },
         {
-          "id": "o2",
-          "text": "Surprises"
+          "id": "b",
+          "text": "Their taste"
         },
         {
-          "id": "o3",
-          "text": "Slow mornings"
+          "id": "c",
+          "text": "Their hands in your hair"
         },
         {
-          "id": "o4",
-          "text": "Spontaneity"
+          "id": "d",
+          "text": "Feeling them tense up"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-04",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t1",
+      "text": "Where do you most like to be licked, apart from your clit or cock?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your inner thighs"
+        },
+        {
+          "id": "b",
+          "text": "Your arse"
+        },
+        {
+          "id": "c",
+          "text": "Your hips"
+        },
+        {
+          "id": "d",
+          "text": "Your stomach"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-05",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t2",
+      "text": "What turns you on most when someone goes down on you?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Eye contact"
+        },
+        {
+          "id": "b",
+          "text": "Their moans"
+        },
+        {
+          "id": "c",
+          "text": "Being watched"
+        },
+        {
+          "id": "d",
+          "text": "A tongue moving slowly"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-06",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t2",
+      "text": "What is your biggest turn off during oral?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Teeth"
+        },
+        {
+          "id": "b",
+          "text": "Being rushed"
+        },
+        {
+          "id": "c",
+          "text": "Too much pressure"
+        },
+        {
+          "id": "d",
+          "text": "Not knowing if they enjoy it"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-07",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t2",
+      "text": "What do you most like to hear while someone goes down on you?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Their moans"
+        },
+        {
+          "id": "b",
+          "text": "Your name"
+        },
+        {
+          "id": "c",
+          "text": "A dirty compliment"
+        },
+        {
+          "id": "d",
+          "text": "Nothing at all"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-08",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t3",
+      "text": "Which oral fantasy sounds best?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being woken by a mouth on you"
+        },
+        {
+          "id": "b",
+          "text": "A sixty nine with no rush"
+        },
+        {
+          "id": "c",
+          "text": "Going down on your partner for an hour"
+        },
+        {
+          "id": "d",
+          "text": "Being licked until you beg"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-09",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t3",
+      "text": "Where would you most like to have oral?",
+      "options": [
+        {
+          "id": "a",
+          "text": "In bed"
+        },
+        {
+          "id": "b",
+          "text": "On a kitchen counter"
+        },
+        {
+          "id": "c",
+          "text": "In the shower"
+        },
+        {
+          "id": "d",
+          "text": "On the back seat of a car"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-10",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t3",
+      "text": "What would you most like to do to your partner with your mouth?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Lick them slowly for an hour"
+        },
+        {
+          "id": "b",
+          "text": "Tease them until they beg"
+        },
+        {
+          "id": "c",
+          "text": "Make them come"
+        },
+        {
+          "id": "d",
+          "text": "Use fingers and tongue together"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-11",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t4",
+      "text": "What do you most enjoy during oral?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being held down by the hips"
+        },
+        {
+          "id": "b",
+          "text": "Being told to stay quiet"
+        },
+        {
+          "id": "c",
+          "text": "Being teased and made to wait"
+        },
+        {
+          "id": "d",
+          "text": "Being blindfolded"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-12",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t4",
+      "text": "Which would you most like to try during oral?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Oral with your wrists held"
+        },
+        {
+          "id": "b",
+          "text": "Oral with a vibrator"
+        },
+        {
+          "id": "c",
+          "text": "Oral in front of a mirror"
+        },
+        {
+          "id": "d",
+          "text": "Oral with ice"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-13",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t5",
+      "text": "Where have you most often had oral?",
+      "options": [
+        {
+          "id": "a",
+          "text": "In bed"
+        },
+        {
+          "id": "b",
+          "text": "On the sofa"
+        },
+        {
+          "id": "c",
+          "text": "In the shower"
+        },
+        {
+          "id": "d",
+          "text": "In a car"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-14",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t5",
+      "text": "What was your biggest oral mishap?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Cramp in the jaw"
+        },
+        {
+          "id": "b",
+          "text": "A fit of giggles"
+        },
+        {
+          "id": "c",
+          "text": "A phone going off"
+        },
+        {
+          "id": "d",
+          "text": "Falling off the bed"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-15",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t6",
+      "text": "What would you most like your partner to do while going down on you?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Use their fingers"
+        },
+        {
+          "id": "b",
+          "text": "Hold your thighs open"
+        },
+        {
+          "id": "c",
+          "text": "Look you in the eye"
+        },
+        {
+          "id": "d",
+          "text": "Take their time"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-16",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t6",
+      "text": "What would you most like to try next time you go down on your partner?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A new move with your tongue"
+        },
+        {
+          "id": "b",
+          "text": "Using a toy"
+        },
+        {
+          "id": "c",
+          "text": "Switching position halfway"
+        },
+        {
+          "id": "d",
+          "text": "Going slower"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-17",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t6",
+      "text": "How would you most like oral to end?",
+      "options": [
+        {
+          "id": "a",
+          "text": "With you coming, then a cuddle"
+        },
+        {
+          "id": "b",
+          "text": "With you coming, then sex"
+        },
+        {
+          "id": "c",
+          "text": "With your partner coming, then swapping"
+        },
+        {
+          "id": "d",
+          "text": "With a long slow kiss"
         }
       ],
       "source": "shipped"
@@ -224,20 +1280,24 @@
       "id": "guess-c4-01",
       "format": "guess",
       "category": "c4",
-      "topic": "t6",
-      "text": "What would your partner like to try next?",
+      "topic": "t1",
+      "text": "What is your favourite position for sex?",
       "options": [
         {
-          "id": "o1",
-          "text": "A new place"
+          "id": "a",
+          "text": "You on top"
         },
         {
-          "id": "o2",
-          "text": "A new time of day"
+          "id": "b",
+          "text": "Your partner on top"
         },
         {
-          "id": "o3",
-          "text": "A new pace"
+          "id": "c",
+          "text": "Spooning"
+        },
+        {
+          "id": "d",
+          "text": "From behind"
         }
       ],
       "source": "shipped"
@@ -246,20 +1306,24 @@
       "id": "guess-c4-02",
       "format": "guess",
       "category": "c4",
-      "topic": "t2",
-      "text": "What does your partner enjoy most?",
+      "topic": "t1",
+      "text": "When do you most like to have sex?",
       "options": [
         {
-          "id": "o1",
-          "text": "Being led"
+          "id": "a",
+          "text": "First thing in the morning"
         },
         {
-          "id": "o2",
-          "text": "Taking the lead"
+          "id": "b",
+          "text": "Mid afternoon"
         },
         {
-          "id": "o3",
-          "text": "Taking turns"
+          "id": "c",
+          "text": "Late at night"
+        },
+        {
+          "id": "d",
+          "text": "Whenever the mood hits"
         }
       ],
       "source": "shipped"
@@ -268,24 +1332,362 @@
       "id": "guess-c4-03",
       "format": "guess",
       "category": "c4",
-      "topic": "t3",
-      "text": "Which would your partner choose for a dream night?",
+      "topic": "t1",
+      "text": "What do you love most just after you come?",
       "options": [
         {
-          "id": "o1",
-          "text": "Somewhere far away"
+          "id": "a",
+          "text": "Cuddling straight away"
         },
         {
-          "id": "o2",
-          "text": "Right here at home"
+          "id": "b",
+          "text": "A shower together"
         },
         {
-          "id": "o3",
-          "text": "Somewhere a little risky"
+          "id": "c",
+          "text": "Talking in the dark"
         },
         {
-          "id": "o4",
-          "text": "Somewhere very quiet"
+          "id": "d",
+          "text": "Falling asleep"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-04",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t2",
+      "text": "What turns you on most during sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Dirty talk"
+        },
+        {
+          "id": "b",
+          "text": "Feeling your partner come"
+        },
+        {
+          "id": "c",
+          "text": "Watching your partner's face"
+        },
+        {
+          "id": "d",
+          "text": "Being held by the hips"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-05",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t2",
+      "text": "What do you most like to hear during sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your name"
+        },
+        {
+          "id": "b",
+          "text": "How good it feels"
+        },
+        {
+          "id": "c",
+          "text": "What they want next"
+        },
+        {
+          "id": "d",
+          "text": "Nothing but breathing"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-06",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t2",
+      "text": "Which touch makes you come fastest?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Fingers on your clit or cock"
+        },
+        {
+          "id": "b",
+          "text": "A tongue"
+        },
+        {
+          "id": "c",
+          "text": "A vibrator"
+        },
+        {
+          "id": "d",
+          "text": "Slow deep sex"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-07",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t3",
+      "text": "Where have you never had sex that you would most like to?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A secluded beach"
+        },
+        {
+          "id": "b",
+          "text": "A hotel with floor to ceiling windows"
+        },
+        {
+          "id": "c",
+          "text": "A hot tub"
+        },
+        {
+          "id": "d",
+          "text": "In front of a mirror"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-08",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t3",
+      "text": "Which fantasy sounds best?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A whole weekend in bed"
+        },
+        {
+          "id": "b",
+          "text": "Sex against a wall the second you get home"
+        },
+        {
+          "id": "c",
+          "text": "Slow sex until sunrise"
+        },
+        {
+          "id": "d",
+          "text": "A night where your partner leads everything"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-09",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t3",
+      "text": "Which would you most like to watch?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner touching themselves"
+        },
+        {
+          "id": "b",
+          "text": "Yourselves in a mirror"
+        },
+        {
+          "id": "c",
+          "text": "Your partner dressed up for you"
+        },
+        {
+          "id": "d",
+          "text": "Your partner coming"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-10",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t4",
+      "text": "Which would you most like to try in bed?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A vibrator during sex"
+        },
+        {
+          "id": "b",
+          "text": "Wrists tied with silk"
+        },
+        {
+          "id": "c",
+          "text": "A blindfold"
+        },
+        {
+          "id": "d",
+          "text": "Taking turns giving orders"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-11",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t4",
+      "text": "Which role do you most like during sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Taking control"
+        },
+        {
+          "id": "b",
+          "text": "Giving up control"
+        },
+        {
+          "id": "c",
+          "text": "Switching halfway"
+        },
+        {
+          "id": "d",
+          "text": "Being teased"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-12",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t5",
+      "text": "Where outside the bedroom have you had sex most often?",
+      "options": [
+        {
+          "id": "a",
+          "text": "The sofa"
+        },
+        {
+          "id": "b",
+          "text": "The shower"
+        },
+        {
+          "id": "c",
+          "text": "The kitchen"
+        },
+        {
+          "id": "d",
+          "text": "A car"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-13",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t5",
+      "text": "What has most often interrupted sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A phone"
+        },
+        {
+          "id": "b",
+          "text": "A noise next door"
+        },
+        {
+          "id": "c",
+          "text": "A cramp"
+        },
+        {
+          "id": "d",
+          "text": "A fit of giggles"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-14",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t6",
+      "text": "What would you most like your partner to do during sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Talk dirtier"
+        },
+        {
+          "id": "b",
+          "text": "Go slower"
+        },
+        {
+          "id": "c",
+          "text": "Go harder"
+        },
+        {
+          "id": "d",
+          "text": "Look you in the eye"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-15",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t6",
+      "text": "How often would you like sex?",
+      "options": [
+        {
+          "id": "a",
+          "text": "Every day"
+        },
+        {
+          "id": "b",
+          "text": "A few times a week"
+        },
+        {
+          "id": "c",
+          "text": "Once a week"
+        },
+        {
+          "id": "d",
+          "text": "Whenever we both feel like it"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-16",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t6",
+      "text": "What would you most like to try next?",
+      "options": [
+        {
+          "id": "a",
+          "text": "A new position"
+        },
+        {
+          "id": "b",
+          "text": "A new place"
+        },
+        {
+          "id": "c",
+          "text": "A toy"
+        },
+        {
+          "id": "d",
+          "text": "Sex with the lights on"
         }
       ],
       "source": "shipped"

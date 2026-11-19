@@ -5,6 +5,8 @@
   "exclude": [
     "tailwind/rawColorGuard.test.ts",
     "features/welcome/routeCoverage.test.tsx",
-    "feedback/sounds.test.ts"
+    "feedback/sounds.test.ts",
+    "storage/personal/**/*.node.test.ts",
+    "storage/personal/testing/nodeSqlite.ts"
   ]
 }
