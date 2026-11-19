@@ -12,7 +12,7 @@ export function SettingsSection({ label, children }: SettingsSectionProps) {
 
   return (
     <View className="gap-4">
-      <Text className="type-caption uppercase text-muted">{label}</Text>
+      {label ? <Text className="type-caption uppercase text-muted">{label}</Text> : null}
       <Card grouped={false}>
         <View className="gap-8">
           {rows.map((row, index) => (

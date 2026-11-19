@@ -3,6 +3,8 @@ import { act, waitFor, within } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import type { ReactNode } from 'react';
 
+import { LockServiceContext } from '../../../lock';
+import { createTestLock } from '../../../lock/testing/createTestLock';
 import { SettingsProvider, useSettings } from '../../../settings';
 import type { ClearEverythingResult } from '../../../storage/clearEverything';
 import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
@@ -14,14 +16,19 @@ const mockBack = jest.fn();
 const mockReplace = jest.fn();
 const mockPush = jest.fn();
 let mockCanGoBack = true;
-jest.mock('expo-router', () => ({
-  useRouter: () => ({
-    back: mockBack,
-    replace: mockReplace,
-    push: mockPush,
-    canGoBack: () => mockCanGoBack,
-  }),
-}));
+jest.mock('expo-router', () => {
+  const { useEffect } = jest.requireActual<typeof import('react')>('react');
+  return {
+    useRouter: () => ({
+      back: mockBack,
+      replace: mockReplace,
+      push: mockPush,
+      canGoBack: () => mockCanGoBack,
+    }),
+    // The screen is always in focus here, so the effect runs once, when it mounts.
+    useFocusEffect: (effect: () => void) => useEffect(effect, [effect]),
+  };
+});
 
 // The real clear needs the root and the phone's stores. The route tests run it. Here it is a mock.
 const mockClearEverything = jest.fn<Promise<ClearEverythingResult>, []>();
@@ -40,11 +47,13 @@ function AfterSettingsLoad({ children }: { children: ReactNode }) {
 
 async function renderScreen(backend = createInMemoryBackend()) {
   await renderThemed(
-    <SettingsProvider storage={createStorage(backend)}>
-      <AfterSettingsLoad>
-        <SettingsScreen />
-      </AfterSettingsLoad>
-    </SettingsProvider>,
+    <LockServiceContext.Provider value={createTestLock().lock}>
+      <SettingsProvider storage={createStorage(backend)}>
+        <AfterSettingsLoad>
+          <SettingsScreen />
+        </AfterSettingsLoad>
+      </SettingsProvider>
+    </LockServiceContext.Provider>,
   );
   await waitFor(() => expect(screen.getByRole('header')).toBeOnTheScreen());
   return backend;
@@ -161,6 +170,30 @@ describe('SettingsScreen', () => {
       await renderScreen();
 
       expect(screen.getByText('Version 9.9.9 (99)')).toBeOnTheScreen();
+    });
+  });
+
+  describe('the App lock row', () => {
+    it('should sit in the Privacy section, above the privacy policy row', async () => {
+      await renderScreen();
+
+      const labels = screen
+        .getAllByRole('button')
+        .map((button) => button.props.accessibilityLabel)
+        .filter(Boolean);
+      const lockPosition = labels.findIndex((label: string) =>
+        label.startsWith(copy.settings.lockLabel),
+      );
+      expect(lockPosition).toBeGreaterThan(-1);
+      expect(lockPosition).toBeLessThan(labels.indexOf(copy.settings.privacyLabel));
+    });
+
+    it('should open the App lock screen', async () => {
+      await renderScreen();
+
+      fireEvent.press(screen.getByRole('button', { name: /^App lock/ }));
+
+      expect(mockPush).toHaveBeenCalledWith('/app-lock');
     });
   });
 

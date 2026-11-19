@@ -4,7 +4,14 @@ import type { SecureStorage } from '../storage';
 export type BiometricKind = 'face' | 'fingerprint' | 'iris';
 
 export type BiometricsAvailability =
-  { isAvailable: false } | { isAvailable: true; kind: BiometricKind };
+  | { isAvailable: false }
+  | {
+      isAvailable: true;
+      /** The kind to name when the phone has more than one: face, then fingerprint, then iris. */
+      kind: BiometricKind;
+      /** Every kind the phone has, in that same order. */
+      kinds: readonly BiometricKind[];
+    };
 
 /** What the phone can do with biometrics. The native module is behind this. */
 export type BiometricsDevice = {

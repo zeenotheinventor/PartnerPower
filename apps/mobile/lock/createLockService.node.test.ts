@@ -390,6 +390,7 @@ describe('biometrics availability', () => {
     expect(await lock.getBiometricsAvailability()).toEqual({
       isAvailable: true,
       kind: 'fingerprint',
+      kinds: ['fingerprint'],
     });
   });
 
@@ -406,7 +407,11 @@ describe('biometrics availability', () => {
   it('should name face first when the phone has several kinds', async () => {
     const lock = createFixture({ kinds: ['iris', 'fingerprint', 'face'] }).makeService();
 
-    expect(await lock.getBiometricsAvailability()).toEqual({ isAvailable: true, kind: 'face' });
+    expect(await lock.getBiometricsAvailability()).toEqual({
+      isAvailable: true,
+      kind: 'face',
+      kinds: ['face', 'fingerprint', 'iris'],
+    });
   });
 
   it('should name fingerprint before iris', async () => {
@@ -415,6 +420,7 @@ describe('biometrics availability', () => {
     expect(await lock.getBiometricsAvailability()).toEqual({
       isAvailable: true,
       kind: 'fingerprint',
+      kinds: ['fingerprint', 'iris'],
     });
   });
 
@@ -543,6 +549,40 @@ describe('clearing the PIN', () => {
 
     await lock.clearPin();
     await expect(lock.clearPin()).resolves.toBeUndefined();
+  });
+
+  it('should stay on, with the PIN still working, when the hash cannot be removed', async () => {
+    const fixture = createFixture();
+    const lock = fixture.makeService();
+    await lock.setPin(rightPin);
+    await lock.setBiometricsChoice(true);
+    const removeItem = fixture.secureBackend.removeItem;
+    fixture.secureBackend.removeItem = (key) =>
+      key === 'lockPinHash'
+        ? Promise.reject(new Error('The keychain is not available'))
+        : removeItem(key);
+
+    await expect(lock.clearPin()).rejects.toThrow();
+
+    expect(await lock.isLockOn()).toBe(true);
+    expect((await lock.checkPin(rightPin)).status).toBe('correct');
+  });
+
+  it('should remove the hash last, so a failure before it leaves the lock on', async () => {
+    const fixture = createFixture();
+    const lock = fixture.makeService();
+    await lock.setPin(rightPin);
+    await lock.setBiometricsChoice(true);
+    const removed: string[] = [];
+    const removeItem = fixture.secureBackend.removeItem;
+    fixture.secureBackend.removeItem = (key) => {
+      removed.push(key);
+      return removeItem(key);
+    };
+
+    await lock.clearPin();
+
+    expect(removed.at(-1)).toBe('lockPinHash');
   });
 
   it('should leave the database key alone', async () => {

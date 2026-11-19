@@ -18,6 +18,8 @@ export { FeedbackPressable } from './FeedbackPressable';
 export type { FeedbackPressableProps, PressFeedback } from './FeedbackPressable';
 export { Header } from './Header';
 export type { HeaderProps } from './Header';
+export { PinPad } from './PinPad';
+export type { PinPadProps } from './PinPad';
 export { Screen } from './Screen';
 export type { ScreenProps } from './Screen';
 export { SegmentedControl } from './SegmentedControl';
