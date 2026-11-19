@@ -1,3 +1,6 @@
+import { existsSync } from 'node:fs';
+import { resolve } from 'node:path';
+
 import { colorThemes } from '@getfreak/tokens';
 
 import { z } from 'zod';
@@ -16,6 +19,17 @@ const splashOptionsSchema = z.object({
 const splashOptions = splashOptionsSchema.parse(
   appConfig.expo.plugins.flatMap((plugin) =>
     Array.isArray(plugin) && plugin[0] === 'expo-splash-screen' ? [plugin[1]] : [],
+  )[0],
+);
+
+const notificationsOptionsSchema = z.object({
+  icon: z.string(),
+  color: z.string(),
+});
+
+const notificationsOptions = notificationsOptionsSchema.parse(
+  appConfig.expo.plugins.flatMap((plugin) =>
+    Array.isArray(plugin) && plugin[0] === 'expo-notifications' ? [plugin[1]] : [],
   )[0],
 );
 
@@ -49,6 +63,10 @@ describe('app.json colours', () => {
     expect(appConfig.expo.android.adaptiveIcon.backgroundColor).toBe(colorThemes.dark.background);
   });
 
+  it('should colour the Android notification icon with the light accent token', () => {
+    expect(notificationsOptions.color).toBe(colorThemes.light.accent);
+  });
+
   it('should hold no colour that is not a token', () => {
     const tokenColors = collectThemeColors(colorThemes);
 
@@ -60,7 +78,7 @@ describe('app.json colours', () => {
   });
 
   it('should find the colours it guards, so the check is not empty', () => {
-    expect(collectColorValues(appConfig)).toHaveLength(3);
+    expect(collectColorValues(appConfig)).toHaveLength(4);
   });
 });
 
@@ -170,17 +188,29 @@ describe('app.json native settings', () => {
   });
 });
 
+describe('app.json notifications', () => {
+  // Android draws only the alpha of a small icon, so the file is white on transparent. The
+  // plugin copies it into the native project at build time, so a wrong path fails the build.
+  it('should use the notification small icon from the design', () => {
+    expect(notificationsOptions.icon).toBe('./assets/images/notification-icon-96.png');
+  });
+
+  it('should point the notification icon at a file that exists', () => {
+    expect(existsSync(resolve(__dirname, notificationsOptions.icon))).toBe(true);
+  });
+});
+
 describe('app.json app lock', () => {
   // Biometrics are an extra on top of the PIN. The usage text cannot live in `packages/content`,
   // because the native build reads app.json before any JavaScript runs.
-  it('should ask to use Face ID with a usage text', () => {
+  it('should ask to use Face ID with the designed usage text', () => {
     const localAuthentication = appConfig.expo.plugins.find(
       (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-local-authentication',
     );
 
     expect(localAuthentication).toEqual([
       'expo-local-authentication',
-      { faceIDPermission: expect.stringMatching(/\S/) },
+      { faceIDPermission: 'Unlock the app with Face ID.' },
     ]);
   });
 });

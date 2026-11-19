@@ -59,7 +59,7 @@ docs/
   architecture.md      this file
   compliance.md        the store review: rules, ratings, privacy answers, listing and review notes
   decisions/           one file per area for decisions a ticket made
-  runbooks/            how to operate the app, such as error monitoring
+  runbooks/            how to operate the app, such as error monitoring and updates
 ```
 
 ### Import rules
@@ -1564,8 +1564,21 @@ JavaScript and content changes reach installed phones over the air, through EAS 
   does not. An update only reaches builds with the same runtime version, so one built from a
   different lockfile or config just does not reach the phone. Any native change needs a new build.
 - Each EAS build profile has a channel: `preview` and `development` for now, and `production` gets
-  its own when the store profile exists. An update is published to a channel from `apps/mobile`
-  with `eas update`, see the README. CI never publishes.
+  its own when the store profile exists.
+- A push to `main` that touches `apps/mobile` or `packages` publishes an update to the `preview`
+  channel by itself. The `EAS Update` workflow (`.github/workflows/eas-update.yml`) runs `eas
+update --channel preview --environment preview --auto --non-interactive` from `apps/mobile`, in
+  an environment named `preview` (a GitHub one) that holds `EXPO_TOKEN` and allows only `main`. A
+  concurrency group stops two merges publishing at once, and a missing token fails with a message
+  that names it. The
+  commit goes in as `EXPO_PUBLIC_COMMIT_SHA` and the Sentry DSN comes from the `preview` environment
+  on expo.dev, so the update matches the build. Pull requests never publish.
+- The `Mobile fingerprint` workflow (`.github/workflows/mobile-fingerprint.yml`) runs on a pull
+  request that touches the native inputs. It fingerprints the base and the merged result with the
+  `@expo/fingerprint` command line and posts one comment, kept up to date, when the pull request
+  changes the fingerprint, which means a new build is needed. It is not a required check.
+  `docs/runbooks/updates.md` says how an update reaches the phone, what the comment means, when a
+  new build is needed and the one-time setup the owner does.
 - A failed check or download is silent. The app keeps the version it has, and nothing is logged.
 - `apps/mobile/updates` holds the toast logic. `announceUpdateOnce` takes an `UpdatesDevice`, which
   is the only thing that touches `expo-updates` (`nativeUpdatesDevice`), and the storage. It returns
@@ -1627,8 +1640,9 @@ live.
     remove it. The runbook gives the scrubbing rule to add in Sentry that removes it on arrival.
 - Source maps are uploaded by the Sentry build step in a `production` build, which needs
   `SENTRY_AUTH_TOKEN` in the build service. The `development` and `preview` profiles set
-  `SENTRY_DISABLE_AUTO_UPLOAD`, so they build without the token. For an update, the README gives the
-  upload command to run after `eas update`.
+  `SENTRY_DISABLE_AUTO_UPLOAD`, so they build without the token. For an update, the `EAS Update`
+  workflow uploads the maps right after the publish when `SENTRY_AUTH_TOKEN` is set on its
+  environment, and publishes without them when it is not.
 - Under Jest the SDK is replaced by a stand-in in `jest.setup.js`. `envelope.test.ts` takes the real
   SDK and reads the text it would send, to check that a name, a card and a typed dare never appear.
 

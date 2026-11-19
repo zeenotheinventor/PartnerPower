@@ -1,0 +1,123 @@
+# Publish an over-the-air (OTA) update to the preview EAS channel.
+#
+# What it does: on a push to main that touches code bundled into the mobile app, and on manual
+# dispatch, it installs dependencies and runs `eas update` for the `preview` channel. The build on
+# the owner's phone is the `preview` profile APK, which listens to that channel, so a merge reaches
+# the phone with no one running a command. docs/runbooks/updates.md says how it arrives and when a
+# new build is needed instead.
+#
+# Release policy: continuous deployment with no approval gate. Every qualifying push to main
+# publishes straight away, and the installed build picks the update up on its next launch. The
+# `preview` environment deliberately has no required reviewers.
+#
+# One-time setup in GitHub (Settings of this repository, done by the owner):
+#
+#   1. Settings > Environments > New environment, named exactly `preview`. Leave "Required
+#      reviewers" off. The job below declares `environment: preview` only to read the
+#      environment's secret and to apply its branch policy, so a run starts as soon as it is
+#      triggered. This is the GitHub environment. It is not the EAS environment of the same name
+#      on expo.dev, which the publish step selects with `--environment preview`.
+#   2. On that environment, add this secret under "Environment secrets" (not a repository secret,
+#      so that only runs on an allowed branch can read it):
+#        EXPO_TOKEN  Expo access token for the account that owns @sojisoft/get-freak
+#      Optionally, one more secret on the same environment:
+#        SENTRY_AUTH_TOKEN  Sentry auth token, to upload the source maps of the update.
+#      Without it the update is still published, and its error reports show unreadable stacks.
+#   3. On that same environment, set "Deployment branches" to "Selected branches" and allow only
+#      `main` (Settings > Environments > preview > Deployment branches). This branch policy is the
+#      only restriction on the environment. It stops a manual run from a feature branch from
+#      reading the secret and publishing that branch.
+#
+# Prerequisites in the app itself, already in place: expo-updates is installed, and app.json
+# carries `extra.eas.projectId` and `updates.url`.
+#
+# Build-time values: Metro inlines EXPO_PUBLIC_* values into the bundle when `eas update` exports
+# it, and the runner has no .env.local. Get Freak sets none in eas.json. The one it needs,
+# EXPO_PUBLIC_SENTRY_DSN, is a variable of the `preview` environment on expo.dev. `eas update
+# --environment preview` below reads it for the OTA bundle, and the `preview` profile in eas.json
+# (`environment: preview`) reads it for the build, so the two cannot disagree. Without it, error
+# reporting is off.
+#
+# EXPO_PUBLIC_COMMIT_SHA is the commit the bundle was built from, used as the release on an error
+# report. It is set here only, never in eas.json (which the fingerprint hashes whole) or the Expo
+# config, so it changes no fingerprint input and a merge never needs a new build.
+#
+# Source maps: after the publish, in the same step so the two cannot drift, the maps of the bundle
+# `eas update` just exported (in `dist`) are uploaded to Sentry. This only runs when
+# SENTRY_AUTH_TOKEN is set. The organization and project come from the Sentry plugin in app.json.
+#
+# Scope: OTA carries JavaScript and content only. A native change (new native dependency, config
+# plugin, permission or SDK bump) changes the fingerprint runtime version and needs a new build.
+# An update published under a runtime version that no installed build has is never delivered.
+#
+# Not verifiable before the secret exists and a real push to main happens.
+
+name: EAS Update
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'apps/mobile/**'
+      - 'packages/**'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+# Two merges must not publish OTA updates in parallel.
+concurrency:
+  group: eas-update
+  cancel-in-progress: false
+
+jobs:
+  update:
+    name: Publish OTA update to preview
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    environment: preview
+    steps:
+      - uses: actions/checkout@v4
+
+      # Node from .nvmrc, pnpm from the packageManager field, the pnpm store cache and a frozen
+      # install, the same setup the CI jobs use.
+      - uses: ./.github/actions/setup
+
+      # The action silently skips authentication when the token is empty, which would surface
+      # later as an obscure eas error. Fail here with the reason. Checked in the shell because a
+      # step's own env is not visible to its `if`.
+      - name: Check the EXPO_TOKEN secret is set
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error title=EXPO_TOKEN is not set::Add EXPO_TOKEN as a secret on the preview environment (see the header of this workflow)."
+            exit 1
+          fi
+
+      # The packager only installs the EAS CLI. npm ships with Node, so the job does not depend on
+      # yarn (the action default) being present.
+      - uses: expo/expo-github-action@v9
+        with:
+          eas-version: latest
+          packager: npm
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # `--channel` publishes to the branch linked to the preview channel, which is what the
+      # preview build listens to, and EAS creates and links that branch if it is missing.
+      # `--branch` and `--channel` cannot be combined. `--auto` takes the update message from the
+      # commit message. `--environment preview` selects the EAS-side environment (expo.dev, not
+      # the GitHub one) whose variables the export may read. `eas update` requires the flag for
+      # Expo SDK 55 and later.
+      - name: Publish the update
+        working-directory: apps/mobile
+        env:
+          EXPO_PUBLIC_COMMIT_SHA: ${{ github.sha }}
+          SENTRY_AUTH_TOKEN: ${{ secrets.SENTRY_AUTH_TOKEN }}
+        run: |
+          eas update --channel preview --environment preview --auto --non-interactive
+          if [ -n "$SENTRY_AUTH_TOKEN" ]; then
+            pnpm exec sentry-expo-upload-sourcemaps dist
+          else
+            echo "::notice title=Source maps not uploaded::SENTRY_AUTH_TOKEN is not set, so this update's error reports will show unreadable stacks."
+          fi
