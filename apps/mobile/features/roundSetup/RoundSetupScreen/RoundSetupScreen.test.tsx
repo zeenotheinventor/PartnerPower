@@ -976,6 +976,38 @@ describe('RoundSetupScreen', () => {
         expect(held.current?.choice).toBe(customDeckChoice(saved.saved.id));
       });
 
+      it('should hold Start until the edited deck has been read, then deal its new cards', async () => {
+        const { held, deckChoice, fixture } = await renderWithCustomDeck({ cardIds: ['card-1'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await screen.findByText(fillCopy(copy.roundSetup.inPlayOne, { count: 1 }));
+        // The deck is edited while the picker is open, and the read on the next focus is slow.
+        await setFocus(false);
+        const deckId = deckChoice.slice('custom:'.length);
+        await fixture.repository.saveDeck({
+          id: deckId,
+          name: 'Placeholder deck',
+          cardIds: ['card-2'],
+        });
+        const readEditedDecks = await fixture.repository.listDecks();
+        let finishRead: () => void = () => {};
+        jest.spyOn(fixture.repository, 'listDecks').mockReturnValue(
+          new Promise((resolve) => {
+            finishRead = () => resolve(readEditedDecks);
+          }),
+        );
+
+        await setFocus(true);
+
+        expect(startButton()).toBeDisabled();
+
+        await act(async () => finishRead());
+        await pressStart();
+
+        const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(deck?.cards.map((card) => card.text)).toEqual(['Card 2']);
+      });
+
       it('should fall back to the starter deck when the decks cannot be read, and let Start work', async () => {
         const fixture = makeOwnCardsFixture({
           shippedTexts: testDeck.cards.map((card) => card.text),
