@@ -1,5 +1,6 @@
-import { Pressable, View } from 'react-native';
+import { View } from 'react-native';
 
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { FavouriteToggleProps } from './types';
 
 const switchClasses = {
@@ -29,11 +30,12 @@ export function FavouriteToggle({ label, value, onValueChange, context }: Favour
   const state = value ? 'on' : 'off';
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="switch"
       accessibilityLabel={label}
       accessibilityHint={context}
       accessibilityState={{ checked: value }}
+      feedback={value ? 'toggleOff' : 'toggleOn'}
       onPress={() => onValueChange(!value)}
       className={switchClasses[state]}
     >
@@ -41,6 +43,6 @@ export function FavouriteToggle({ label, value, onValueChange, context }: Favour
         <View className={leftHalfClasses[state]} />
         <View className={rightHalfClasses[state]} />
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

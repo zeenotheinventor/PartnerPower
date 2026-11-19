@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { ToggleProps } from './types';
 
 const trackClasses = {
@@ -31,11 +32,12 @@ export function Toggle({
   const state = value ? 'on' : 'off';
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="switch"
       accessibilityHint={locked ? lockedHint : description}
-      accessibilityState={{ checked: value, disabled: disabled || locked }}
+      accessibilityState={{ checked: value }}
       disabled={disabled || locked}
+      feedback={value ? 'toggleOff' : 'toggleOn'}
       onPress={() => onValueChange(!value)}
       className={`min-h-48 flex-row items-center justify-between gap-12 ${disabled ? 'opacity-50' : ''}`}
     >
@@ -46,6 +48,6 @@ export function Toggle({
       <View className={locked ? lockedTrackClasses : trackClasses[state]}>
         <View className={knobClasses[state]} />
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

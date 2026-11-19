@@ -1,6 +1,7 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { hostViewsInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { Toggle } from './Toggle';
@@ -237,5 +238,44 @@ describe('Toggle', () => {
       expect(track).toHaveStyle({ backgroundColor: theme.border.toLowerCase() });
       expect(knob).toHaveStyle({ backgroundColor: theme.muted.toLowerCase() });
     });
+  });
+});
+
+describe('Toggle press feedback', () => {
+  it('should give the toggle on feedback when it is switched on', async () => {
+    const onValueChange = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Toggle label="Sound" value={false} onValueChange={onValueChange} />,
+    );
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Sound' }));
+
+    expect(feedback.toggleOn).toHaveBeenCalledTimes(1);
+    expect(feedback.toggleOff).not.toHaveBeenCalled();
+    expect(onValueChange).toHaveBeenCalledWith(true);
+  });
+
+  it('should give the toggle off feedback when it is switched off', async () => {
+    const feedback = await renderWithMockFeedback(
+      <Toggle label="Sound" value onValueChange={jest.fn()} />,
+    );
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Sound' }));
+
+    expect(feedback.toggleOff).toHaveBeenCalledTimes(1);
+    expect(feedback.toggleOn).not.toHaveBeenCalled();
+  });
+
+  it('should give the locked feedback and change nothing when disabled', async () => {
+    const onValueChange = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Toggle label="Sound" value disabled onValueChange={onValueChange} />,
+    );
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Sound', disabled: true }));
+
+    expect(feedback.locked).toHaveBeenCalledTimes(1);
+    expect(feedback.toggleOff).not.toHaveBeenCalled();
+    expect(onValueChange).not.toHaveBeenCalled();
   });
 });

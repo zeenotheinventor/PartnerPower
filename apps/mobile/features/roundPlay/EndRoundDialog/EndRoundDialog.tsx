@@ -1,13 +1,20 @@
 import { copy } from '@getfreak/content';
+import { useEffect } from 'react';
 import { Modal, Text, View } from 'react-native';
 
 import { Button } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import type { EndRoundDialogProps } from './types';
 
 // A Modal keeps focus inside the dialog on both platforms. The back button on Android closes it,
 // which is the same as choosing to keep playing. The scrim is the background colour at reduced
 // opacity, because there is no scrim token.
 export function EndRoundDialog({ visible, onConfirm, onCancel }: EndRoundDialogProps) {
+  const { sheetOpen } = useFeedback();
+  useEffect(() => {
+    if (visible) sheetOpen();
+  }, [visible, sheetOpen]);
+
   return (
     <Modal transparent visible={visible} animationType="fade" onRequestClose={onCancel}>
       <View className="flex-1 justify-center px-16">

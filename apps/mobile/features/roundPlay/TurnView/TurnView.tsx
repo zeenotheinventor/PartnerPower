@@ -1,9 +1,17 @@
 import { copy, fillCopy, surpriseNames } from '@getfreak/content';
 import { useEffect, useRef, useState, type RefObject } from 'react';
-import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Button, Card, Character, Chip, Countdown, Screen } from '../../../components/ui';
+import {
+  Button,
+  Card,
+  Character,
+  Chip,
+  Countdown,
+  FeedbackPressable,
+  Screen,
+} from '../../../components/ui';
 import { useFeedback } from '../../../feedback/FeedbackProvider';
 import type { PressEffectKind } from '../pressEffect';
 import { TurnTopBar } from '../TurnTopBar';
@@ -195,13 +203,13 @@ export function TurnView({
       )}
 
       {isFaceDownShowing ? null : (
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onNotThisOne}
           className="min-h-48 items-center justify-center"
         >
           <Text className="type-caption text-muted underline">{copy.roundPlay.notThisOne}</Text>
-        </Pressable>
+        </FeedbackPressable>
       )}
     </Screen>
   );

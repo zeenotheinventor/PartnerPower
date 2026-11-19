@@ -2,6 +2,7 @@ import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo, Modal, Text } from 'react-native';
 
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { Dialog } from './Dialog';
 import type { DialogProps } from './types';
@@ -182,5 +183,31 @@ describe('Dialog', () => {
         color: theme.muted.toLowerCase(),
       });
     });
+  });
+});
+
+describe('Dialog feedback', () => {
+  const dialog = (visible: boolean) => (
+    <Dialog
+      visible={visible}
+      title="Delete this?"
+      body="It goes for good."
+      confirmLabel="Delete"
+      cancelLabel="Keep it"
+      onConfirm={jest.fn()}
+      onCancel={jest.fn()}
+    />
+  );
+
+  it('should play the opening swoosh once when it opens', async () => {
+    const feedback = await renderWithMockFeedback(dialog(true));
+
+    expect(feedback.sheetOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('should play nothing while it stays closed', async () => {
+    const feedback = await renderWithMockFeedback(dialog(false));
+
+    expect(feedback.sheetOpen).not.toHaveBeenCalled();
   });
 });

@@ -608,6 +608,7 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx      a stand-in until the Drink If summary replaces it
+        match.tsx        secret match: holds the session for the route, in memory only
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -632,6 +633,7 @@ apps/mobile/
   features/questionsSetup/ the Drink If round setup screen
   features/questionsPlay/  the Drink If play screen and its turn views
   features/questionsSummary/ the Drink If round summary screen and its player score block
+  features/secretMatch/  the secret match screens: the provider, the intro, the answering view, the handoff, the reveal and the cover
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -926,6 +928,54 @@ category's `penalty`, or the drinks the reveal carries.
   saves them.
 - The copy is in `copy.questionsPlay`, and the leads are in `copy.questionLeads`.
 
+### Secret match screens
+
+`app/games/questions/match.tsx` renders `SecretMatchProvider` and `SecretMatchScreen` from
+`features/secretMatch`. The Secret match entry of `homeEntries` opens it. The provider holds the
+engine's state in a reducer, in memory only, so leaving the route by any path unmounts it and
+discards the session. It gives screens `view` (from `viewSecretMatch`, undefined before a session
+starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them the state.
+
+- The screen keeps the intro, each pass, the handoff and the reveal as state of one route, not as
+  routes. It renders by the phase of the view. The intro has no session behind it, so it is the
+  screen before `start`.
+- `SecretMatchIntroView` has Theo covering his eyes, three how it works lines (the third says a
+  missing item can mean the partner said no), the privacy promise in an accent `Card`, the two
+  names (shared with the rest of the app through the settings provider), the level and the six
+  topics with the last one locked on. There is no category, format or length choice: the categories
+  are the level's and the engine fixes 12 items. `availableItemCount` below 3 shows the too few
+  items line and disables Start. Start passes the question ids of the `match` discoveries as
+  `avoidIds`, so a new session tries new items first.
+- `SecretMatchAnsweringView` shows the Stop pill, the count and `ProgressBar`, whose pass it is,
+  the item in a static `Card` with its category chip, and Yes, Maybe and No stacked full width.
+  An answer button never shows a chosen state, because choosing moves on at once. After Back, the
+  card shows only the player's own earlier answer as a neutral chip. The back link is not rendered
+  on the first item. The look away line names the other partner. The two names come from the
+  provider (`players`), because the rating view gives only the current player's name, and a name is
+  not private.
+- `SecretMatchHandoffView` has one button and no way back, and it names both partners.
+- `SecretMatchRevealView` lists the matches mild to bold, each in a static `Card` in its category
+  with a strength chip: accent for "You both said yes" and neutral for "Worth talking about".
+  Nothing says who said maybe. With no matches it shows a gentle empty state with no list, link or
+  saved line. The reveal's stage saves the matches once through `useDiscoveries().addDiscoveries`
+  (`useSaveMatches`), and says "Saved to discoveries" when saving is on, or that matches go when
+  they leave when it is off. It says nothing while the save is under way and nothing if it failed.
+  The "dares for you two" card shows only when the Discoveries entry on the home has a route, and
+  opens that screen. Until then it is hidden.
+- Stop, the system back button and the iOS swipe open the kit `Dialog` while a pass or the handoff
+  is showing, through `usePreventRemove`. Confirming sends `stop`, which wipes both passes, and the
+  screen goes back to the home, or replaces itself with it when it was opened by a deep link. The
+  Done button on the reveal does the same, and the system back is not held at the intro or the
+  reveal.
+- While a pass is under way and the app is not in the foreground (`AppState` inactive or
+  background, through `useIsAppHidden`), `PrivacyCover` replaces the answering view, so the item
+  is not in the tree and the app switcher picture shows nothing private. It is JavaScript only, with
+  no native module. iOS takes the picture on inactive, so inactive counts.
+- Privacy is tested by walking whole sessions through the screen. The accessibility tree of every
+  second pass step is the same whatever the first partner rated, no "Your answer" shows on an item
+  not yet rated in the pass, and the only answer ever shown is the player's own after Back.
+- The copy is in `copy.secretMatch`. Nothing here logs.
+
 ### Drink If summary
 
 `features/questionsSummary/QuestionsSummaryScreen` shows `summariseQuestionRound` of the round from
@@ -1054,13 +1104,36 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `apps/mobile/feedback` gives a press a sound and a haptic in one call. It sits beside `settings` and
 `storage`, not under `features`, because the UI kit `Button` uses it.
 
-- There are five moments: `tap`, `done`, `pass`, `roundComplete` and `timerEnd`. `useFeedback()`
-  returns one call for each. A call plays the moment's sound first and then fires its haptic, in the
-  same call, so they land together. `roundComplete` and `timerEnd` have a haptic and no sound.
-- `Button` takes `feedback`, which is `tap` unless it says `done`, `pass` or `none`. A press asks for
-  its feedback and then runs `onPress`. Nothing waits on the feedback, so the action is never
-  delayed. A disabled button gives none. The turn's Done and Pass use `done` and `pass`, and so do the
-  together card's "We did it" and "We drink".
+- There are fourteen moments, each with a sound and a haptic of its own. The press moments are
+  `tap`, `done`, `pass`, `toggleOn`, `toggleOff`, `select`, `back` and `locked`. The game moments are
+  `deal`, `stepUp`, `handover`, `sheetOpen` and `roundComplete`, and one alarm, `timerEnd`. `useFeedback()` returns one call
+  for each. A call plays the moment's sound first and then fires its haptic, in the same call, so
+  they land together.
+- Every control that can be pressed goes through the kit `FeedbackPressable`, which takes a
+  `feedback` moment (`tap` unless it says otherwise, or `none`), asks for it, and then runs
+  `onPress`. Nothing waits on the feedback, so the action is never delayed. `Button`, `Toggle`,
+  `CategoryToggle`, `SegmentedControl`, `Card`, `Chip`, `Header`, `FavouriteToggle`, `Toast`, the question turn frame and the controls
+  on the turn and sheet views are all built on it. A test scans the source and fails on a raw `Pressable`,
+  `Touchable*` or `Switch` outside it. The text field is the one exception: its press only focuses
+  the field, and typing is silent.
+- Which moment a control gives: a `Button` gives `tap`, or `done` and `pass` on the turn's Done and
+  Pass and the together card's actions. A toggle gives `toggleOn` when it turns on and `toggleOff`
+  when it turns off. A segmented control and a chip give `select`. The back button gives `back`. A
+  pressable card, the End round pill, Not this one and the skip row give `tap`.
+- A locked or disabled control is still pressable. `FeedbackPressable` does not hand `disabled` to
+  the native `Pressable`, which would drop the press, and sets `accessibilityState.disabled` itself.
+  A press on it gives `locked` and does nothing else, unless its feedback is `none`.
+- The game moments follow the screen. `RoundPlayScreen` announces each view that shows: `stepUp` for
+  the step up screen, `handover` for the pass the phone screen and `deal` for a card, keyed on the
+  card id so a swapped card is dealt again. The Not this one sheet, the end round dialog and the shared
+  `Dialog` (the clear everything dialog) give `sheetOpen` when they become visible. The summary gives `roundComplete`, a short jingle with the
+  existing haptic, and a timer card's countdown ending gives `timerEnd`, three bell dings with its
+  one heavy haptic.
+- Sounds never pile up. `createSoundScheduler` holds the rule. A press fires at once and restarts
+  its own sound. A game moment waits until every sound playing has ended, using the lengths in
+  `soundMilliseconds`, so the deal after Done follows the done sound. The alarm fires at once over any sound and no press cancels it. Only one game moment waits and
+  a newer one replaces it. A press that lands while one waits skips it. Pending moments are dropped
+  when the provider rebuilds its calls or unmounts, through `cancelScheduled`.
 - `createFeedback(device, { soundOn, hapticsOn })` holds the rules: skip the sound when sound is off,
   skip the haptic when vibration is off, and swallow any error without logging it. It is pure, and
   its tests use a fake device.
@@ -1068,7 +1141,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
   `nativeFeedbackDevice` is the real one and the only code that imports `expo-audio` and
   `expo-haptics`. Tests replace the device, or the provider, and never reach the native modules.
 - `FeedbackProvider` sits inside `SettingsProvider` at the root. It creates the native device once,
-  when it first renders, which sets the audio session and loads all three sounds, so the first press
+  when it first renders, which sets the audio session and loads all fourteen sounds, so the first press
   has nothing left to load. It rebuilds the calls when a setting changes. With no provider above, the
   calls do nothing, so a component can be rendered alone.
 - Audio session: `playsInSilentMode: false`, so the iOS silent switch mutes the sounds, and
@@ -1086,6 +1159,10 @@ player to confirm they are 18 or over, and its wording is in `content`.
   calls it when it is left, and the provider calls it when vibration is turned off.
 - Each moment has its own feel. On iOS a tap is a light impact, done is a success notification and
   pass is a warning notification. On Android they are the virtual key, confirm and reject effects.
+  The new moments are subtle. On iOS they are single light or medium impacts, with a double light tick
+  for `locked` and two medium impacts for `stepUp`. On Android they are the toggle on and off,
+  segment tick, virtual key release, keyboard tap (twice for `locked`), clock tick, confirm, context
+  click and gesture start effects.
   The round complete haptic is a run of four pulses over about half a second on both platforms, so it
   cannot be taken for a press. The timer end haptic is one heavy impact on iOS and one long press
   effect on Android, which no press uses. The timer card plays it when its countdown ends.
