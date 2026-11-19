@@ -1,11 +1,12 @@
 import { copy, fillCopy } from '@getfreak/content';
-import type { Deck } from '@getfreak/core';
+import { limits, type Deck } from '@getfreak/core';
 import { fireEvent, screen } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { makeOwnCardsFixture } from '../../ownCards/testing/ownCardsFixture';
 import { DeckChoiceProvider, useDeckChoice } from '../DeckChoiceProvider';
+import { customDeckChoice } from '../customDeckChoice';
 import type { DeckChoice } from '../types';
 import { DeckPickerScreen } from './DeckPickerScreen';
 
@@ -59,10 +60,12 @@ function ChoiceProbe({ onChoice }: { onChoice: (choice: DeckChoice) => void }) {
 async function renderPicker({
   favouriteCardIds = [],
   favouriteDareCount = 0,
+  customDecks = [],
   initialChoice,
 }: {
   favouriteCardIds?: string[];
   favouriteDareCount?: number;
+  customDecks?: { name: string; cardIds: string[] }[];
   initialChoice?: DeckChoice;
 } = {}) {
   const fixture = makeOwnCardsFixture({ shippedTexts: starterDeck.cards.map((card) => card.text) });
@@ -74,6 +77,11 @@ async function renderPicker({
       text: `Placeholder dare ${index}`,
     });
     if (result.ok) await fixture.repository.setFavourite(result.saved.id, true);
+  }
+  const savedDeckIds: string[] = [];
+  for (const draft of customDecks) {
+    const result = await fixture.repository.saveDeck(draft);
+    if (result.ok) savedDeckIds.push(result.saved.id);
   }
   const choices: DeckChoice[] = [];
   function ChooseFirst({ children }: { children: ReactNode }) {
@@ -95,7 +103,7 @@ async function renderPicker({
   );
   // The favourites are read after the screen shows, and the card has no count until then.
   await screen.findByRole('button', { name: new RegExp(`^${copy.decks.favourites}, `) });
-  return { choices, fixture };
+  return { choices, fixture, savedDeckIds };
 }
 
 describe('DeckPickerScreen', () => {
@@ -248,6 +256,124 @@ describe('DeckPickerScreen', () => {
       await renderPicker();
 
       expect(screen.getAllByRole('button', { name: /^View / })).toHaveLength(1);
+    });
+  });
+
+  describe('the custom decks', () => {
+    const placeholderDecks = [
+      { name: 'Placeholder deck 1', cardIds: ['card-1', 'card-2'] },
+      { name: 'Placeholder deck 2', cardIds: ['card-3'] },
+    ];
+
+    it('should list each custom deck after the starter deck and Favourites, with its count', async () => {
+      await renderPicker({ customDecks: placeholderDecks });
+
+      expect(
+        await screen.findByRole('button', { name: deckName('Placeholder deck 1', countText(2)) }),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByRole('button', {
+          name: deckName('Placeholder deck 2', fillCopy(copy.decks.countOne, { count: 1 })),
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should choose a custom deck and return to setup when it is pressed', async () => {
+      const { choices, savedDeckIds } = await renderPicker({ customDecks: placeholderDecks });
+
+      fireEvent.press(
+        await screen.findByRole('button', { name: deckName('Placeholder deck 1', countText(2)) }),
+      );
+
+      expect(choices.at(-1)).toBe(customDeckChoice(savedDeckIds[0] ?? ''));
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show the custom deck that is chosen as selected', async () => {
+      const { savedDeckIds } = await renderPicker({
+        customDecks: placeholderDecks,
+        initialChoice: undefined,
+      });
+      fireEvent.press(
+        await screen.findByRole('button', {
+          name: deckName('Placeholder deck 2', fillCopy(copy.decks.countOne, { count: 1 })),
+        }),
+      );
+
+      expect(savedDeckIds).toHaveLength(2);
+      expect(
+        screen.getByRole('button', {
+          name: deckName('Placeholder deck 2', fillCopy(copy.decks.countOne, { count: 1 })),
+          selected: true,
+        }),
+      ).toBeOnTheScreen();
+      expect(
+        screen.getByRole('button', {
+          name: deckName('Placeholder deck 1', countText(2)),
+          selected: false,
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should open a custom deck in the editor from its own Edit button, without choosing it', async () => {
+      const { choices, savedDeckIds } = await renderPicker({ customDecks: placeholderDecks });
+
+      fireEvent.press(
+        await screen.findByRole('button', {
+          name: fillCopy(copy.decks.editDeckName, { name: 'Placeholder deck 2' }),
+        }),
+      );
+
+      expect(mockPush).toHaveBeenCalledWith(`/games/dares/decks/${savedDeckIds[1]}`);
+      expect(choices.at(-1)).toBe('starter');
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
+    it('should not give the starter deck or Favourites an Edit button', async () => {
+      await renderPicker({ customDecks: placeholderDecks });
+      await screen.findByRole('button', { name: deckName('Placeholder deck 1', countText(2)) });
+
+      expect(screen.getAllByRole('button', { name: /^Edit / })).toHaveLength(2);
+    });
+
+    it('should open the editor for a new deck from New deck', async () => {
+      await renderPicker();
+
+      fireEvent.press(screen.getByRole('button', { name: copy.decks.newDeck }));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/dares/decks/new');
+    });
+
+    it('should not say anything about a limit while there is room for another deck', async () => {
+      await renderPicker({ customDecks: placeholderDecks });
+      await screen.findByRole('button', { name: deckName('Placeholder deck 1', countText(2)) });
+
+      expect(screen.queryByText(copy.decks.deckLimit)).not.toBeOnTheScreen();
+    });
+
+    it('should disable New deck at 20 decks, and say why', async () => {
+      const twentyDecks = Array.from({ length: limits.customDecks }, (_, index) => ({
+        name: `Placeholder deck ${index + 1}`,
+        cardIds: [],
+      }));
+      await renderPicker({ customDecks: twentyDecks });
+      await screen.findByText(copy.decks.deckLimit);
+
+      fireEvent.press(screen.getByRole('button', { name: copy.decks.newDeck }));
+
+      expect(screen.getByRole('button', { name: copy.decks.newDeck })).toBeDisabled();
+      expect(mockPush).not.toHaveBeenCalled();
+    });
+
+    it('should leave New deck on at 19 decks', async () => {
+      const nineteenDecks = Array.from({ length: limits.customDecks - 1 }, (_, index) => ({
+        name: `Placeholder deck ${index + 1}`,
+        cardIds: [],
+      }));
+      await renderPicker({ customDecks: nineteenDecks });
+      await screen.findByRole('button', { name: deckName('Placeholder deck 19', countText(0)) });
+
+      expect(screen.getByRole('button', { name: copy.decks.newDeck })).toBeEnabled();
     });
   });
 });
