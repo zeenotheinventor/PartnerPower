@@ -90,5 +90,6 @@ describe('FeedbackProvider', () => {
 
     expect(() => result.current.tap()).not.toThrow();
     expect(() => result.current.roundComplete()).not.toThrow();
+    expect(() => result.current.timerEnd()).not.toThrow();
   });
 });
