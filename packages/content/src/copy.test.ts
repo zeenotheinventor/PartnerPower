@@ -161,15 +161,65 @@ describe('copy', () => {
     expect(copy.ownCards.tooLongError).toContain(String(limits.cardTextLength));
   });
 
+  it('should give the Your questions screens every line as non-empty text', () => {
+    expect(Object.keys(copy.ownQuestions).sort()).toEqual(
+      [
+        'add',
+        'addOption',
+        'backLabel',
+        'categoryLabel',
+        'countLine',
+        'delete',
+        'deleteBody',
+        'deleteCancel',
+        'deleteConfirm',
+        'deleteTitle',
+        'eitherOrOptions',
+        'empty',
+        'emptyTheo',
+        'errorDuplicate',
+        'errorEmpty',
+        'errorOptionEmpty',
+        'errorOptionRepeat',
+        'errorTooLong',
+        'formatLabel',
+        'guessHint',
+        'leadBefore',
+        'limit',
+        'optionLabel',
+        'removeOption',
+        'removeOptionLabel',
+        'save',
+        'textLabel',
+        'textLabelOptional',
+        'textPlaceholderOptional',
+        'title',
+        'titleEdit',
+        'titleNew',
+        'topicLabel',
+        'writeFailed',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.ownQuestions);
+  });
+
+  it('should word the question limit and the length message with the numbers the rules use', () => {
+    expect(copy.ownQuestions.limit).toContain(String(limits.playerQuestions));
+    expect(copy.ownQuestions.errorTooLong).toContain(String(limits.cardTextLength));
+  });
+
   it('should give the Drink If home every line as non-empty text', () => {
     expect(Object.keys(copy.questionsHome).sort()).toEqual(
       [
         'backLabel',
         'discoveriesBody',
         'discoveriesTitle',
+        'entryLabel',
         'matchBody',
         'matchTitle',
         'ownBody',
+        'ownCount',
+        'ownNone',
         'ownTitle',
         'playBody',
         'playTitle',

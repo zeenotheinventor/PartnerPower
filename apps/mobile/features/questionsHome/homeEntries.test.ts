@@ -21,12 +21,21 @@ describe('homeEntries', () => {
     ]);
   });
 
-  it('should switch on Play a round, which opens setup, and Secret match, which opens its intro', () => {
+  it('should switch on Play a round, Secret match and Your questions, each opening its screen', () => {
     expect(homeEntries.map((entry) => entry.route)).toEqual([
       '/games/questions/setup',
       '/games/questions/match',
       null,
-      null,
+      '/games/questions/my-questions',
+    ]);
+  });
+
+  it('should show a count on Your questions only', () => {
+    expect(homeEntries.map((entry) => entry.countOf)).toEqual([
+      undefined,
+      undefined,
+      undefined,
+      'ownQuestions',
     ]);
   });
 });
