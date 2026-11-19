@@ -127,6 +127,7 @@ interface Card {
   kind: CardKind;
   text: string;
   effect?: CardEffect;
+  tags?: string[]; // 1 to 3 interest tags, shipped dares only
   source: 'shipped' | 'player';
 }
 
@@ -155,7 +156,8 @@ schema and checks that card ids are unique across all decks.
 A card's `effect` is a typed union. A value that does not match fails `parseDeck` with a message
 that names the card, for example `cards[2] (id "card-3"): timer seconds must be a whole number from
 5 to 120`. `source` is required: every shipped card carries `shipped`, and a card a player wrote
-carries `player`.
+carries `player`. `tags` is optional, so player cards and stored data stay valid, and it holds 1 to 3
+plain strings, because `core` cannot import the vocabulary from `content`.
 
 ### Player-written cards
 
@@ -255,6 +257,36 @@ Names are content, typed by id so a missing one fails typecheck. `topicNames` an
 you rather") are in `copy` as `questionLeads`, so question text holds only the clause after the
 lead. The topics are t1 favourites, t2 turn-ons and turn-offs, t3 fantasies, t4 kinks and fetishes,
 t5 history and t6 wishlist.
+
+## Dare suggestions
+
+A couple's secret match results suggest dares, all on the device. A shared vocabulary of interest
+tags links the two sides. `content` holds it as `interestTags` in `src/interestTags.ts`, 29 short
+lowercase words and hyphenated phrases covering activities, kit, places, roles and pace. Every
+shipped dare carries 1 to 3 of these tags, every `secretMatch` item carries 1 to 3, and every tag
+sits on at least 2 dares. `decks.ts` and `questions.ts` check each tag against the vocabulary at
+import time through `findUnknownTags`, so an unknown tag fails loudly, and tests repeat the checks.
+Player-written dares have no tags and are never suggested.
+
+`core` takes tags as plain strings and does the ranking in `suggestions.ts`:
+
+```ts
+type MatchedItem = { strength: 'yes' | 'maybe'; tags: readonly string[] };
+
+suggestDares(matches: MatchedItem[], cards: Card[], options?: { limit?: number; categories?: CategoryId[] }): Card[];
+buildMatchesDeck(cards: Card[]): Deck; // id 'matches', version 1, at most 20 cards
+canOfferMatchesDeck(suggestions: Card[]): boolean; // 5 or more
+```
+
+- Each tag takes the strength of the strongest match that carries it: 2 for `yes`, 1 for `maybe`.
+- A dare scores the sum over its distinct tags. A dare that scores 0, or has no tags, is left out.
+- Ranking is score high to low, then category c1 to c4, then id.
+- `limit` defaults to 10. `categories`, when given, is applied before the limit.
+- The function takes match tags, not discoveries. The caller looks up each match's item in the
+  current content and passes its tags, so retagging content changes suggestions without touching
+  stored data.
+- The matches deck is built when needed and never stored. It holds the first 20 suggestions in
+  rank order, and the screen offers it when there are at least 5 suggestions.
 
 ## Round engine
 
