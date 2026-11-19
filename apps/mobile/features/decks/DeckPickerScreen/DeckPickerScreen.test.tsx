@@ -1,6 +1,6 @@
 import { copy, fillCopy } from '@getfreak/content';
-import { limits, type Deck } from '@getfreak/core';
-import { fireEvent, screen } from 'nativewind/test';
+import { limits, type Card as DareCard, type Deck, type QuestionDeck } from '@getfreak/core';
+import { act, fireEvent, screen } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -28,10 +28,18 @@ jest.mock('expo-router', () => ({
 }));
 
 const mockDecks: Deck[] = [];
-// The decks are read when they are used, because this factory runs before the array above exists.
+const mockQuestionDecks: QuestionDeck[] = [];
+// The decks are read when they are used, because this factory runs before the arrays above exist.
 jest.mock('@getfreak/content', () => {
   const actual = jest.requireActual<typeof import('@getfreak/content')>('@getfreak/content');
-  return Object.defineProperty({ ...actual }, 'decks', { get: () => mockDecks, enumerable: true });
+  const withDecks = Object.defineProperty({ ...actual }, 'decks', {
+    get: () => mockDecks,
+    enumerable: true,
+  });
+  return Object.defineProperty(withDecks, 'questionDecks', {
+    get: () => mockQuestionDecks,
+    enumerable: true,
+  });
 });
 
 const starterDeck: Deck = {
@@ -41,6 +49,37 @@ const starterDeck: Deck = {
     { id: 'card-1', category: 'c1', kind: 'solo', text: 'Card text 1', source: 'shipped' },
     { id: 'card-2', category: 'c2', kind: 'solo', text: 'Card text 2', source: 'shipped' },
     { id: 'card-3', category: 'c3', kind: 'solo', text: 'Card text 3', source: 'shipped' },
+  ],
+};
+
+// A starter deck of tagged dares and one secret match item that matches all of them, so the
+// matches deck can be as big as a test needs. The item is stored as a match when a test asks.
+const taggedDeck = (cardCount: number): Deck => ({
+  id: 'tagged-deck',
+  version: 1,
+  cards: Array.from({ length: cardCount }, (_, index): DareCard => ({
+    id: `card-${index + 1}`,
+    category: 'c1',
+    kind: 'solo',
+    text: `Card text ${index + 1}`,
+    source: 'shipped',
+    tags: ['tag-a'],
+  })),
+});
+const matchItemId = 'm-1';
+const matchItems: QuestionDeck = {
+  id: 'secretMatch',
+  version: 1,
+  questions: [
+    {
+      id: matchItemId,
+      format: 'secretMatch',
+      category: 'c1',
+      topic: 't1',
+      source: 'shipped',
+      text: 'Item one',
+      tags: ['tag-a'],
+    },
   ],
 };
 
@@ -58,17 +97,27 @@ function ChoiceProbe({ onChoice }: { onChoice: (choice: DeckChoice) => void }) {
 }
 
 async function renderPicker({
+  storeMatch = false,
   favouriteCardIds = [],
   favouriteDareCount = 0,
   customDecks = [],
   initialChoice,
 }: {
+  storeMatch?: boolean;
   favouriteCardIds?: string[];
   favouriteDareCount?: number;
   customDecks?: { name: string; cardIds: string[] }[];
   initialChoice?: DeckChoice;
 } = {}) {
-  const fixture = makeOwnCardsFixture({ shippedTexts: starterDeck.cards.map((card) => card.text) });
+  const fixture = makeOwnCardsFixture({
+    shippedTexts: (mockDecks[0] ?? starterDeck).cards.map((card) => card.text),
+    shippedMatchItemIds: [matchItemId],
+  });
+  if (storeMatch) {
+    await fixture.repository.addDiscoveries([
+      { kind: 'match', questionId: matchItemId, strength: 'yes' },
+    ]);
+  }
   for (const cardId of favouriteCardIds) await fixture.repository.setFavourite(cardId, true);
   for (let index = 1; index <= favouriteDareCount; index += 1) {
     const result = await fixture.repository.savePlayerCard({
@@ -109,6 +158,7 @@ async function renderPicker({
 describe('DeckPickerScreen', () => {
   beforeEach(() => {
     mockDecks.splice(0, mockDecks.length, starterDeck);
+    mockQuestionDecks.splice(0, mockQuestionDecks.length, matchItems);
   });
 
   afterEach(() => {
@@ -188,6 +238,96 @@ describe('DeckPickerScreen', () => {
       expect(
         await screen.findByRole('button', { name: deckName(copy.decks.favourites, countText(0)) }),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe('Your matches', () => {
+    const matchesButton = (count: number) => ({
+      name: deckName(copy.decks.matches, countText(count)),
+    });
+    const bigDeck = (cardCount: number) =>
+      mockDecks.splice(0, mockDecks.length, taggedDeck(cardCount));
+    const settle = () => act(async () => {});
+
+    it('should list Your matches with its count and what it is when it has 5 cards', async () => {
+      bigDeck(5);
+      await renderPicker({ storeMatch: true });
+
+      expect(await screen.findByRole('button', matchesButton(5))).toBeOnTheScreen();
+      expect(screen.getByText(copy.decks.matchesBody)).toBeOnTheScreen();
+    });
+
+    it('should leave Your matches out with 4 cards', async () => {
+      bigDeck(4);
+      await renderPicker({ storeMatch: true });
+      await settle();
+
+      expect(screen.queryByText(copy.decks.matches)).not.toBeOnTheScreen();
+    });
+
+    it('should leave Your matches out when nothing is matched', async () => {
+      bigDeck(6);
+      await renderPicker();
+      await settle();
+
+      expect(screen.queryByText(copy.decks.matches)).not.toBeOnTheScreen();
+    });
+
+    it('should count up to 20 cards of the matches deck and no more', async () => {
+      bigDeck(25);
+      await renderPicker({ storeMatch: true });
+
+      expect(await screen.findByRole('button', matchesButton(20))).toBeOnTheScreen();
+    });
+
+    it('should choose Your matches and return to setup when it is pressed', async () => {
+      bigDeck(5);
+      const { choices } = await renderPicker({ storeMatch: true });
+
+      fireEvent.press(await screen.findByRole('button', matchesButton(5)));
+
+      expect(choices.at(-1)).toBe('matches');
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('should show Your matches as selected when it is the deck chosen', async () => {
+      bigDeck(5);
+      await renderPicker({ storeMatch: true, initialChoice: 'matches' });
+
+      expect(
+        await screen.findByRole('button', { ...matchesButton(5), selected: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should give Your matches no view or edit button', async () => {
+      bigDeck(5);
+      await renderPicker({ storeMatch: true });
+      await screen.findByRole('button', matchesButton(5));
+
+      expect(screen.getAllByRole('button', { name: /^View / })).toHaveLength(1);
+      expect(screen.queryByRole('button', { name: /^Edit / })).not.toBeOnTheScreen();
+    });
+
+    it('should list it after Favourites and before the custom decks', async () => {
+      bigDeck(5);
+      await renderPicker({
+        storeMatch: true,
+        customDecks: [{ name: 'Placeholder deck', cardIds: [] }],
+      });
+      await screen.findByRole('button', matchesButton(5));
+
+      const headings = screen.getAllByText(
+        new RegExp(
+          `^(${copy.decks.starter}|${copy.decks.favourites}|${copy.decks.matches}|Placeholder deck)$`,
+        ),
+      );
+
+      expect(headings.map((heading) => heading.props.children)).toEqual([
+        copy.decks.starter,
+        copy.decks.favourites,
+        copy.decks.matches,
+        'Placeholder deck',
+      ]);
     });
   });
 

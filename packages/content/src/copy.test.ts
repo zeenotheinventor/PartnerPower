@@ -298,6 +298,8 @@ describe('copy', () => {
         'favourites',
         'favouritesEmpty',
         'groupHeading',
+        'matches',
+        'matchesBody',
         'nameError',
         'nameLabel',
         'newDeck',
@@ -466,6 +468,11 @@ describe('copy', () => {
         'clearCancel',
         'clearConfirm',
         'clearTitle',
+        'daresBody',
+        'daresPlay',
+        'daresStartMatch',
+        'daresTooFew',
+        'daresTitle',
         'emptyBody',
         'emptyMatch',
         'emptyPlay',
@@ -489,6 +496,14 @@ describe('copy', () => {
     );
     expectEveryValueToBeText(copy.discoveries);
     Object.values(copy.discoveries).forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+  });
+
+  it('should name the matches deck and the dares for you two section', () => {
+    expect(copy.decks.matches).toBe('Your matches');
+    expect(copy.decks.matchesBody).toBe('Dares picked from your secret matches.');
+    expect(copy.discoveries.daresTitle).toBe('Dares for you two');
+    expect(copy.discoveries.daresPlay).toBe('Play these in Freak or Drink');
+    expect(copy.discoveries.daresStartMatch).toBe('Start a secret match');
   });
 
   it('should leave a place for each name, option and text in the Discoveries lines', () => {

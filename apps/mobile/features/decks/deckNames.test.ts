@@ -11,6 +11,10 @@ describe('deckNameOf', () => {
     expect(deckNameOf('favourites', undefined)).toBe(copy.decks.favourites);
   });
 
+  it('should name Your matches from the copy', () => {
+    expect(deckNameOf('matches', undefined)).toBe(copy.decks.matches);
+  });
+
   it('should name a custom deck by the name the player gave it', () => {
     expect(deckNameOf(customDeckChoice('d-1'), customDecks)).toBe('Placeholder deck');
   });

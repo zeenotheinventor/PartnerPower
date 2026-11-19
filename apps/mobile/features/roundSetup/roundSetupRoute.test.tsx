@@ -49,6 +49,20 @@ describe('round setup in the route tree', () => {
     expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
 
+  it('should open from the dares for you two link with the starter deck, when there are too few matches to play', async () => {
+    await launchApp(`${setupRoute}?deck=matches`);
+
+    expect(await screen.findByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
+    expect(
+      await screen.findByRole('button', {
+        name: fillCopy(copy.roundSetup.deckRowName, {
+          label: copy.roundSetup.deckLabel,
+          value: copy.decks.starter,
+        }),
+      }),
+    ).toBeOnTheScreen();
+  });
+
   it('should go back to the hub with the back button', async () => {
     await launchApp('/');
     fireEvent.press(screen.getByRole('button', { name: displayNames.dares.title }));

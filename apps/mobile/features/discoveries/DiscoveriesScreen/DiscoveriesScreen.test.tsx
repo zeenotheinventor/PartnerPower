@@ -1,7 +1,8 @@
-import { copy, fillCopy, topicNames } from '@getfreak/content';
+import { categoryNames, copy, fillCopy, topicNames } from '@getfreak/content';
 import {
   questionPreferencesSchema,
   topicIds,
+  type Deck,
   type NewDiscovery,
   type Question,
   type QuestionDeck,
@@ -43,10 +44,16 @@ jest.mock('expo-router', () => ({
 // The shipped questions are placeholders, so the tests hold no question content. The array is read
 // when it is used, because this factory runs before the array below exists.
 const mockQuestionDecks: QuestionDeck[] = [];
+// The shipped dares, which the suggestions are picked from. A test fills it when it needs dares.
+const mockDecks: Deck[] = [];
 jest.mock('@getfreak/content', () => {
   const actual = jest.requireActual<typeof import('@getfreak/content')>('@getfreak/content');
-  return Object.defineProperty({ ...actual }, 'questionDecks', {
+  const withQuestionDecks = Object.defineProperty({ ...actual }, 'questionDecks', {
     get: () => mockQuestionDecks,
+    enumerable: true,
+  });
+  return Object.defineProperty(withQuestionDecks, 'decks', {
+    get: () => mockDecks,
     enumerable: true,
   });
 });
@@ -329,6 +336,171 @@ describe('DiscoveriesScreen', () => {
       expect(screen.queryByText(copy.discoveries.emptyTitle)).not.toBeOnTheScreen();
       await openStore();
       expect(saveSwitch()).toBeOnTheScreen();
+    });
+  });
+
+  describe('Dares for you two', () => {
+    // A starter deck of tagged dares, and the first secret match item tagged to match all of them.
+    // With that item stored as a match, every dare is suggested.
+    const daresIn = (count: number): Deck => ({
+      id: 'tagged-deck',
+      version: 1,
+      cards: Array.from({ length: count }, (_, index) => ({
+        id: `card-${String(index + 1).padStart(2, '0')}`,
+        category: 'c1' as const,
+        kind: 'solo' as const,
+        text: `Placeholder dare ${index + 1}`,
+        source: 'shipped' as const,
+        tags: ['tag-a'],
+      })),
+    });
+    const taggedItem = (item: Question): Question =>
+      item.format === 'secretMatch' && item.id === 'm-001' ? { ...item, tags: ['tag-a'] } : item;
+    const firstMatch: NewDiscovery = { kind: 'match', questionId: 'm-001', strength: 'yes' };
+    const dareTexts = () =>
+      screen.queryAllByText(/^Placeholder dare /).map((node) => node.props.children);
+    const heading = () => screen.queryByRole('header', { name: copy.discoveries.daresTitle });
+
+    let untaggedDecks: QuestionDeck[] = [];
+    beforeEach(() => {
+      untaggedDecks = [...mockQuestionDecks];
+      mockQuestionDecks.splice(
+        0,
+        mockQuestionDecks.length,
+        ...untaggedDecks.map((deck) => ({ ...deck, questions: deck.questions.map(taggedItem) })),
+      );
+    });
+    afterEach(() => {
+      mockQuestionDecks.splice(0, mockQuestionDecks.length, ...untaggedDecks);
+      mockDecks.splice(0, mockDecks.length);
+    });
+
+    it('should show up to five suggested dares, best first, each with its category', async () => {
+      mockDecks.push(daresIn(30));
+      await renderScreen([firstMatch]);
+
+      expect(heading()).toBeOnTheScreen();
+      expect(dareTexts()).toEqual([1, 2, 3, 4, 5].map((number) => `Placeholder dare ${number}`));
+      expect(screen.getAllByText(categoryNames.c1).length).toBeGreaterThanOrEqual(5);
+    });
+
+    it('should offer to play them with five suggestions, and open Freak or Drink setup with the matches deck chosen', async () => {
+      mockDecks.push(daresIn(5));
+      await renderScreen([firstMatch]);
+
+      fireEvent.press(screen.getByRole('button', { name: copy.discoveries.daresPlay }));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/dares/setup?deck=matches');
+    });
+
+    it('should show the hint and no play button with four suggestions', async () => {
+      mockDecks.push(daresIn(4));
+      await renderScreen([firstMatch]);
+
+      expect(screen.getByText(copy.discoveries.daresTooFew)).toBeOnTheScreen();
+      expect(
+        screen.queryByRole('button', { name: copy.discoveries.daresPlay }),
+      ).not.toBeOnTheScreen();
+      expect(dareTexts()).toEqual([]);
+    });
+
+    it('should open a secret match from the hint', async () => {
+      mockDecks.push(daresIn(4));
+      await renderScreen([firstMatch]);
+
+      fireEvent.press(screen.getByRole('button', { name: copy.discoveries.daresStartMatch }));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/questions/match');
+    });
+
+    it('should show the hint when other discoveries are saved but no match is', async () => {
+      mockDecks.push(daresIn(30));
+      await renderScreen([{ kind: 'agree', questionId: 'e-001', optionId: 'a' }]);
+
+      expect(screen.getByText(copy.discoveries.daresTooFew)).toBeOnTheScreen();
+    });
+
+    it('should show the hint with saving off and no stored matches', async () => {
+      mockDecks.push(daresIn(30));
+      await storage.set('questionPreferences', { saveDiscoveries: false });
+
+      await renderScreen([]);
+
+      expect(heading()).toBeOnTheScreen();
+      expect(screen.getByText(copy.discoveries.daresTooFew)).toBeOnTheScreen();
+      expect(
+        screen.queryByRole('button', { name: copy.discoveries.daresPlay }),
+      ).not.toBeOnTheScreen();
+    });
+
+    it('should still suggest from stored matches when saving is off', async () => {
+      mockDecks.push(daresIn(30));
+      await storage.set('questionPreferences', { saveDiscoveries: false });
+
+      await renderScreen([firstMatch]);
+
+      expect(dareTexts()).toHaveLength(5);
+    });
+
+    it('should leave the section out of the empty screen when saving is on', async () => {
+      mockDecks.push(daresIn(30));
+
+      await renderScreen([]);
+
+      expect(heading()).not.toBeOnTheScreen();
+    });
+
+    it('should never suggest a dare the player wrote', async () => {
+      mockDecks.push(daresIn(6));
+      const store = makeRepository();
+      await store.addDiscoveries([firstMatch]);
+      await store.savePlayerCard({ category: 'c1', kind: 'solo', text: 'Player written dare' });
+      const { openStore } = await renderWithStore(store);
+      await openStore();
+
+      expect(screen.queryByText('Player written dare')).not.toBeOnTheScreen();
+      expect(dareTexts()).toHaveLength(5);
+    });
+
+    it('should follow the matches, going back to the hint when the match is removed', async () => {
+      mockDecks.push(daresIn(30));
+      await renderScreen([firstMatch, { kind: 'agree', questionId: 'e-001', optionId: 'a' }]);
+      expect(dareTexts()).toHaveLength(5);
+
+      fireEvent.press(screen.getByRole('button', { name: 'Remove, Item 001' }));
+
+      expect(await screen.findByText(copy.discoveries.daresTooFew)).toBeOnTheScreen();
+      expect(dareTexts()).toEqual([]);
+    });
+
+    it('should sit between the saving switch and the groups', async () => {
+      mockDecks.push(daresIn(30));
+      await renderScreen([firstMatch]);
+
+      const labels = screen
+        .getAllByText(
+          new RegExp(
+            `^(${copy.discoveries.saveToggle}|${copy.discoveries.daresTitle}|${copy.discoveries.matchesLabel})$`,
+          ),
+        )
+        .map((node) => node.props.children);
+
+      expect(labels).toEqual([
+        copy.discoveries.saveToggle,
+        copy.discoveries.daresTitle,
+        copy.discoveries.matchesLabel,
+      ]);
+    });
+
+    it('should log nothing', async () => {
+      const consoleSpies = (['log', 'info', 'warn', 'error', 'debug'] as const).map((method) =>
+        jest.spyOn(console, method),
+      );
+      mockDecks.push(daresIn(30));
+
+      await renderScreen([firstMatch]);
+
+      consoleSpies.forEach((spy) => expect(spy).not.toHaveBeenCalled());
     });
   });
 

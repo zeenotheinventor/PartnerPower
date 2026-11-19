@@ -7,11 +7,14 @@ import { AccessibilityInfo, Text, View } from 'react-native';
 import { Button, Card, Character, Header, Screen, Toggle } from '../../../components/ui';
 import { useCustomQuestions, useDiscoveries } from '../../../personal';
 import type { DiscoveryKey } from '../../../storage';
+import { matchesSetupRoute } from '../../decks/routes';
 import { LineBox } from '../../questionsPlay/LineBox';
+import { DaresForYouTwo } from '../DaresForYouTwo';
 import { ClearDiscoveriesDialog, type ClearDiscoveriesVariant } from '../ClearDiscoveriesDialog';
 import { DiscoveryEntryCard } from '../DiscoveryEntryCard';
 import { buildDiscoveryGroups } from '../discoveryRows';
 import { questionsHomeRoute, roundSetupRoute, secretMatchRoute } from '../routes';
+import { useMatchSuggestions } from '../useMatchSuggestions';
 
 function GroupLabel({ children }: { children: string }) {
   return <Text className="type-caption uppercase text-muted">{children}</Text>;
@@ -20,8 +23,9 @@ function GroupLabel({ children }: { children: string }) {
 /**
  * What the couple has learned about each other in Drink If, kept on the phone: matches, things they
  * would both rather, and what each partner answered, newest first. Each entry can be removed, all
- * can be cleared, and the switch decides whether new ones are kept. The section for dares for you
- * two goes between the switch and the groups. Nothing here logs, because every line is personal.
+ * can be cleared, and the switch decides whether new ones are kept. Dares for you two, picked from
+ * the stored matches, sit between the switch and the groups. Nothing here logs, because every line
+ * is personal.
  */
 export function DiscoveriesScreen() {
   const router = useRouter();
@@ -44,6 +48,11 @@ export function DiscoveriesScreen() {
     () => buildDiscoveryGroups(discoveries, [...shippedQuestions, ...playerQuestions]),
     [discoveries, shippedQuestions, playerQuestions],
   );
+
+  const { dares, canPlay } = useMatchSuggestions(discoveries);
+  // With saving on and nothing saved the screen is the empty state, which the design draws without
+  // the section. With saving off it shows the hint, because nothing new will be kept to suggest from.
+  const isDaresSectionShown = groups.count > 0 || !saveDiscoveries;
 
   // A deep link can open this screen with nothing behind it, so it falls back to the home.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(questionsHomeRoute));
@@ -105,7 +114,14 @@ export function DiscoveriesScreen() {
             </View>
           )}
 
-          {/* The section for dares for you two goes here. */}
+          {isDaresSectionShown ? (
+            <DaresForYouTwo
+              dares={dares}
+              canPlay={canPlay}
+              onPlay={() => router.push(matchesSetupRoute)}
+              onStartMatch={() => router.push(secretMatchRoute)}
+            />
+          ) : null}
 
           {groups.count === 0 ? (
             <>
