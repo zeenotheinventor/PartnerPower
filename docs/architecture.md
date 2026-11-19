@@ -594,6 +594,10 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx
+        my-dares/
+          index.tsx      the My dares list
+          new.tsx        the dare editor, for a new dare
+          [id].tsx       the dare editor, for a dare that is stored
       questions/
         _layout.tsx      holds the question round for this route group
         index.tsx        the Drink If home
@@ -616,6 +620,7 @@ apps/mobile/
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
+  features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
@@ -638,6 +643,12 @@ apps/mobile/
   The provider also keeps `lastStart`, the setup and deck the last round was started from, in
   memory only, so the summary can start another round like it. It goes with the round when the
   route group is left.
+- **Own dares** are held once for the `games/dares` route group by `OwnCardsProvider`
+  (`features/ownCards`), above the round provider. `useOwnCards` gives `isLoading`, `cards`,
+  `hasReachedLimit`, `save(draft)` and `remove(id)`. It reads the list from the repository of
+  `usePersonalData`, and a save or a delete goes through the repository and then reads the list again,
+  so setup, the list and the editor always agree. `save` returns the repository's result, so a
+  screen maps the problem codes to messages. Nothing in it logs.
 - **Question round state** works the same way for `questions`. The layout renders
   `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
   `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
@@ -654,6 +665,34 @@ apps/mobile/
   `setHapticsOn` never reject, and a failed write still holds for that session.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
+
+### My dares
+
+A couple write their own dares and deal them in with the starter deck. The code is in
+`features/ownCards`. A dare is a `PlayerCard`, stored by the personal repository, so tidying the text
+and the checks against the shipped deck and the player's other dares are the repository's, not the
+screen's. The screens map the problem codes to the messages in `content`, in `cardProblemMessage`.
+
+- **Setup.** `RoundSetupScreen` has a `My dares` row under the names: a pressable card named "My dares,
+  12 written" that opens the list. With at least one dare, a `Mix in my dares` switch sits under it,
+  in a bordered box. It is on each time setup opens, is not remembered, and applies to the starter
+  deck only. Start deals from `withOwnCards(starterDeck, dares)` when it is on and from the starter
+  deck alone when it is off. A player's dare can be in any category, and the level decides which are
+  dealt, as for shipped cards.
+- **List** (`my-dares`). The title with how many are written, then `Write a dare`, then the dares
+  grouped by category in rank order. Each group has a category chip and its count as a heading, and
+  each dare is a pressable card in its category colour, with a Together chip where it applies, that
+  opens it for editing. An empty list invites the first dare. At 300 dares (`limits.playerCards`)
+  `Write a dare` is disabled and the line under it says why. If the store reported that it could not
+  open saved data and started fresh, a notice shows once, on the next visit to the list.
+- **Editor** (`my-dares/new`, `my-dares/[id]`). A multiline `TextField` for the dare with a count against
+  140, four category chips (a radio group named Category), and a `SegmentedControl` for "For your
+  partner" or "Together". `Save dare` is pinned in the `Screen` footer. It is off while the field is
+  empty and until the store has loaded. A rejected save shows the message under the field, reads it
+  with the field and announces it. A dare that is being edited also has `Delete dare` at the end of
+  the form, which asks with the kit `Dialog`, then deletes through the repository, which also takes
+  the dare out of the favourites and the decks, and goes back.
+- **Not logged.** No dare text is logged or sent anywhere.
 
 ### Summary screen
 
@@ -895,7 +934,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 
 | Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                                                                                                                                  |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading. An optional `footer` is pinned under the content, outside a scroll view, above the keyboard.                                                                                                                                     |
 | `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
@@ -903,7 +942,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a primary confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing.                                                                                                                                         |
+| `TextField`        | A labelled text input, found by its label. `multiline` makes it three lines high. `count` with `maxCount` draws "count/maxCount" under it, and `error` draws a message. An error or a count over the maximum takes the accent border, and focus the foreground border. The error and count under the box are hidden from a screen reader, and its hint is the error, then `countHint`.                                                                                                                      |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                           |
 | `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                 |

@@ -8,6 +8,8 @@ export { Character, CharacterOf } from './Character';
 export type { CharacterProps, CharacterPropsFor } from './Character';
 export { Chip } from './Chip';
 export type { ChipProps } from './Chip';
+export { Dialog } from './Dialog';
+export type { DialogProps } from './Dialog';
 export { FavouriteToggle } from './FavouriteToggle';
 export type { FavouriteToggleProps } from './FavouriteToggle';
 export { Header } from './Header';

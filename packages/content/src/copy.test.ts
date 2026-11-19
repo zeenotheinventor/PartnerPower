@@ -1,4 +1,4 @@
-import { surpriseIds } from '@getfreak/core';
+import { limits, surpriseIds } from '@getfreak/core';
 
 import { copy } from './copy';
 import { hasDashOrSemicolon } from './textRules';
@@ -47,6 +47,11 @@ describe('copy', () => {
         'lengthTen',
         'lengthTwenty',
         'levelLabel',
+        'mixInMyDares',
+        'myDaresCount',
+        'myDaresLabel',
+        'myDaresNone',
+        'myDaresRowName',
         'playerOneLabel',
         'playerTwoLabel',
         'start',
@@ -56,6 +61,48 @@ describe('copy', () => {
       ].sort(),
     );
     expectEveryValueToBeText(copy.roundSetup);
+  });
+
+  it('should give the shared kit lines as non-empty text', () => {
+    expect(Object.keys(copy.ui)).toEqual(['characterCount']);
+    expectEveryValueToBeText(copy.ui);
+  });
+
+  it('should give the My dares screens every line as non-empty text', () => {
+    expect(Object.keys(copy.ownCards).sort()).toEqual(
+      [
+        'add',
+        'backLabel',
+        'categoryLabel',
+        'deleteButton',
+        'deleteCancel',
+        'deleteConfirm',
+        'deleteBody',
+        'deleteTitle',
+        'duplicateError',
+        'editorTitle',
+        'emptyError',
+        'emptyList',
+        'fieldLabel',
+        'groupHeading',
+        'kindLabel',
+        'kindSolo',
+        'kindTogether',
+        'limit',
+        'listTitle',
+        'notice',
+        'save',
+        'togetherCardLabel',
+        'tooLongError',
+        'writeFailed',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.ownCards);
+  });
+
+  it('should word the dare limit and the length message with the numbers the rules use', () => {
+    expect(copy.ownCards.limit).toContain(String(limits.playerCards));
+    expect(copy.ownCards.tooLongError).toContain(String(limits.cardTextLength));
   });
 
   it('should give the Drink If home every line as non-empty text', () => {
