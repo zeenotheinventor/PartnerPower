@@ -169,6 +169,38 @@ describe('KitGallery', () => {
     expect(screen.getByRole('button', { name: 'Danger button' })).toBeOnTheScreen();
   });
 
+  describe('the PIN pad', () => {
+    it('should show it empty, partly filled, full, with an error and while waiting', async () => {
+      await renderThemed(<KitGallery />);
+
+      // The empty one is the pad to try, so two pads are empty: that one and the waiting one.
+      expect(screen.getAllByRole('text', { name: '0 of 4 digits entered' })).toHaveLength(3);
+      expect(screen.getByRole('text', { name: '2 of 4 digits entered' })).toBeOnTheScreen();
+      expect(screen.getByRole('text', { name: '4 of 4 digits entered' })).toBeOnTheScreen();
+      expect(screen.getByText('Wrong PIN. Try again.')).toBeOnTheScreen();
+      expect(screen.getByText('Try again in 0:24.')).toBeOnTheScreen();
+    });
+
+    it('should show a pad whose keys are all disabled for the wait', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getAllByRole('button', { name: '1', disabled: true })).toHaveLength(1);
+    });
+
+    it('should let the pad to try take digits, and show an error after the fourth', async () => {
+      await renderThemed(<KitGallery />);
+      // The pad to try is the first one on the screen, so its key is the first one found.
+      const [seven] = screen.getAllByRole('button', { name: '7', disabled: false });
+      if (!seven) throw new Error('The pad to try has no 7 key.');
+
+      fireEvent.press(seven);
+      expect(screen.getAllByRole('text', { name: '1 of 4 digits entered' })).toHaveLength(1);
+      [1, 2, 3].forEach(() => fireEvent.press(seven));
+
+      expect(screen.getAllByText('Sample error. Try again.')).toHaveLength(1);
+    });
+  });
+
   describe('the settings rows', () => {
     it('should show a row with a value, named by its label and value', async () => {
       await renderThemed(<KitGallery />);

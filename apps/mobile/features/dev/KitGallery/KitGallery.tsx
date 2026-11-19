@@ -14,6 +14,7 @@ import {
   Dialog,
   FavouriteToggle,
   Header,
+  PinPad,
   Screen,
   SegmentedControl,
   SettingsRow,
@@ -61,6 +62,8 @@ export function KitGallery() {
   const [liveCountdownStartedAt, setLiveCountdownStartedAt] = useState<number | null>(null);
   // The ended one started a long time ago, so it is already at zero.
   const [endedCountdownStartedAt] = useState(() => Date.now() - 120_000);
+  const [pinValue, setPinValue] = useState('');
+  const [pinError, setPinError] = useState<string | undefined>(undefined);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>(['c1', 'c2']);
 
   const toggleCategory = (categoryId: CategoryId) =>
@@ -121,6 +124,49 @@ export function KitGallery() {
               />
             </View>
           </Card>
+        </Section>
+
+        <Section title="PIN pad, to try">
+          {/* The last number shows the error line and clears the dots, as a wrong PIN would. */}
+          <PinPad
+            value={pinValue}
+            onChange={(next) => {
+              setPinError(undefined);
+              setPinValue(next);
+            }}
+            onComplete={() => {
+              setPinError('Sample error. Try again.');
+              setPinValue('');
+            }}
+            error={pinError}
+          />
+        </Section>
+
+        <Section title="PIN pad, partly filled">
+          <PinPad value="12" onChange={() => {}} onComplete={() => {}} />
+        </Section>
+
+        <Section title="PIN pad, full">
+          <PinPad value="1234" onChange={() => {}} onComplete={() => {}} />
+        </Section>
+
+        <Section title="PIN pad, error">
+          <PinPad
+            value=""
+            error="Wrong PIN. Try again."
+            onChange={() => {}}
+            onComplete={() => {}}
+          />
+        </Section>
+
+        <Section title="PIN pad, waiting">
+          <PinPad
+            value=""
+            disabled
+            message="Try again in 0:24."
+            onChange={() => {}}
+            onComplete={() => {}}
+          />
         </Section>
 
         <Section title="Cards">

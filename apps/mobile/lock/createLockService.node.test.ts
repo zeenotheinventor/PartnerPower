@@ -390,6 +390,7 @@ describe('biometrics availability', () => {
     expect(await lock.getBiometricsAvailability()).toEqual({
       isAvailable: true,
       kind: 'fingerprint',
+      kinds: ['fingerprint'],
     });
   });
 
@@ -406,7 +407,11 @@ describe('biometrics availability', () => {
   it('should name face first when the phone has several kinds', async () => {
     const lock = createFixture({ kinds: ['iris', 'fingerprint', 'face'] }).makeService();
 
-    expect(await lock.getBiometricsAvailability()).toEqual({ isAvailable: true, kind: 'face' });
+    expect(await lock.getBiometricsAvailability()).toEqual({
+      isAvailable: true,
+      kind: 'face',
+      kinds: ['face', 'fingerprint', 'iris'],
+    });
   });
 
   it('should name fingerprint before iris', async () => {
@@ -415,6 +420,7 @@ describe('biometrics availability', () => {
     expect(await lock.getBiometricsAvailability()).toEqual({
       isAvailable: true,
       kind: 'fingerprint',
+      kinds: ['fingerprint', 'iris'],
     });
   });
 
