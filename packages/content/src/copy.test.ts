@@ -187,9 +187,6 @@ describe('copy', () => {
         'stepUpCost',
         'stepUpLine',
         'stepUpLineBold',
-        'summaryStandInHome',
-        'summaryStandInLine',
-        'summaryStandInTitle',
         'title',
         'wrongLine',
         'yes',
@@ -257,6 +254,40 @@ describe('copy', () => {
 
   it('should keep the secret match lines free of dashes and semicolons', () => {
     Object.values(copy.secretMatch).forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+  });
+
+  it('should give the Drink If summary every line as non-empty text, free of dashes and semicolons', () => {
+    expect(Object.keys(copy.questionsSummary).sort()).toEqual(
+      [
+        'badge',
+        'discoveriesBody',
+        'discoveriesMany',
+        'discoveriesOne',
+        'guessCount',
+        'guessedRight',
+        'guessesLine',
+        'home',
+        'knowsBestLine',
+        'matchesLineMany',
+        'matchesLineOne',
+        'noGuessLine',
+        'playAgain',
+        'playerSummary',
+        'playerSummaryBest',
+        'playerSummaryNoGuesses',
+        'questionCountMany',
+        'questionCountOne',
+        'saveFailed',
+        'settings',
+        'subtitle',
+        'tieLine',
+        'title',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.questionsSummary);
+    Object.values(copy.questionsSummary).forEach((line) =>
+      expect(hasDashOrSemicolon(line)).toBe(false),
+    );
   });
 
   it('should give the round screen every line as non-empty text', () => {

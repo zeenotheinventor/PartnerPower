@@ -1,6 +1,5 @@
-import { SummaryStandIn } from '../../../features/questionsPlay/SummaryStandIn';
+import { QuestionsSummaryScreen } from '../../../features/questionsSummary/QuestionsSummaryScreen';
 
-// A stand-in until the Drink If summary replaces it.
 export default function QuestionsSummaryRoute() {
-  return <SummaryStandIn />;
+  return <QuestionsSummaryScreen />;
 }
