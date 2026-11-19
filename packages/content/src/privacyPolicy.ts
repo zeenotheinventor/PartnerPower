@@ -11,7 +11,8 @@ export type PrivacyPolicy = {
 };
 
 // Placeholder. The owner replaces it with the real contact address before launch (FRK-73). The
-// same address goes in the hosted copy of this policy.
+// same address goes in the hosted copy of this policy. A skipped test in privacyPolicy.test.ts is
+// the launch gate for it.
 const contactEmail = 'privacy@example.com';
 
 // The settings screen shows this text, and the owner hosts the same words at the privacy policy URL
@@ -54,15 +55,16 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'Backups',
       paragraphs: [
-        'On Android, the app switches off app backup, so nothing from it goes into a cloud backup.',
-        'On iPhone, your settings and player names may be included in your own iCloud or computer backup, as with most apps. What you write yourselves is encrypted, and the key never leaves your phone, so a backup of it cannot be read.',
+        "Your phone's own backup, such as iCloud, Google or a computer backup, may include the app's settings and player names, as with most apps. That backup is kept under your own account, and we cannot see it.",
+        'If you write your own dares or questions, or save favourites, decks or answers, they are encrypted with a key that stays on this phone. A backup of them cannot be read on another phone.',
       ],
     },
     {
       heading: 'Removing everything',
       paragraphs: [
         'Clear everything, in Settings, deletes everything the app has stored on your phone and takes the app back to its first screen.',
-        'Deleting the app removes everything too. On iPhone, a few secure items, such as a PIN, can stay in the phone keychain after the app is deleted. If you install the app again, it removes them before it reads anything.',
+        'Deleting the app removes everything too.',
+        'If you set a PIN or wrote your own cards, a few secure items, such as the PIN, can stay in the iPhone keychain after the app is deleted. If you install the app again, it removes them before it reads anything.',
       ],
     },
     {

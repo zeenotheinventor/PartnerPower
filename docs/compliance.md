@@ -32,14 +32,14 @@ Target audience on Google Play: 18 and over only.
 
 ### Top risks
 
-| #   | Risk                                                                                                                                                                           | Likelihood                      | Mitigation                                                                                                                          | If review objects                                                                                                 |
-| --- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
-| 1   | Google Play rejects or removes the app for sexual content. Its policy has no adult exception and names "explicit text" in the app and "sex guides".                            | High                            | Text only, no images. 18+ rating and target audience. Clean listing. Couples framing. Learn the outcome early from the closed test. | Soften the deck on Android, or ship Android with Soft only. See [Explicit dares](#explicit-dares).                |
-| 2   | App Review rejects the app under 1.1.4, or reads the explicit cards as "Graphic Sexual Content", which makes an app Unrated and unpublishable on the App Store.                | Medium to high                  | Text only, no images, no narrative. 18+ rating. 18+ confirmation. Couples and consent framing. Full disclosure in the review notes. | Same deck options as risk 1, for iOS.                                                                             |
-| 3   | Apple 1.4.3 or Google's alcohol rule: the forfeit is drinks, 1 to 4 per pass, with no cap. A player who passes every card of a 20 card Freaky round is told to drink 30 times. | Medium                          | Any card can be skipped at no cost. The winner is whoever did more dares, never whoever drank more. Clean listing.                  | Call the unit a sip, add a responsible drinking line on the 18+ screen, or add a cap. Copy and data, little code. |
-| 4   | Apple 4.3(b) names "drinking games" and "Kama Sutra" apps as low value.                                                                                                        | Medium                          | Two games, a curated deck of 128 cards, the couple's own dares and decks, the lock, the design. Say so in the notes.                | Answer in Resolution Center with what sets the app apart. No code change helps directly.                          |
-| 5   | The vibration card reads as the phone being used as a vibrator (Apple), or as "functionally sexual aids" (Google).                                                             | Medium on Apple, high on Google | One card in the deck. Described in the notes, kept out of the listing and screenshots.                                              | Take the card out of the deck (a data change) and resubmit.                                                       |
-| 6   | US state app store age laws. Texas is in force. Apple says an 18+ app still needs the Declared Age Range API where the law requires it.                                        | Certain for Texas accounts      | Not built yet. Needs a new ticket before a US launch. See [Age assurance](#age-assurance).                                          | Not a review risk as such. A legal risk.                                                                          |
+| #   | Risk                                                                                                                                                                                                | Likelihood                                  | Mitigation                                                                                                                          | If review objects                                                                                                 |
+| --- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| 1   | Google Play rejects or removes the app for sexual content. Its policy has no adult exception and names "explicit text" in the app and "sex guides".                                                 | High                                        | Text only, no images. 18+ rating and target audience. Clean listing. Couples framing. Learn the outcome early from the closed test. | Soften the deck on Android, or ship Android with Soft only. See [Explicit dares](#explicit-dares).                |
+| 2   | App Review rejects the app under 1.1.4, or reads the explicit cards as "Graphic Sexual Content", which makes an app Unrated and unpublishable on the App Store.                                     | Medium to high                              | Text only, no images, no narrative. 18+ rating. 18+ confirmation. Couples and consent framing. Full disclosure in the review notes. | Same deck options as risk 1, for iOS.                                                                             |
+| 3   | Apple 1.4.3 or Google's alcohol rule: the forfeit is drinks, 1 to 4 per pass, with no cap. Passing every card of a 20 card Freaky round costs each player 30 drinks (worked example under Alcohol). | Medium                                      | Any card can be skipped at no cost. The winner is whoever did more dares, never whoever drank more. Clean listing.                  | Call the unit a sip, add a responsible drinking line on the 18+ screen, or add a cap. Copy and data, little code. |
+| 4   | Apple 4.3(b) names "drinking games" and "Kama Sutra" apps as low value.                                                                                                                             | Medium                                      | Two games, a curated deck of 128 cards, the couple's own dares and decks, the lock, the design. Say so in the notes.                | Answer in Resolution Center with what sets the app apart. No code change helps directly.                          |
+| 5   | The vibration card reads as the phone being used as a vibrator (Apple), or as "functionally sexual aids" (Google).                                                                                  | Medium on Apple, high on Google             | One card in the deck. Described in the notes, kept out of the listing and screenshots.                                              | Take the card out of the deck (a data change) and resubmit.                                                       |
+| 6   | US state app store age laws. Texas is in force. Apple says an 18+ app still needs the Declared Age Range API where the law requires it.                                                             | Likely for Texas accounts, duties unsettled | Not built yet. Needs a new ticket before a US launch. See [Age assurance](#age-assurance).                                          | Not a review risk as such. A legal risk.                                                                          |
 
 ## Sources
 
@@ -127,7 +127,7 @@ Quotes are from A1 unless another source is named.
 | 5.1.1(v)      | Apps without significant account features must not require a login.                                                                                                                                        | None.                                                                   | No accounts.                                                                                                                         |
 | 5.1.2         | Rules on using and sharing personal data.                                                                                                                                                                  | None.                                                                   | Nothing is collected or shared.                                                                                                      |
 | 3.1.1         | In-app purchases go through Apple, with a restore option.                                                                                                                                                  | Only if FRK-42 picks a purchase. Not reviewed in detail here.           | FRK-71 covers it.                                                                                                                    |
-| Age assurance | A10: "If my app is rated 18+, do I still need to implement the Declared Age Range API? Yes. In regions where legally required".                                                                            | Certain for Texas accounts.                                             | See [Age assurance](#age-assurance).                                                                                                 |
+| Age assurance | A10: "If my app is rated 18+, do I still need to implement the Declared Age Range API? Yes. In regions where legally required".                                                                            | Likely for Texas accounts, duties unsettled.                            | See [Age assurance](#age-assurance).                                                                                                 |
 
 No guideline mentions vibration. That Apple has rejected apps whose main purpose is to act as a
 vibrator is from the FRK-29 ticket and developer reports. **Unconfirmed** from a primary source.
@@ -194,7 +194,8 @@ FRK-29 adds one card that makes the phone vibrate for 10 seconds while held agai
 - **Apple.** Apps whose main purpose is to act as a vibrator have been rejected (**Unconfirmed**,
   see above). One card in a card game is a different case, but it is a review risk.
 - **Google.** The card could be read as content that is "functionally" a sexual aid (G1). The risk
-  is higher than on Apple, and Google Play has no free-text notes for the reviewer.
+  is higher than on Apple. Google Play has no dedicated reviewer notes for content, only App access
+  instructions and appeals (**Unconfirmed**: not checked against Play Console).
 
 Decision (tech lead, 2026-11-19, from the ticket): describe the card in the App Review notes, keep it
 out of the listing and the screenshots, and if review objects, take the card out of the deck (a data
@@ -202,15 +203,28 @@ change, no code) and resubmit. Hiding it from review is not an option. Apple 2.3
 features to be described in the notes, and 2.5.19 forbids hidden features.
 
 Recommendation for the owner, not decided here: consider leaving the card out of the first Android
-submission, since a removal on Google Play counts against the account and there is no way to
-explain the card to the reviewer.
+submission, since a removal on Google Play can count against the account and there is no
+dedicated place to explain the card to the reviewer before review.
 
 ### Alcohol
 
 Passing a card costs 1 to 4 drinks, rising with the category. A together card costs both players.
-There is no cap and no non-alcoholic mode (owner, 2026-11-18, FRK-16). If both players pass every
-card of a 20 card round at Freaky, each is told to drink 30 times. The second game is named "Drink
-If".
+There is no cap and no non-alcoholic mode (owner, 2026-11-18, FRK-16). The second game is named
+"Drink If".
+
+Worked example, using the penalties in `packages/core/src/contentModel.ts` (Soft 1, Foreplay 2,
+Oral 3, Sex 4) and the round rules in `docs/architecture.md`. A 20 card round at Freaky deals 5
+cards from each category. Cards 5, 10, 15 and 20 are together cards, one per category, and the
+other 16 are solo cards, 2 per player in each category. If every card is passed:
+
+- Solo cards, per player: 2 × (1 + 2 + 3 + 4) = 20 drinks.
+- Together cards, charged to both: 1 + 2 + 3 + 4 = 10 drinks each.
+- So each player is told to drink 30 times, and the pair 60. That is the 20 cards at an average of
+  2.5 (50), plus the 10 that together cards charge a second time.
+- A 10 card round at Freaky gives 17 each. An endless round at Freaky with every card passed deals
+  all 128 cards and gives about 205 each.
+
+These figures were checked by running the round engine with every card passed, for three seeds.
 
 - **Apple 1.4.3** does not allow apps that "encourage consumption of ... excessive amounts of
   alcohol".
@@ -349,6 +363,23 @@ sign-in, and not a news, government, financial or health app (FRK-73).
 - Both stores need the privacy policy URL. The text is `privacyPolicy` in `packages/content`, and
   the owner hosts the same words.
 
+### Must be true before the privacy policy is published
+
+The policy describes the launch build. Where a feature is not built yet, its text starts with "if",
+so it is true whether or not the feature ships. These must still be true before the owner hosts the
+policy or gives its URL to a store:
+
+- FRK-58 sets `android.allowBackup` to `false` in `app.json`.
+- FRK-41 stores the database key in `expo-secure-store` with device-only keychain accessibility
+  (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), so the key is never in a backup and a backup of the encrypted
+  store cannot be read on another phone.
+- FRK-53 keeps the PIN only as a salted hash in secure storage, and its install marker clears
+  secure storage on the first launch after a reinstall.
+- FRK-63 ships Clear everything in Settings, as the policy describes it.
+- FRK-63 and FRK-73 re-read the policy against the build that is submitted, and change it if
+  anything differs. FRK-73 also replaces the placeholder contact email and turns on the launch gate
+  test in `privacyPolicy.test.ts`.
+
 ### Every library against "no data collected"
 
 Checked from `apps/mobile/package.json` on `main` and from the source of `apps/mobile`, which has no
@@ -439,7 +470,8 @@ The answer:
 - **Once SQLCipher ships: `YES`,** and in App Store Connect choose "an industry standard algorithm,
   not provided within the Apple operating system". SQLCipher uses standard AES, but its encryption
   scheme is its own layer above the operating system's primitives, so the exemption for encryption
-  "limited to that within the Apple operating system" is not safe to claim. This needs no CCATS.
+  "limited to that within the Apple operating system" is not safe to claim. This needs no CCATS,
+  per A8, which asks for one only for proprietary algorithms (**Unconfirmed**: take advice).
   It needs the French encryption declaration only if the app is offered in France. The owner either
   files that declaration or leaves France out of the launch countries.
 
@@ -541,14 +573,14 @@ Limits: Apple name and subtitle 30 characters each (A13), keywords 100 bytes, pr
 characters, description 4000 characters (A14). Google title 30 characters, short description 80,
 full description 4000 (G6).
 
-| Field                  | Draft                                                                                                | Length |
-| ---------------------- | ---------------------------------------------------------------------------------------------------- | ------ |
-| Name (both stores)     | `Get Freak: Couples Game`                                                                            | 23     |
-| Apple subtitle         | `Dares for two, on one phone`                                                                        | 27     |
-| Apple promotional text | `Date night, sorted. Pass the phone, draw a dare, and see how far you both want to go. Adults only.` | 98     |
-| Play short description | `Playful dares for couples. Two of you, one phone, you set the pace. 18+ only.`                      | 77     |
-| Apple keywords         | `couple,dare,date night,romance,relationship,party game,two player,flirt,partner,love,game night`    | 95     |
-| Category (both stores) | Entertainment                                                                                        |        |
+| Field                  | Draft                                                                                             | Length |
+| ---------------------- | ------------------------------------------------------------------------------------------------- | ------ |
+| Name (both stores)     | `Get Freak: Couples Game`                                                                         | 23     |
+| Apple subtitle         | `Dares for two, on one phone`                                                                     | 27     |
+| Apple promotional text | `Date night, sorted. Pass the phone, draw a dare and have fun together. Adults only.`             | 83     |
+| Play short description | `Playful dares for couples. Two of you, one phone, you set the pace. 18+ only.`                   | 77     |
+| Apple keywords         | `couple,dare,date night,romance,relationship,party game,two player,flirt,partner,love,game night` | 95     |
+| Category (both stores) | Entertainment                                                                                     |        |
 
 The home screen name stays "Get Freak" (owner, 2026-11-18). The store name adds a short descriptor,
 which 2.3.7 allows. If the owner prefers, the store name can be plain "Get Freak".
@@ -559,21 +591,21 @@ Full description, for both stores:
 Get Freak is a game for couples, played together on one phone.
 
 Take turns drawing dares, pass the phone, and decide together how bold to be. Start gentle with
-Flirty, or turn it up when you are both ready. Every round is yours to shape.
+Flirty and play at a pace you both enjoy. Every round is yours to shape.
 
-HOW IT WORKS
+How It Works
 - Enter your names and choose how bold and how long.
 - Draw a dare. Do it, or pass and take the forfeit, a drink.
 - Some cards are for both of you at once.
 - Not feeling a card? Skip it at no cost, or switch a whole category off.
 - At the end of the round, see who was boldest.
 
-MADE FOR TWO
+Made for Two
 - One phone, passed between you. No sign-up and no account.
 - Over a hundred hand-written dares that build from sweet to bold.
 - Pick your level and your round length, from a quick ten cards to endless.
 
-PRIVATE BY DESIGN
+Private by Design
 - Nothing leaves your phone. No accounts, no ads, no tracking.
 - Clear everything in one tap.
 
@@ -582,8 +614,8 @@ drink if you are of legal drinking age and want to.
 ```
 
 Before using it, cut any line about a feature the submitted build does not have, and add lines for
-features it does, such as the app lock and the couple's own dares. Keep the HOW IT WORKS hyphens
-as plain list markers. Apple's description is plain text with no formatting (A14).
+features it does, such as the app lock and the couple's own dares. Keep the hyphens as plain list
+markers. Apple's description is plain text with no formatting (A14).
 
 ## Draft App Review notes
 
@@ -619,10 +651,9 @@ CONTENT
 The cards are text only. There are no images, video or audio of a sexual nature. The deck has four
 categories that build in order: Soft (compliments and kisses), Foreplay (undressing and touching,
 including by hand), Oral and Sex. The Foreplay, Oral and Sex cards name sexual acts between the two
-partners plainly, in the
-language adults use with each other. They are written for a consenting couple. Many cards say
-either partner can stop at any time, and any card or whole category can be skipped at no cost. The
-store listing and screenshots show only the mildest level.
+partners plainly, in the language adults use with each other. They are written for a consenting
+couple. Many cards say either partner can stop at any time, and any card or whole category can be
+skipped at no cost. The store listing and screenshots show only the mildest level.
 
 THE FORFEIT
 Passing a card costs drinks, from 1 in the mildest category to 4 in the boldest. Nobody has to
@@ -657,23 +688,25 @@ hand-written cards that build in steps, [the couple's own dares and decks,] an a
 privacy-first design with nothing leaving the phone.
 ```
 
-Google Play has no free-text field for review notes. App access in Play Console says the whole app
-is available with no sign-in.
+Google Play has no dedicated reviewer notes for content, only App access instructions and appeals
+(**Unconfirmed**: not checked against Play Console). App access says the whole app is available with
+no sign-in. If a rejection names the explicit cards or the vibration card, the appeal can use the
+CONTENT and THE VIBRATION CARD paragraphs above.
 
 ## Decisions made in this ticket
 
-| Decision                            | Outcome                                                                                                                                                                                       |
-| ----------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error reporting and analytics       | None at launch. Crash data comes only from what Apple and Google collect from players who opt in, with no SDK in the app. Recorded in `docs/architecture.md`.                                 |
-| Apple Graphic Sexual Content answer | None, with the explicit wording disclosed in the review notes. A judgement call the owner may reverse, knowing that any other answer makes the app Unrated on the App Store.                  |
-| Contests and profanity answers      | Infrequent for both. Neither changes the 18+ result.                                                                                                                                          |
-| Apple Age assurance control         | No at launch, Yes once Declared Age Range ships.                                                                                                                                              |
-| IARC category                       | Game.                                                                                                                                                                                         |
-| `ITSAppUsesNonExemptEncryption`     | `NO` until SQLCipher ships, then `YES` with "industry standard algorithm". The owner files the French declaration or leaves France out.                                                       |
-| Store name                          | "Get Freak: Couples Game" in both stores. The home screen name stays "Get Freak".                                                                                                             |
-| Store category                      | Entertainment on both stores, as proposed.                                                                                                                                                    |
-| Privacy policy scope                | Written for the launch build. Features that may not have shipped yet are described with "if", so the text stays true either way. Change it if a decision in FRK-41, FRK-53 or FRK-58 changes. |
-| Age assurance                       | Recommend a new milestone 4 ticket for Declared Age Range and Play Age Signals, before a US launch.                                                                                           |
+| Decision                            | Outcome                                                                                                                                                                                                                                                 |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Error reporting and analytics       | None at launch. Crash data comes only from what Apple and Google collect from players who opt in, with no SDK in the app. Recorded in `docs/architecture.md`.                                                                                           |
+| Apple Graphic Sexual Content answer | None, with the explicit wording disclosed in the review notes. A judgement call the owner may reverse, knowing that any other answer makes the app Unrated on the App Store.                                                                            |
+| Contests and profanity answers      | Infrequent for both. Neither changes the 18+ result.                                                                                                                                                                                                    |
+| Apple Age assurance control         | No at launch, Yes once Declared Age Range ships.                                                                                                                                                                                                        |
+| IARC category                       | Game.                                                                                                                                                                                                                                                   |
+| `ITSAppUsesNonExemptEncryption`     | `NO` until SQLCipher ships, then `YES` with "industry standard algorithm". The owner files the French declaration or leaves France out.                                                                                                                 |
+| Store name                          | "Get Freak: Couples Game" in both stores. The home screen name stays "Get Freak".                                                                                                                                                                       |
+| Store category                      | Entertainment on both stores, as proposed.                                                                                                                                                                                                              |
+| Privacy policy scope                | Written for the launch build. Features that may not have shipped yet are described with "if", and a list says what must be true before it is published, so the text stays true either way. Change it if a decision in FRK-41, FRK-53 or FRK-58 changes. |
+| Age assurance                       | Recommend a new milestone 4 ticket for Declared Age Range and Play Age Signals, before a US launch.                                                                                                                                                     |
 
 ## Recommendations for the owner
 

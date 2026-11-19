@@ -704,6 +704,9 @@ and pnpm 9.11.0, and the README has the steps.
   collected". `docs/compliance.md` checks every library against that answer.
 - The privacy policy is one export, `privacyPolicy`, in `packages/content`. The settings screen
   shows it, and the owner hosts the same words at the URL given to the stores.
+- The policy describes the launch build. `docs/compliance.md` lists what must be true before it is
+  published: no Android backup, a device-only database key, the PIN hash and install marker, and
+  Clear everything.
 - A change that adds a network call, an SDK that sends data, a push token, or a new kind of stored
   data updates `docs/compliance.md` and `privacyPolicy` in the same pull request.
 - Never log player names, card text or anything a player typed.
