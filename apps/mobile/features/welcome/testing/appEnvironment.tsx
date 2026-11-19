@@ -1,6 +1,7 @@
 import { act, renderRouter } from 'expo-router/testing-library';
 import backend from 'expo-sqlite/kv-store';
 
+import type { PersonalRepository } from '../../../storage';
 import { createNativeFeedbackDevice } from '../../../feedback/nativeFeedbackDevice';
 
 // Importing this file first sets up what the real route tree needs under Jest. The real storage
@@ -19,15 +20,24 @@ jest.mock('../../../storage/personal/nativePersonalStore', () => {
   const { createInMemoryPersonalRepository } = jest.requireActual<
     typeof import('../../../storage/personal/createInMemoryPersonalRepository')
   >('../../../storage/personal/createInMemoryPersonalRepository');
-  const createEmpty = () =>
-    createInMemoryPersonalRepository({
+  // The store the app opened last, so a route test can set up favourites the way a round would.
+  let latestRepository: ReturnType<typeof createInMemoryPersonalRepository> | undefined;
+  let uuidCount = 0;
+  const createEmpty = () => {
+    latestRepository = createInMemoryPersonalRepository({
       getShippedCards: () => [],
       getShippedQuestions: () => [],
-      randomUUID: () => '00000000-0000-4000-8000-000000000001',
+      randomUUID: () => {
+        uuidCount += 1;
+        return `00000000-0000-4000-8000-${String(uuidCount).padStart(12, '0')}`;
+      },
       now: () => 1,
     });
+    return latestRepository;
+  };
   return {
     __esModule: true,
+    getLatestRepository: () => latestRepository,
     personalStore: { load: () => Promise.resolve(createEmpty()), clear: () => Promise.resolve() },
     personalDataSource: { load: () => Promise.resolve(createEmpty()), createEmpty },
   };
@@ -59,6 +69,16 @@ jest.mock('../../../feedback/nativeFeedbackDevice', () => {
 });
 
 export { backend };
+
+/** The personal store the app opened last. It throws when the app has not opened one. */
+export function latestPersonalRepository() {
+  const { getLatestRepository } = jest.requireMock<{
+    getLatestRepository: () => PersonalRepository | undefined;
+  }>('../../../storage/personal/nativePersonalStore');
+  const repository = getLatestRepository();
+  if (!repository) throw new Error('The app has not opened a personal store');
+  return repository;
+}
 
 export const feedbackDevice = createNativeFeedbackDevice();
 
