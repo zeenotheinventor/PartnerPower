@@ -14,6 +14,7 @@ Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No
 - `packages/tokens`: design tokens: colours for the light and dark themes, type, spacing and radius.
 - `tools`: data shared by the checks, such as the pattern that finds raw colour values.
 - `docs/architecture.md`: how the code is laid out and why.
+- `docs/runbooks/error-monitoring.md`: setting up Sentry, sending a test error and reading a report.
 
 ## Setup
 
@@ -66,7 +67,17 @@ Once a phone has a build made with `expo-updates`, JavaScript and content change
 new build. The `preview` build listens to the `preview` channel. From `apps/mobile`:
 
 ```
-npx eas-cli update --channel preview --message "What changed"
+EXPO_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) npx eas-cli update --channel preview --environment preview --message "What changed"
+```
+
+`--environment preview` gives the update the preview environment's variables, such as the Sentry
+DSN, and the commit names the release on an error report.
+
+After publishing, upload the update's source maps so its error reports show readable stacks. This
+needs `SENTRY_AUTH_TOKEN` in your shell, and the update still works without it:
+
+```
+pnpm exec sentry-expo-upload-sourcemaps dist
 ```
 
 The app checks at launch and downloads the update in the background. It runs from the next time the

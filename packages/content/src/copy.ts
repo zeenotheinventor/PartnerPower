@@ -17,6 +17,12 @@ export const copy = {
     body: 'Get Freak is for adults only.',
     backLabel: 'Go back',
   },
+  // Shown in place of a screen that failed.
+  crash: {
+    title: 'Well, that was not meant to happen',
+    body: 'Something went wrong on our side. Nothing you saved has been lost.',
+    restartLabel: 'Start again',
+  },
   hub: {
     greeting: 'Welcome back, you two. What are we feeling?',
     comingSoon: 'Coming soon',
