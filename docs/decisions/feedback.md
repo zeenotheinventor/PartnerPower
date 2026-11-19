@@ -8,7 +8,7 @@
 - **Feedback with no provider** (FRK-26): Calls do nothing, so a component renders alone. The route tests prove the real root layout wires the provider.
 - **Android haptics** (FRK-28): The view haptic effects, not the vibrator, so the phone's touch feedback setting is respected and no permission is needed. iOS uses its system generators, which follow System Haptics.
 - **Round complete haptic** (FRK-28): A run of four pulses over about half a second, fired once from the summary screen when it first shows. The summary is where both ways of ending a round meet, so one guard gives once only.
-- **Press effects library** (FRK-27): `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.
+- **Press effects library** (FRK-27): `react-native-reanimated`, already installed, with plain views for every shape. No svg, Rive or other native dependency for the effect.
 - **Where press effects are drawn** (FRK-27): A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.
 - **Style prop for animated styles** (FRK-27): `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.
 - **One press effect at a time** (FRK-27): The design said to let two run. The ticket says effects must not stack, so a new press replaces the one playing, by remounting the layer with a new key.
