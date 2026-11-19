@@ -112,10 +112,22 @@ export const effectSchema = z.discriminatedUnion(
 );
 export type CardEffect = z.infer<typeof effectSchema>;
 
+/** One to three tags. `core` keeps them as plain strings, and `content` holds the vocabulary. */
+export const tagsSchema = z
+  .array(text('tag'), {
+    error: (issue: ErrorContext) =>
+      issue.input === undefined ? 'tags is required' : 'tags must be a list',
+  })
+  .min(1, 'tags must have 1 to 3 entries')
+  .max(3, 'tags must have 1 to 3 entries');
+
 export const cardSources = ['shipped', 'player'] as const;
 export type CardSource = (typeof cardSources)[number];
 
-/** `effect` is for cards that change the turn. `source` tells a shipped card from a player's. */
+/**
+ * `effect` is for cards that change the turn. `tags` link a card to what a couple matched on, and
+ * player cards have none. `source` tells a shipped card from a player's.
+ */
 export const cardSchema = z.strictObject(
   {
     id: text('id'),
@@ -123,6 +135,7 @@ export const cardSchema = z.strictObject(
     kind: oneOf('kind', cardKinds),
     text: text('text'),
     effect: effectSchema.optional(),
+    tags: tagsSchema.optional(),
     source: oneOf('source', cardSources),
   },
   { error: objectError },
