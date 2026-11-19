@@ -40,6 +40,10 @@ export const copy = {
     lockLabel: 'App lock',
     lockOff: 'Off',
     lockOnPin: 'On, PIN',
+    reminderLabel: 'Reminder',
+    reminderOff: 'Off',
+    reminderOn: '{day}, {time}',
+    reminderDenied: 'Not allowed',
     privacyLabel: 'Privacy policy',
     clearSection: 'Start again',
     clearLabel: 'Clear everything',
@@ -70,6 +74,44 @@ export const copy = {
     clearing: 'Clearing',
     failed: 'That did not finish, so some things may still be here. Try again to finish.',
     retry: 'Try again',
+  },
+  // The reminder screen. The day chips show the short names, and a screen reader says the long ones.
+  // The row of Settings says the plural, such as "Fridays, 20:00".
+  reminder: {
+    backLabel: 'Back',
+    title: 'Reminder',
+    toggle: 'Weekly reminder',
+    toggleCaption: 'One notification a week, on the day and time you pick.',
+    dayLabel: 'Day',
+    days: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'],
+    daysLong: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+    daysPlural: [
+      'Mondays',
+      'Tuesdays',
+      'Wednesdays',
+      'Thursdays',
+      'Fridays',
+      'Saturdays',
+      'Sundays',
+    ],
+    timeLabel: 'Time',
+    times: ['18:00', '19:00', '20:00', '21:00', '22:00'],
+    previewLabel: 'It will say',
+    nameNote: "The notification shows the app's name. Its words never say what you play.",
+    deniedTitle: 'Notifications are off',
+    deniedBody: "To get the reminder, allow notifications for Get Freak in your phone's settings.",
+    deniedPath: 'Settings, Apps, Get Freak, Notifications',
+    openSettings: 'Open phone settings',
+  },
+  // What the phone shows for the reminder. It names no game, card, category, level, drink or player
+  // and does not say what the app is for. There is no title, so iOS shows the app's name as one.
+  notification: {
+    body: 'Time for the two of you.',
+    // Shown by iOS in place of the body when the player has hidden previews.
+    hiddenPreviewPlaceholder: 'Reminder',
+    // Android shows these in the phone's own settings for the app.
+    channelName: 'Weekly reminder',
+    channelDescription: 'The reminder you set in Settings.',
   },
   // The keypad of the PIN pad. The dots are announced as a count of the digits typed so far.
   pin: {

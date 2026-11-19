@@ -1,6 +1,7 @@
-import { limits, surpriseIds } from '@getfreak/core';
+import { limits, reminderDays, reminderHours, surpriseIds } from '@getfreak/core';
 
 import { copy } from './copy';
+import { categoryNames, displayNames, levelNames } from './displayNames';
 import { fillCopy } from './fillCopy';
 import { hasBarredWord, hasDashOrSemicolon } from './textRules';
 
@@ -36,6 +37,10 @@ describe('copy', () => {
         'playSection',
         'privacyLabel',
         'privacySection',
+        'reminderDenied',
+        'reminderLabel',
+        'reminderOff',
+        'reminderOn',
         'soundsCaption',
         'soundsLabel',
         'title',
@@ -738,6 +743,104 @@ describe('copy', () => {
       ifYou: 'Drink if',
       neverHave: 'Never have I ever',
       eitherOr: 'Would you rather',
+    });
+  });
+
+  describe('the reminder', () => {
+    it('should give the reminder screen every line as non-empty text', () => {
+      const { days, daysLong, daysPlural, times, ...lines } = copy.reminder;
+      expect(Object.keys(lines).sort()).toEqual(
+        [
+          'backLabel',
+          'dayLabel',
+          'deniedBody',
+          'deniedPath',
+          'deniedTitle',
+          'nameNote',
+          'openSettings',
+          'previewLabel',
+          'timeLabel',
+          'title',
+          'toggle',
+          'toggleCaption',
+        ].sort(),
+      );
+      expectEveryValueToBeText(lines);
+      [...days, ...daysLong, ...daysPlural, ...times].forEach((line) =>
+        expect(line.trim()).not.toBe(''),
+      );
+    });
+
+    it('should name every day in three forms and every hour once, in the order of the lists', () => {
+      expect(copy.reminder.days).toHaveLength(reminderDays.length);
+      expect(copy.reminder.daysLong).toHaveLength(reminderDays.length);
+      expect(copy.reminder.daysPlural).toHaveLength(reminderDays.length);
+      expect(copy.reminder.times).toEqual(reminderHours.map((hour) => `${hour}:00`));
+    });
+
+    it('should fill the row of Settings with the day and the time', () => {
+      expect(
+        fillCopy(copy.settings.reminderOn, {
+          day: copy.reminder.daysPlural[4],
+          time: copy.reminder.times[2],
+        }),
+      ).toBe('Fridays, 20:00');
+    });
+
+    it('should keep every reminder line free of dashes and semicolons', () => {
+      const { days, daysLong, daysPlural, times, ...lines } = copy.reminder;
+      [
+        ...days,
+        ...daysLong,
+        ...daysPlural,
+        ...times,
+        ...Object.values(lines),
+        ...Object.values(copy.notification),
+        copy.settings.reminderLabel,
+        copy.settings.reminderOff,
+        copy.settings.reminderOn,
+        copy.settings.reminderDenied,
+      ].forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+    });
+
+    // Everything the phone can show for the reminder, on the lock screen and in the phone's own
+    // notification settings. The words are the names of the games, categories and levels, read from
+    // the content, and the plain words for what they are.
+    describe('the words of the notification', () => {
+      const shownByThePhone = Object.values(copy.notification);
+      const namesFromContent = [
+        ...Object.values(displayNames).map((name) => name.title),
+        ...Object.values(categoryNames),
+        ...Object.values(levelNames),
+      ].flatMap((name) => name.toLowerCase().split(/\W+/));
+      const plainWords = [
+        'game',
+        'card',
+        'category',
+        'level',
+        'deck',
+        'player',
+        'dare',
+        'question',
+      ];
+      const barredWords = [...new Set([...namesFromContent, ...plainWords])].filter(
+        (word) => word.length >= 4,
+      );
+
+      it('should have words to check against', () => {
+        expect(barredWords).toEqual(expect.arrayContaining(['drink', 'freak', 'dare', 'soft']));
+      });
+
+      it.each(shownByThePhone)(
+        'should not name a game, card, category, level or drink in %p',
+        (line) => {
+          barredWords.forEach((word) => expect(line.toLowerCase()).not.toContain(word));
+        },
+      );
+
+      it('should use no gendered word or name for a drink', () => {
+        shownByThePhone.forEach((line) => expect(hasBarredWord(line)).toBe(false));
+      });
     });
   });
 });
