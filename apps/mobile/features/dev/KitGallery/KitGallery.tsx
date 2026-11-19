@@ -46,6 +46,7 @@ export function KitGallery() {
   const router = useRouter();
   const [soundOn, setSoundOn] = useState(true);
   const [favouriteOff, setFavouriteOff] = useState(false);
+  const [chosenCard, setChosenCard] = useState<'one' | 'two'>('two');
   const [isToastShowing, setIsToastShowing] = useState(false);
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
@@ -104,6 +105,23 @@ export function KitGallery() {
             <Text className="type-heading mt-8 text-foreground">Accent card</Text>
           </Card>
           <Card faceDown mark="?" title="Face down" label="Face down card" />
+          <Card
+            label="Choice one"
+            selected={chosenCard === 'one'}
+            onPress={() => setChosenCard('one')}
+          >
+            <Text className="type-heading text-foreground">Choice one</Text>
+          </Card>
+          <Card
+            label="Choice two"
+            selected={chosenCard === 'two'}
+            onPress={() => setChosenCard('two')}
+          >
+            <Text className="type-heading text-foreground">Choice two</Text>
+          </Card>
+          <Card label="Choice, disabled" selected={false} disabled onPress={() => {}}>
+            <Text className="type-heading text-foreground">Choice, disabled</Text>
+          </Card>
           {categoryIds.map((categoryId) => (
             <Card key={categoryId} category={categoryId}>
               <Chip label={`Category ${categoryId}`} category={categoryId} />

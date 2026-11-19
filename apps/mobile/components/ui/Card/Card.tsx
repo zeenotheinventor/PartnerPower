@@ -45,11 +45,25 @@ const pressableFaceClasses: Record<CardTone, string> = {
   c4: 'mb-4 rounded-xl border-2 border-category-c4 bg-surface p-16 group-active:translate-y-4',
 };
 
+// A card that can be selected lays its face out as a row, with the mark after the children. The
+// selected card takes the accent tone, as the checked option of a segmented control does.
+const selectableFaceClasses = 'flex-row items-center gap-12';
+
+const markClasses = {
+  off: 'h-24 w-24 rounded-pill border-2 border-border bg-surface',
+  on: 'h-24 w-24 items-center justify-center rounded-pill bg-accent',
+};
+
+// The tick and the border change together with the fill, so the state does not rest on colour alone.
+const tickClasses = '-mt-4 h-12 w-8 rotate-45 border-b-4 border-r-4 border-on-accent';
+
 /**
  * Without onPress a card is for reading. A screen reader treats it as one group named by the text
  * inside, so a static card must not contain controls. Passing grouped as false leaves the card
  * without an accessibility element of its own, so its children are read separately. With onPress it is one button named by its
  * label.
+ * Passing selected makes it a choice: the card gets a mark, is announced as selected or not, and
+ * the selected one takes the accent tone.
  */
 export function Card(props: CardProps) {
   if (props.faceDown) {
@@ -84,8 +98,9 @@ function ShownCard({
   label,
   disabled = false,
   grouped = true,
+  selected,
 }: ShownCardProps) {
-  const tone: CardTone = accent ? 'accent' : (category ?? 'plain');
+  const tone: CardTone = accent || selected ? 'accent' : (category ?? 'plain');
 
   if (!onPress) {
     return (
@@ -103,13 +118,34 @@ function ShownCard({
     <Pressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={{ disabled }}
+      accessibilityState={selected === undefined ? { disabled } : { disabled, selected }}
       disabled={disabled}
       onPress={onPress}
       className={`group ${disabled ? 'opacity-50' : ''}`}
     >
       <View className={pressableEdgeClasses[tone]} />
-      <View className={pressableFaceClasses[tone]}>{children}</View>
+      <View
+        className={
+          selected === undefined
+            ? pressableFaceClasses[tone]
+            : `${pressableFaceClasses[tone]} ${selectableFaceClasses}`
+        }
+      >
+        {selected === undefined ? (
+          children
+        ) : (
+          <>
+            <View className="flex-1">{children}</View>
+            <View
+              accessibilityElementsHidden
+              importantForAccessibility="no-hide-descendants"
+              className={markClasses[selected ? 'on' : 'off']}
+            >
+              {selected ? <View className={tickClasses} /> : null}
+            </View>
+          </>
+        )}
+      </View>
     </Pressable>
   );
 }

@@ -41,6 +41,10 @@ describe('copy', () => {
       [
         'backLabel',
         'categoriesLabel',
+        'deckLabel',
+        'deckRowName',
+        'inPlay',
+        'inPlayOne',
         'lastCategoryHint',
         'lengthEndless',
         'lengthLabel',
@@ -52,6 +56,7 @@ describe('copy', () => {
         'myDaresLabel',
         'myDaresNone',
         'myDaresRowName',
+        'noCardsInPlay',
         'playerOneLabel',
         'playerTwoLabel',
         'start',
@@ -61,6 +66,25 @@ describe('copy', () => {
       ].sort(),
     );
     expectEveryValueToBeText(copy.roundSetup);
+  });
+
+  it('should give the deck picker and the Favourites view every line as non-empty text', () => {
+    expect(Object.keys(copy.decks).sort()).toEqual(
+      [
+        'backLabel',
+        'count',
+        'countOne',
+        'deckCardName',
+        'favourites',
+        'favouritesEmpty',
+        'groupHeading',
+        'pickerTitle',
+        'starter',
+        'viewFavourites',
+        'viewFavouritesName',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.decks);
   });
 
   it('should give the shared kit lines as non-empty text', () => {

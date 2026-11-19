@@ -1,21 +1,19 @@
-import { categoryNames, copy, decks, fillCopy, levelNames } from '@getfreak/content';
+import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
 import {
   categoriesForLevel,
   levelIds,
   type CategoryId,
-  type Deck,
   type LevelId,
   type PlayerNames,
   type RoundLength,
 } from '@getfreak/core';
 import { useFocusEffect, useRouter } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
-import { Text, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Text, View } from 'react-native';
 
 import {
   Button,
   CategoryToggle,
-  Card,
   Character,
   Header,
   Screen,
@@ -24,20 +22,27 @@ import {
   Toggle,
 } from '../../../components/ui';
 import { useSettings } from '../../../settings';
+import { buildRoundDeck } from '../../decks/buildRoundDeck';
+import { countCardsInPlay } from '../../decks/countCardsInPlay';
+import { useDeckChoice } from '../../decks/DeckChoiceProvider';
+import { deckNames } from '../../decks/deckNames';
+import { getStarterDeck } from '../../decks/getStarterDeck';
+import { deckPickerRoute } from '../../decks/routes';
+import { useFavouriteIds } from '../../decks/useFavouriteIds';
 import { useOwnCards } from '../../ownCards/OwnCardsProvider';
 import { myDaresRoute } from '../../ownCards/routes';
-import { withOwnCards } from '../../ownCards/withOwnCards';
 import { useRound } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { randomSeed } from '../randomSeed';
+import { SetupRow } from '../SetupRow';
 
 const maxNameLength = 20;
 const defaultLevel: LevelId = 'l2';
 const defaultLength: RoundLength = 20;
 const playRoute = '/games/dares/play';
 
-// Until a deck ships there is nothing to deal, and the round that starts from this is already over.
-const deckWithoutCards: Deck = { id: 'no-cards', version: 1, cards: [] };
+// Before the favourites have been read, no card counts as one.
+const noFavouriteIds: ReadonlySet<string> = new Set();
 
 const levelOptions = levelIds.map((levelId) => ({ value: levelId, label: levelNames[levelId] }));
 
@@ -54,6 +59,8 @@ export function RoundSetupScreen() {
   const { playerNames, savePlayerNames } = useSettings();
   const { startNewRound } = useRound();
   const { cards: ownCards, isLoading: isOwnCardsLoading } = useOwnCards();
+  const { choice: deckChoice } = useDeckChoice();
+  const favouriteIds = useFavouriteIds();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -79,13 +86,30 @@ export function RoundSetupScreen() {
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  // Start waits for the dares to be read, so a round never starts without the dares it should mix.
-  const canStart = !isOwnCardsLoading && names.every((name) => tidyName(name) !== '');
+  // Start waits for the dares and the favourites to be read, so a round never starts without the
+  // cards it should deal.
+  const isDeckReady = !isOwnCardsLoading && favouriteIds !== undefined;
+  const deck = buildRoundDeck({
+    choice: deckChoice,
+    starterDeck: getStarterDeck(),
+    ownCards,
+    mixInOwnCards: mixOn,
+    favouriteIds: favouriteIds ?? noFavouriteIds,
+  });
+  const cardsInPlay = countCardsInPlay(deck, enabledCategories);
+  const hasNoCardsInPlay = isDeckReady && cardsInPlay === 0;
+  const canStart = isDeckReady && cardsInPlay > 0 && names.every((name) => tidyName(name) !== '');
   const myDaresValue = isOwnCardsLoading
     ? undefined
     : ownCards.length === 0
       ? copy.roundSetup.myDaresNone
       : fillCopy(copy.roundSetup.myDaresCount, { count: ownCards.length });
+
+  // The hint is a polite live region, which the platform announces on Android. This announces it
+  // on iOS too, when a level or a deck brings it up.
+  useEffect(() => {
+    if (hasNoCardsInPlay) AccessibilityInfo.announceForAccessibility(copy.roundSetup.noCardsInPlay);
+  }, [hasNoCardsInPlay]);
 
   // A deep link can open this screen with nothing behind it, so it falls back to the first screen.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -116,8 +140,6 @@ export function RoundSetupScreen() {
     hasStarted.current = true;
     const [first, second] = names;
     const tidiedNames: PlayerNames = [tidyName(first), tidyName(second)];
-    const [firstDeck = deckWithoutCards] = decks;
-    const deck = mixOn ? withOwnCards(firstDeck, ownCards) : firstDeck;
     startNewRound(
       {
         players: tidiedNames,
@@ -169,9 +191,21 @@ export function RoundSetupScreen() {
         </View>
       </View>
 
+      <SetupRow
+        caption={copy.roundSetup.deckLabel}
+        value={deckNames[deckChoice]}
+        name={fillCopy(copy.roundSetup.deckRowName, {
+          label: copy.roundSetup.deckLabel,
+          value: deckNames[deckChoice],
+        })}
+        onPress={() => router.push(deckPickerRoute)}
+      />
+
       <View className="gap-8">
-        <Card
-          label={
+        <SetupRow
+          caption={copy.roundSetup.myDaresLabel}
+          value={myDaresValue}
+          name={
             myDaresValue === undefined
               ? copy.roundSetup.myDaresLabel
               : fillCopy(copy.roundSetup.myDaresRowName, {
@@ -180,18 +214,8 @@ export function RoundSetupScreen() {
                 })
           }
           onPress={() => router.push(myDaresRoute)}
-        >
-          <View className="flex-row items-center gap-12">
-            <View className="flex-1">
-              <Text className="type-caption uppercase text-muted">
-                {copy.roundSetup.myDaresLabel}
-              </Text>
-              <Text className="type-heading text-foreground">{myDaresValue ?? ' '}</Text>
-            </View>
-            <View className="mr-4 h-12 w-12 rotate-45 border-r-4 border-t-4 border-muted" />
-          </View>
-        </Card>
-        {ownCards.length > 0 ? (
+        />
+        {deckChoice === 'starter' && ownCards.length > 0 ? (
           <View className="rounded-lg border-2 border-border bg-surface px-12">
             <Toggle label={copy.roundSetup.mixInMyDares} value={mixOn} onValueChange={setMixOn} />
           </View>
@@ -246,6 +270,21 @@ export function RoundSetupScreen() {
       </View>
 
       <View className="flex-1" />
+
+      {hasNoCardsInPlay ? (
+        <Text
+          accessibilityLiveRegion="polite"
+          className="type-body-bold text-center text-foreground"
+        >
+          {copy.roundSetup.noCardsInPlay}
+        </Text>
+      ) : isDeckReady ? (
+        <Text className="type-label text-center text-muted">
+          {fillCopy(cardsInPlay === 1 ? copy.roundSetup.inPlayOne : copy.roundSetup.inPlay, {
+            count: cardsInPlay,
+          })}
+        </Text>
+      ) : null}
 
       <Button label={copy.roundSetup.start} fullWidth disabled={!canStart} onPress={start} />
     </Screen>
