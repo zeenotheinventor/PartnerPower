@@ -10,5 +10,6 @@ export const lockService = createLockService({
   biometricsDevice: nativeBiometricsDevice,
   hashText: (text) => digestStringAsync(CryptoDigestAlgorithm.SHA256, text),
   getRandomBytes,
-  now: Date.now,
+  // Read each time, not kept, so a test that replaces the clock moves the lock's clock too.
+  now: () => Date.now(),
 });

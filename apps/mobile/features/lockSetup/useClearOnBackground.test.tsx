@@ -5,7 +5,11 @@ import {
   changeAppState,
   fakeAppState,
 } from '../../lock/testing/fakeAppState';
-import { useClearOnBackground, whileBiometricsPromptIsOpen } from './useClearOnBackground';
+import {
+  isBiometricsPromptOpen,
+  useClearOnBackground,
+  whileBiometricsPromptIsOpen,
+} from './useClearOnBackground';
 
 describe('useClearOnBackground', () => {
   beforeEach(fakeAppState);
@@ -79,5 +83,19 @@ describe('useClearOnBackground', () => {
     unmount();
 
     expect(appStateListenerCount()).toBe(0);
+  });
+});
+
+describe('isBiometricsPromptOpen', () => {
+  it('should be true while a prompt runs, and false before and after it, even when it fails', async () => {
+    expect(isBiometricsPromptOpen()).toBe(false);
+
+    await whileBiometricsPromptIsOpen(async () => {
+      expect(isBiometricsPromptOpen()).toBe(true);
+    });
+    expect(isBiometricsPromptOpen()).toBe(false);
+
+    await whileBiometricsPromptIsOpen(() => Promise.reject(new Error('Failed'))).catch(() => {});
+    expect(isBiometricsPromptOpen()).toBe(false);
   });
 });

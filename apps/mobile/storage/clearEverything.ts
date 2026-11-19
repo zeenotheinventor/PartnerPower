@@ -13,13 +13,17 @@ export type ClearEverythingDependencies = {
 };
 
 /**
- * Makes the app as it is on first launch. In order: cancel the scheduled notifications, clear
- * secure storage (the PIN hash, the biometrics choice, the wrong PIN count and the database key),
- * delete the database and clear the key-value store, write the install marker back, then remount
- * the root.
+ * Makes the app as it is on first launch. In order: cancel the scheduled notifications,
+ * delete the database and clear the key-value store, then clear secure storage (the PIN hash, the
+ * biometrics choice, the wrong PIN count and the database key), write the install marker back, then
+ * remount the root.
  *
- * Every step is safe to run twice. A step that fails does not stop the others, so as little as
- * possible is left behind, but nothing after it counts as done: the marker is not written and the
+ * Secure storage goes last, and only when every step before it worked, so a wipe that fails part
+ * way (from Forgot PIN, say) leaves the PIN hash and the lock on, and never a lock that is quietly
+ * off over data that is still there.
+ *
+ * Every step is safe to run twice. A step that fails does not stop the ones before secure storage,
+ * so as little as possible is left behind, but nothing after it counts as done: the marker is not written and the
  * root is not remounted, and the result says it failed so the player can try again. It never
  * throws, and the result carries no error, because an error message can hold stored text.
  *
@@ -45,8 +49,9 @@ export function createClearEverything({
     };
 
     await attempt(cancelScheduledNotifications);
-    await attempt(() => secureStorage.clearAll());
     await attempt(() => storage.clearAll());
+    if (hasFailed) return { ok: false };
+    await attempt(() => secureStorage.clearAll());
     if (hasFailed) return { ok: false };
 
     await attempt(() => storage.set('installMarker', true));

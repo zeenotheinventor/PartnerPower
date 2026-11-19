@@ -14,16 +14,8 @@ const fullDotsHoldMilliseconds = 150;
  * while the step is on screen. They are never logged and never stored. They go to `onSubmit` and
  * nowhere else.
  */
-export function PinEntryStep({
-  title,
-  subtitle,
-  onBack,
-  onSubmit,
-  initialError,
-  message,
-  disabled = false,
-  below,
-}: PinEntryStepProps) {
+export function PinEntryStep(props: PinEntryStepProps) {
+  const { onSubmit, initialError, message, disabled = false, below } = props;
   const [value, setValue] = useState('');
   const [error, setError] = useState(initialError);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
@@ -68,17 +60,26 @@ export function PinEntryStep({
 
   return (
     <Screen>
-      {onBack ? (
-        <Header
-          title={title}
-          subtitle={subtitle}
-          backLabel={copy.lockSetup.backLabel}
-          onBack={onBack}
-        />
+      {props.hero ? (
+        <>
+          <View className="flex-1" />
+          {props.hero}
+        </>
       ) : (
-        <Header title={title} subtitle={subtitle} />
+        <>
+          {props.onBack ? (
+            <Header
+              title={props.title}
+              subtitle={props.subtitle}
+              backLabel={copy.lockSetup.backLabel}
+              onBack={props.onBack}
+            />
+          ) : (
+            <Header title={props.title} subtitle={props.subtitle} />
+          )}
+          <View className="flex-1" />
+        </>
       )}
-      <View className="flex-1" />
       <PinPad
         value={value}
         onChange={change}

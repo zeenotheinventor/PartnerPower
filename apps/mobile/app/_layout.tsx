@@ -8,6 +8,7 @@ import { FontGate } from '../components/FontGate';
 import { SplashSafetyNet } from '../components/SplashSafetyNet';
 import { ThemedNavigation } from '../components/ThemedNavigation';
 import { FeedbackProvider } from '../feedback/FeedbackProvider';
+import { LockGate } from '../features/lock';
 import { CrashBoundary, initMonitoring, reportError, RouteTrail } from '../monitoring';
 import { PersonalDataProvider } from '../personal';
 import { SettingsProvider } from '../settings';
@@ -37,7 +38,9 @@ export default function RootLayout() {
                   <FeedbackProvider>
                     <StatusBar style="auto" />
                     <RouteTrail />
-                    <EntryStack />
+                    <LockGate>
+                      <EntryStack />
+                    </LockGate>
                     <UpdateToastHost />
                   </FeedbackProvider>
                 </PersonalDataProvider>

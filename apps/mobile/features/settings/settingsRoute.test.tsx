@@ -1,5 +1,10 @@
 // This import comes first so that its mocks are in place before Expo Router loads.
-import { backend, currentPathname, launchApp } from '../welcome/testing/appEnvironment';
+import {
+  backend,
+  currentPathname,
+  launchUnlockedApp as launchApp,
+  storedPinHash,
+} from '../welcome/testing/appEnvironment';
 
 import { copy, privacyPolicy } from '@getfreak/content';
 import { router } from 'expo-router';
@@ -68,10 +73,7 @@ describe('Settings in the real route tree', () => {
     await backend.setItem('entryConfirmation', 'true');
     await backend.setItem('installMarker', 'true');
     await backend.setItem('playerNames', JSON.stringify(['Name 1', 'Name 2']));
-    mockSecureItems.set(
-      'lockPinHash',
-      JSON.stringify({ salt: 'a'.repeat(32), hash: 'b'.repeat(64) }),
-    );
+    mockSecureItems.set('lockPinHash', storedPinHash());
     mockSecureItems.set('lockBiometricsChoice', 'true');
   });
 
@@ -234,8 +236,9 @@ describe('Settings in the real route tree', () => {
     });
 
     it('should stay in settings when the clear fails, then finish on Try again', async () => {
-      mockFailingDeletes = 1;
       await openSettingsFromTheHub();
+      // After unlocking, which deletes the count of wrong PINs, so the failure is the clear's.
+      mockFailingDeletes = 1;
 
       fireEvent.press(clearRow());
       await confirmClear();
@@ -253,8 +256,9 @@ describe('Settings in the real route tree', () => {
     });
 
     it('should let the player cancel after a failure and keep using settings', async () => {
-      mockFailingDeletes = 1;
       await openSettingsFromTheHub();
+      // After unlocking, which deletes the count of wrong PINs, so the failure is the clear's.
+      mockFailingDeletes = 1;
       fireEvent.press(clearRow());
       await confirmClear();
 
