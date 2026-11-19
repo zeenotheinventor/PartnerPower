@@ -60,6 +60,8 @@ describe.each(statementFormats)('%s question library', (format) => {
   });
 });
 
+// This check only catches identical text. Near-duplicates across the two formats are guarded by
+// content review.
 describe('statement question libraries together', () => {
   it('should never repeat a text across the two formats', () => {
     const texts = statementFormats.flatMap((format) =>
