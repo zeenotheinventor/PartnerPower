@@ -1,4 +1,4 @@
-import type { PlayerNames } from '@getfreak/core';
+import type { Appearance, PlayerNames } from '@getfreak/core';
 import type { ReactNode } from 'react';
 
 import type { Storage } from '../../storage';
@@ -21,6 +21,10 @@ export type Settings = {
   hapticsOn: boolean;
   /** Stores the vibration switch. It never rejects, a failed write is ignored. */
   setHapticsOn: (hapticsOn: boolean) => Promise<void>;
+  /** Match phone, light or dark. Match phone until the player picks one (FRK-89). */
+  appearance: Appearance;
+  /** Applies the choice at once, then stores it. It never rejects, a failed write is ignored. */
+  setAppearance: (appearance: Appearance) => Promise<void>;
 };
 
 export type SettingsProviderProps = {

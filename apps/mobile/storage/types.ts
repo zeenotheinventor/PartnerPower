@@ -10,6 +10,7 @@ export type StorageKey =
   | 'playerNames'
   | 'soundOn'
   | 'hapticsOn'
+  | 'appearance'
   | 'questionPreferences'
   | 'lastShownUpdateId'
   | 'reminder'

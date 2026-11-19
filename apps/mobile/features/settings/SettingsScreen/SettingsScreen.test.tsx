@@ -1,7 +1,8 @@
 import { copy } from '@getfreak/content';
 import { act, waitFor, within } from '@testing-library/react-native';
-import { fireEvent, screen } from 'nativewind/test';
+import { colorScheme, fireEvent, screen } from 'nativewind/test';
 import type { ReactNode } from 'react';
+import { Appearance } from 'react-native';
 
 import { LockServiceContext } from '../../../lock';
 import { createTestLock } from '../../../lock/testing/createTestLock';
@@ -65,6 +66,8 @@ async function renderScreen(backend = createInMemoryBackend()) {
 
 const soundsSwitch = () => screen.getByRole('switch', { name: copy.settings.soundsLabel });
 const vibrationSwitch = () => screen.getByRole('switch', { name: copy.settings.vibrationLabel });
+
+const appearanceChoice = (name: string) => screen.getByRole('radio', { name });
 
 const clearRow = () => screen.getByRole('button', { name: copy.settings.clearLabel });
 
@@ -312,6 +315,93 @@ describe('SettingsScreen', () => {
 
       expect(dialogButton(copy.clear.confirm)).toBeOnTheScreen();
       expect(screen.queryByRole('alert')).not.toBeOnTheScreen();
+    });
+  });
+
+  describe('the appearance choice', () => {
+    let setColorScheme: jest.SpyInstance;
+
+    beforeEach(() => {
+      setColorScheme = jest.spyOn(Appearance, 'setColorScheme').mockImplementation(() => {});
+    });
+
+    afterEach(() => {
+      setColorScheme.mockRestore();
+      act(() => colorScheme.set('light'));
+    });
+
+    it('should offer match phone, light and dark, and check match phone when nothing is stored', async () => {
+      await renderScreen();
+
+      expect(screen.getByText(copy.settings.appearanceLabel)).toBeOnTheScreen();
+      expect(appearanceChoice(copy.settings.appearanceSystem)).toBeChecked();
+      expect(appearanceChoice(copy.settings.appearanceLight)).not.toBeChecked();
+      expect(appearanceChoice(copy.settings.appearanceDark)).not.toBeChecked();
+    });
+
+    it('should show the stored choice', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('appearance', '"dark"');
+      await renderScreen(backend);
+
+      expect(appearanceChoice(copy.settings.appearanceDark)).toBeChecked();
+      expect(appearanceChoice(copy.settings.appearanceSystem)).not.toBeChecked();
+    });
+
+    it('should show match phone for a stored value that is not a choice', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('appearance', '"sepia"');
+      await renderScreen(backend);
+
+      expect(appearanceChoice(copy.settings.appearanceSystem)).toBeChecked();
+    });
+
+    it.each([
+      ['light', copy.settings.appearanceLight],
+      ['dark', copy.settings.appearanceDark],
+    ])('should apply %s, check it and store it when it is picked', async (choice, name) => {
+      const backend = await renderScreen();
+
+      await act(async () => fireEvent.press(appearanceChoice(name)));
+
+      expect(appearanceChoice(name)).toBeChecked();
+      expect(setColorScheme).toHaveBeenLastCalledWith(choice);
+      expect(colorScheme.get()).toBe(choice);
+      expect(backend.entries.get('appearance')).toBe(JSON.stringify(choice));
+    });
+
+    it('should hand the choice back to the phone when match phone is picked again', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('appearance', '"dark"');
+      await renderScreen(backend);
+
+      await act(async () => fireEvent.press(appearanceChoice(copy.settings.appearanceSystem)));
+
+      expect(appearanceChoice(copy.settings.appearanceSystem)).toBeChecked();
+      expect([null, 'unspecified']).toContain(setColorScheme.mock.lastCall?.[0]);
+      expect(backend.entries.get('appearance')).toBe('"system"');
+    });
+
+    it('should sit in the While you play section, above Sounds', async () => {
+      await renderScreen();
+
+      const texts = screen.getAllByText(/./).map((node) => node.props.children);
+      const playSection = texts.indexOf(copy.settings.playSection);
+      const appearance = texts.indexOf(copy.settings.appearanceLabel);
+      const sounds = texts.indexOf(copy.settings.soundsLabel);
+      expect(playSection).toBeGreaterThan(-1);
+      expect(appearance).toBeGreaterThan(playSection);
+      expect(sounds).toBeGreaterThan(appearance);
+    });
+
+    it('should leave the sound and vibration switches alone', async () => {
+      const backend = await renderScreen();
+
+      await act(async () => fireEvent.press(appearanceChoice(copy.settings.appearanceLight)));
+
+      expect(soundsSwitch()).toBeChecked();
+      expect(vibrationSwitch()).toBeChecked();
+      expect(backend.entries.has('soundOn')).toBe(false);
     });
   });
 });

@@ -27,6 +27,10 @@ describe('copy', () => {
   it('should give the settings screen every line as non-empty text', () => {
     expect(Object.keys(copy.settings).sort()).toEqual(
       [
+        'appearanceDark',
+        'appearanceLabel',
+        'appearanceLight',
+        'appearanceSystem',
         'backLabel',
         'clearCaption',
         'clearLabel',

@@ -141,6 +141,7 @@ describe('the entry guard', () => {
       // The install check reads the marker, and the entry confirmation once to tell an upgrade from
       // a reinstall. The settings provider then reads each setting once.
       expect(readSpy.mock.calls.map(([key]) => key).sort()).toEqual([
+        'appearance',
         'entryConfirmation',
         'entryConfirmation',
         'hapticsOn',

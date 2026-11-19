@@ -1,13 +1,17 @@
 import {
+  appearanceSchema,
+  defaultAppearance,
   entryConfirmationSchema,
   hapticsOnSchema,
   playerNamesSchema,
   soundOnSchema,
+  type Appearance,
   type PlayerNames,
 } from '@getfreak/core';
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
 import { storage as defaultStorage, type StorageKey } from '../../storage';
+import { applyAppearance } from '../applyAppearance';
 import { SettingsContext } from './SettingsContext';
 import type { Settings, SettingsProviderProps } from './types';
 
@@ -17,6 +21,7 @@ type LoadedSettings = {
   playerNames: PlayerNames;
   soundOn: boolean;
   hapticsOn: boolean;
+  appearance: Appearance;
 };
 
 // What a setting counts as when nothing valid is stored.
@@ -25,11 +30,13 @@ const defaultSettings: LoadedSettings = {
   playerNames: ['', ''],
   soundOn: true,
   hapticsOn: true,
+  appearance: defaultAppearance,
 };
 
 // Nothing here logs. A failed read or write is not reported with the stored value in it. A failed
-// read counts as not confirmed, so the player is asked again, as no remembered names, and as sound
-// and vibration on.
+// read counts as not confirmed, so the player is asked again, as no remembered names, as sound
+// and vibration on, and as Match phone. The stored appearance is applied as soon as it is read and
+// before the settings count as loaded, so the splash screen hides onto the chosen theme.
 export function SettingsProvider({ children, storage = defaultStorage }: SettingsProviderProps) {
   const [loaded, setLoaded] = useState<LoadedSettings | undefined>(undefined);
 
@@ -40,13 +47,17 @@ export function SettingsProvider({ children, storage = defaultStorage }: Setting
       storage.get('playerNames', playerNamesSchema).catch(() => undefined),
       storage.get('soundOn', soundOnSchema).catch(() => undefined),
       storage.get('hapticsOn', hapticsOnSchema).catch(() => undefined),
-    ]).then(([entryConfirmation, playerNames, soundOn, hapticsOn]) => {
+      storage.get('appearance', appearanceSchema).catch(() => undefined),
+    ]).then(([entryConfirmation, playerNames, soundOn, hapticsOn, appearance]) => {
       if (isCurrent) {
+        const chosenAppearance = appearance ?? defaultSettings.appearance;
+        applyAppearance(chosenAppearance);
         setLoaded({
           hasConfirmedEntry: entryConfirmation === true,
           playerNames: playerNames ?? defaultSettings.playerNames,
           soundOn: soundOn ?? defaultSettings.soundOn,
           hapticsOn: hapticsOn ?? defaultSettings.hapticsOn,
+          appearance: chosenAppearance,
         });
       }
     });
@@ -98,6 +109,17 @@ export function SettingsProvider({ children, storage = defaultStorage }: Setting
     [store],
   );
 
+  // The choice takes effect at once. If the write fails it still counts for this session and is
+  // not remembered next time.
+  const setAppearance = useCallback(
+    async (appearance: Appearance) => {
+      applyAppearance(appearance);
+      setLoaded((current) => ({ ...defaultSettings, ...current, appearance }));
+      await store('appearance', appearance);
+    },
+    [store],
+  );
+
   const settings = useMemo<Settings>(() => {
     const values = loaded ?? defaultSettings;
     return {
@@ -110,8 +132,10 @@ export function SettingsProvider({ children, storage = defaultStorage }: Setting
       setSoundOn,
       hapticsOn: values.hapticsOn,
       setHapticsOn,
+      appearance: values.appearance,
+      setAppearance,
     };
-  }, [loaded, confirmEntry, savePlayerNames, setSoundOn, setHapticsOn]);
+  }, [loaded, confirmEntry, savePlayerNames, setSoundOn, setHapticsOn, setAppearance]);
 
   return <SettingsContext.Provider value={settings}>{children}</SettingsContext.Provider>;
 }
