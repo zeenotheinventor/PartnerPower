@@ -2,6 +2,7 @@
 import { backend, currentPathname, launchApp } from './testing/appEnvironment';
 
 import { copy } from '@getfreak/content';
+import { cancelAllScheduledNotificationsAsync } from 'expo-notifications';
 import { Slot } from 'expo-router';
 import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
 import { Pressable, Text } from 'react-native';
@@ -59,6 +60,8 @@ describe('clear everything in the real root layout', () => {
     await backend.setItem('entryConfirmation', 'true');
     await backend.setItem('installMarker', 'true');
     await backend.setItem('playerNames', JSON.stringify(['Name 1', 'Name 2']));
+    await backend.setItem('reminder', JSON.stringify({ day: 5, hour: 20 }));
+    jest.mocked(cancelAllScheduledNotificationsAsync).mockClear();
     mockSecureItems.set(
       'lockPinHash',
       JSON.stringify({ salt: 'a'.repeat(32), hash: 'b'.repeat(64) }),
@@ -86,6 +89,19 @@ describe('clear everything in the real root layout', () => {
     expect(mockSecureItems.size).toBe(0);
     expect(await backend.getItem('playerNames')).toBeNull();
     expect(await backend.getItem('entryConfirmation')).toBeNull();
+  });
+
+  it('should cancel the scheduled reminder and forget its setting', async () => {
+    await launchApp('/', routes);
+
+    fireEvent.press(screen.getByRole('button', { name: clearButtonName }));
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1000);
+    });
+
+    await waitFor(() => expect(currentPathname()).toBe('/welcome'));
+    expect(cancelAllScheduledNotificationsAsync).toHaveBeenCalledTimes(1);
+    expect(await backend.getItem('reminder')).toBeNull();
   });
 
   it('should keep the install marker, so the next launch does not clear again', async () => {

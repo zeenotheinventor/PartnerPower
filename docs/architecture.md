@@ -591,6 +591,7 @@ apps/mobile/
     settings.tsx         the settings screen
     privacy.tsx          the privacy policy
     app-lock.tsx         the app lock: turning it on, and its settings when it is on
+    reminder.tsx         the weekly reminder's settings
     welcome.tsx          entry confirmation, shown on first launch
     dev/kit.tsx          gallery of the UI kit, development builds only
     games/
@@ -642,11 +643,13 @@ apps/mobile/
   features/questionsSummary/ the Drink If round summary screen and its player score block
   features/secretMatch/  the secret match screens: the provider, the intro, the answering view, the handoff, the reveal and the cover
   features/lockSetup/    turning the app lock on and changing it: the App lock row of Settings, the explainer, choosing a PIN, the biometrics offer, and the lock's settings
+  features/reminderSetup/ the Reminder row of Settings and the reminder's settings screen
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
   monitoring/            error reporting: the start-up, the scrubbing, the route trail and the crash screen
   lock/                  the lock service: the PIN, wrong PINs and their wait, and biometrics
+  reminder/              the reminder service: the weekly local notification, its stored day and time, and the listener that opens the hub when it is tapped
 ```
 
 ### State
@@ -1364,8 +1367,8 @@ grouped, so each row is read on its own, with a divider between rows. The order 
    `description`, so it is also the switch's hint. A change is stored at once through the settings
    context.
 2. **Privacy**: the App lock row (`AppLockRow`, from `features/lockSetup`), which opens
-   `/app-lock`, then the Privacy policy `SettingsRow`, which opens `/privacy`. The reminder row
-   joins this section, above the policy.
+   `/app-lock`, then the Reminder row (`ReminderRow`, from `features/reminderSetup`), which opens
+   `/reminder`, then the Privacy policy `SettingsRow`, which opens `/privacy`.
 3. **Start again**: the Clear everything `SettingsRow`, in the danger tone and with no chevron
    because it opens a dialog.
 
@@ -1777,6 +1780,44 @@ unless a test puts a fake above it with `LockServiceContext`.
   They go to `onSubmit` and nowhere else. They are never logged, never in an accessibility name or
   text, and never stored outside the lock service. The fourth dot is held for 150 ms so it is seen
   before the step moves on.
+
+## Reminder
+
+An optional weekly nudge to play. It is the only notification the app sends. It is scheduled on the
+phone with `expo-notifications`, so there is no server and no push, and the app never asks for a
+push token. The rules and the stored value are in `packages/core/src/reminder.ts`, the service is
+`apps/mobile/reminder`, and the screens are in `features/reminderSetup` (FRK-68).
+
+- **Off by default.** Nothing asks at first launch. Turning the switch on in the reminder screen is
+  the one place the app asks the phone for notification permission.
+- **The setting** is the key `reminder`: a day (Monday is 1, Sunday is 7) and an hour from 18 to 22,
+  on the hour. There is no time picker, so there is no native module for it. A value that fails
+  `reminderSchema` counts as off. Turning it on starts from Friday at 20:00.
+- **The service.** `createReminderService` takes storage and a `ReminderDevice`, which is all the
+  native module, so tests pass a fake. `read` gives off, on (with the day and hour) or denied.
+  `turnOn` is also how the day or time changes: it asks for permission, cancels what is scheduled,
+  schedules the new one and stores it. If permission is refused it schedules nothing, clears the
+  setting and gives denied. `turnOff` cancels and clears. Changes run one at a time, so there is
+  never more than one reminder, even when two taps come quickly.
+- **Denied.** A stored setting with notifications no longer allowed reads as denied, and the row
+  of Settings says "Not allowed". The screen shows a card that says how to allow them and a button
+  that opens the phone's settings. It reads again each time the app comes back to the foreground.
+- **The words.** One line, `copy.notification.body`, with no title and no badge, and the default
+  sound. See Privacy for what a notification may hold.
+- **Android.** The reminder has its own channel, `weeklyReminder`, made at run time with lock
+  screen visibility secret, default importance and no badge, so it does not show on the lock screen.
+  The channel is made before the permission is asked for, because Android 13 and later show the
+  prompt only once a channel exists. Nothing is added to `app.json`.
+- **iOS.** The lock screen cannot be hidden per app, and iOS always shows the app's name. The
+  reminder's category sets the placeholder iOS shows in place of the words when previews are hidden,
+  and the reminder screen says that the app's name shows.
+- **Turning it off, and Clear everything,** cancel it. Clear everything cancels every scheduled
+  notification and clears the stored setting, so nothing is left to arrive.
+- **Opening it.** `ReminderTapHost`, mounted in `EntryStack` once the player has confirmed entry,
+  takes the player to the hub when the reminder is tapped while the app is running. The lock is an
+  overlay above the navigator, so with the lock on the hub waits behind it. A start of the app from
+  the reminder lands on the hub anyway, so it is not handled separately.
+- **Nothing logs** the setting, and the service has no error message that could hold it.
 
 ## Styling
 
