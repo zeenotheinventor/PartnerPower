@@ -590,6 +590,7 @@ apps/mobile/
     index.tsx            hub
     settings.tsx         the settings screen
     privacy.tsx          the privacy policy
+    app-lock.tsx         the app lock: turning it on, and its settings when it is on
     welcome.tsx          entry confirmation, shown on first launch
     dev/kit.tsx          gallery of the UI kit, development builds only
     games/
@@ -640,6 +641,7 @@ apps/mobile/
   features/questionsPlay/  the Drink If play screen and its turn views
   features/questionsSummary/ the Drink If round summary screen and its player score block
   features/secretMatch/  the secret match screens: the provider, the intro, the answering view, the handoff, the reveal and the cover
+  features/lockSetup/    turning the app lock on and changing it: the App lock row of Settings, the explainer, choosing a PIN, the biometrics offer, and the lock's settings
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -1155,6 +1157,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. With `selected` (on a pressable card) it lays the face out as a row with a 24 px mark after the children, is announced as selected or not, and the selected card takes the accent tone, with a tick in the mark. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                                                                                                                                                                                                                                             |
 | `SettingsRow`      | One `button` named by its label and value, "App lock, On, PIN". The optional caption is its hint. `tone="danger"` colours the label. `showChevron={false}` drops the chevron for a row that opens a dialog. It sits in a static card that is not grouped.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `PinPad`           | Four dots and a keypad for a PIN. Each key is a `button` named by its digit, and Delete is a `button` named "Delete", disabled with nothing to delete. The dots are one live region, role `text`, named "2 of 4 digits entered", and the digits are in no name or text. It is controlled: the screen holds `value` and passes `onChange` and `onComplete` (called with the whole PIN on the fourth digit). `error` shows a danger line, turns the dots to the danger border, shakes them (none with reduce motion) and is announced. `message` is a neutral line, such as a countdown, and is not announced. `disabled` dims and disables every key. It has no text field, so the phone keyboard never sees the PIN.         |
 | `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                                                                                                                                                                                                                                               |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                                                                                                                                                                                                                                                |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                                                                                                                                                                                                                                             |
@@ -1385,8 +1388,9 @@ grouped, so each row is read on its own, with a divider between rows. The order 
 1. **While you play**: the Sounds and Vibration `Toggle` rows. Each caption is the toggle's
    `description`, so it is also the switch's hint. A change is stored at once through the settings
    context.
-2. **Privacy**: the Privacy policy `SettingsRow`, which opens `/privacy`. The app lock and reminder
-   rows join this section, above the policy.
+2. **Privacy**: the App lock row (`AppLockRow`, from `features/lockSetup`), which opens
+   `/app-lock`, then the Privacy policy `SettingsRow`, which opens `/privacy`. The reminder row
+   joins this section, above the policy.
 3. **Start again**: the Clear everything `SettingsRow`, in the danger tone and with no chevron
    because it opens a dialog.
 
@@ -1718,7 +1722,8 @@ module, `storage/personal`, and nothing else touches it.
 ## App lock
 
 The rules are pure and live in `packages/core/src/lock.ts`. The service that keeps the PIN is
-`apps/mobile/lock`. The screens that use them (FRK-63, FRK-65, FRK-66) are separate tickets.
+`apps/mobile/lock`. The screens that turn it on and change it are in `features/lockSetup` (FRK-65,
+described below). The lock screen that shows it (FRK-66) is a separate ticket.
 
 - **Off by default.** Nothing asks at first launch. A player turns it on in Settings. It needs a
   4 digit PIN, and biometrics are an optional extra on top of it, offered only when the phone has
@@ -1764,6 +1769,39 @@ The rules are pure and live in `packages/core/src/lock.ts`. The service that kee
   are added now so the milestone needs one new build. `expo-screen-capture` is first used by the
   lock screen, and `expo-notifications` by the reminder. This needs a new build. The Android
   permissions the modules add are listed under Checks and CI.
+
+### Turning the lock on and changing it
+
+`features/lockSetup/AppLockScreen` is the `/app-lock` route. It reads the lock once when it opens
+(`useLockOverview`) and shows the flow that turns the lock on when it is off, or the lock's
+settings when it is on. Until the read answers, and if it fails, it shows only its header with a
+back button. The screens get the lock service from `useLockService()`, which gives the real service
+unless a test puts a fake above it with `LockServiceContext`.
+
+- **The App lock row** (`AppLockRow`) is one child of the Privacy section of Settings. It says Off,
+  On, PIN, or On with the kind of biometrics (Face ID, Touch ID, fingerprint, face unlock, or
+  phone unlock), and reads the lock again each time Settings comes back into view. It shows no value
+  until the first read, or when the read fails.
+- **Turning on** (`TurnOnFlow`): the explainer, then `ChoosePinSteps` (a PIN, then the same PIN
+  again), then the biometrics offer if the phone has biometrics set up, then done. The PIN is saved
+  through `lockService.setPin` as soon as it is confirmed. A second PIN that differs goes back to
+  the first step with the error line and forgets the first PIN. Yes on the offer asks the phone
+  once, and the choice is saved only if that passed. A failed check saves nothing and stays on the
+  offer. Not now saves nothing.
+- **When it is on** (`LockOnSettings`): Change PIN and Turn off first ask for the current PIN
+  (`VerifyPinStep`), or biometrics if the player turned them on. The PIN is checked by
+  `lockService.checkPin`, so a wrong one counts toward the wait exactly as on the lock screen, and a
+  wait that is running (even from before a restart) shows as a disabled keypad with a countdown.
+  The biometrics switch asks the phone once before it turns on, and is disabled with its reason as
+  its hint when the phone has none set up. Turning the lock off calls `clearPin`, which removes the
+  hash, the wrong PIN count and the biometrics choice.
+- **The kind of biometrics** is named by `biometricsCopyKind` from what the phone has and the
+  platform. Every kind has its own set of lines in `content` (`copy.biometrics.kinds`), not a
+  template with a name filled in.
+- **The digits.** `PinEntryStep` holds the digits typed only in its state, while it is on screen.
+  They go to `onSubmit` and nowhere else. They are never logged, never in an accessibility name or
+  text, and never stored outside the lock service. The fourth dot is held for 150 ms so it is seen
+  before the step moves on.
 
 ## Styling
 

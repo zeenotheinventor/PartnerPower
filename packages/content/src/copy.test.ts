@@ -2,7 +2,7 @@ import { limits, surpriseIds } from '@getfreak/core';
 
 import { copy } from './copy';
 import { fillCopy } from './fillCopy';
-import { hasDashOrSemicolon } from './textRules';
+import { hasBarredWord, hasDashOrSemicolon } from './textRules';
 
 function expectEveryValueToBeText(group: Record<string, string>) {
   Object.values(group).forEach((value) => expect(value.trim()).not.toBe(''));
@@ -30,6 +30,9 @@ describe('copy', () => {
         'clearCaption',
         'clearLabel',
         'clearSection',
+        'lockLabel',
+        'lockOff',
+        'lockOnPin',
         'playSection',
         'privacyLabel',
         'privacySection',
@@ -89,6 +92,130 @@ describe('copy', () => {
       expect(fillCopy(copy.settings.versionWithoutBuild, { version: '1.0.0' })).toBe(
         'Version 1.0.0',
       );
+    });
+  });
+
+  describe('app lock', () => {
+    const biometricsKinds = [
+      'faceId',
+      'touchId',
+      'fingerprint',
+      'faceUnlock',
+      'phoneUnlock',
+    ] as const;
+
+    it('should give the PIN pad its lines, with the count and the length to fill in', () => {
+      expect(Object.keys(copy.pin).sort()).toEqual(['delete', 'dots']);
+      expect(fillCopy(copy.pin.dots, { count: 2, length: 4 })).toBe('2 of 4 digits entered');
+      expectEveryValueToBeText(copy.pin);
+    });
+
+    it('should give the lock setup screens every line as non-empty text', () => {
+      const { points, ...lines } = copy.lockSetup;
+      expect(Object.keys(lines).sort()).toEqual(
+        [
+          'backLabel',
+          'confirmSubtitle',
+          'confirmTitle',
+          'done',
+          'doneBody',
+          'doneTitle',
+          'enterSubtitle',
+          'enterTitle',
+          'explainerHeading',
+          'mismatch',
+          'pointAndroid',
+          'start',
+          'title',
+        ].sort(),
+      );
+      expectEveryValueToBeText(lines);
+      expect(points.length).toBeGreaterThan(0);
+      points.forEach((line) => expect(line.trim()).not.toBe(''));
+    });
+
+    it('should give the lock settings screen every line as non-empty text', () => {
+      expect(Object.keys(copy.lockSettings).sort()).toEqual(
+        [
+          'changePin',
+          'changed',
+          'currentForChange',
+          'currentForOff',
+          'currentTitle',
+          'newTitle',
+          'off',
+          'statusCaption',
+          'statusOn',
+          'title',
+          'turnOff',
+          'turnOffCaption',
+        ].sort(),
+      );
+      expectEveryValueToBeText(copy.lockSettings);
+    });
+
+    it('should give the wrong PIN and the wait their lines', () => {
+      expect(Object.keys(copy.lock).sort()).toEqual([
+        'promptMessage',
+        'saveFailed',
+        'wait',
+        'wrong',
+      ]);
+      expect(fillCopy(copy.lock.wait, { time: '0:24' })).toBe('Too many tries. Try again in 0:24.');
+      expectEveryValueToBeText(copy.lock);
+    });
+
+    it('should name every kind of biometrics with its own set of lines', () => {
+      expect(Object.keys(copy.biometrics.kinds).sort()).toEqual([...biometricsKinds].sort());
+      biometricsKinds.forEach((kind) => {
+        expect(Object.keys(copy.biometrics.kinds[kind]).sort()).toEqual(
+          [
+            'body',
+            'doneBody',
+            'rowValue',
+            'title',
+            'toggleCaption',
+            'toggleLabel',
+            'tryAgain',
+            'unavailable',
+            'yes',
+          ].sort(),
+        );
+        expectEveryValueToBeText(copy.biometrics.kinds[kind]);
+      });
+    });
+
+    it('should give the biometrics offer its shared lines', () => {
+      expect(Object.keys(copy.biometrics).sort()).toEqual(
+        ['checkReason', 'failed', 'kinds', 'notNow', 'toggleFailed'].sort(),
+      );
+    });
+
+    it('should keep every app lock line free of dashes and semicolons', () => {
+      const { points, ...setupLines } = copy.lockSetup;
+      const { kinds, ...biometricsLines } = copy.biometrics;
+      const lines = [
+        ...points,
+        ...Object.values(setupLines),
+        ...Object.values(copy.lockSettings),
+        ...Object.values(copy.lock),
+        ...Object.values(copy.pin),
+        ...Object.values(biometricsLines),
+        ...Object.values(kinds).flatMap((kind) => Object.values(kind)),
+        copy.settings.lockLabel,
+        copy.settings.lockOff,
+        copy.settings.lockOnPin,
+      ];
+      lines.forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+    });
+
+    it('should not name a drink or use a gendered word in any app lock line', () => {
+      const lines = [
+        ...copy.lockSetup.points,
+        copy.lockSetup.explainerHeading,
+        ...Object.values(copy.lockSettings),
+      ];
+      lines.forEach((line) => expect(hasBarredWord(line)).toBe(false));
     });
   });
 

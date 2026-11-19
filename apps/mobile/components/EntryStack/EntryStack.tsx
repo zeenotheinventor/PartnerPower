@@ -30,6 +30,7 @@ export function EntryStack() {
           <Stack.Screen name="index" />
           <Stack.Screen name="settings" />
           <Stack.Screen name="privacy" />
+          <Stack.Screen name="app-lock" />
           {/* Each game's route group has a layout, so it is one screen here and its routes sit inside it. */}
           <Stack.Screen name="games/dares" />
           <Stack.Screen name="games/questions" />

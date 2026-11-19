@@ -91,11 +91,11 @@ export function createLockService({
     },
 
     async clearPin() {
-      await Promise.all([
-        secureStorage.remove('lockPinHash'),
-        secureStorage.remove('lockAttempts'),
-        secureStorage.remove('lockBiometricsChoice'),
-      ]);
+      // One after another, with the hash last. If a remove fails, the hash is still there, so the
+      // lock stays on and nothing is half turned off with the PIN gone.
+      await secureStorage.remove('lockBiometricsChoice');
+      await secureStorage.remove('lockAttempts');
+      await secureStorage.remove('lockPinHash');
     },
 
     async getBiometricsAvailability() {
@@ -103,8 +103,9 @@ export function createLockService({
         if (!(await biometricsDevice.hasHardware())) return { isAvailable: false };
         if (!(await biometricsDevice.isEnrolled())) return { isAvailable: false };
         const supported = await biometricsDevice.supportedKinds();
-        const kind = kindsInOrder.find((candidate) => supported.includes(candidate));
-        return kind ? { isAvailable: true, kind } : { isAvailable: false };
+        const kinds = kindsInOrder.filter((candidate) => supported.includes(candidate));
+        const [kind] = kinds;
+        return kind ? { isAvailable: true, kind, kinds } : { isAvailable: false };
       } catch {
         return { isAvailable: false };
       }
