@@ -8,6 +8,7 @@ import {
   CategoryToggle,
   Card,
   Chip,
+  FavouriteToggle,
   Header,
   Screen,
   SegmentedControl,
@@ -30,6 +31,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function KitGallery() {
   const router = useRouter();
   const [soundOn, setSoundOn] = useState(true);
+  const [favouriteOff, setFavouriteOff] = useState(false);
   const [name, setName] = useState('');
   const [option, setOption] = useState('b');
   const [categoryOn, setCategoryOn] = useState(true);
@@ -125,6 +127,18 @@ export function KitGallery() {
           onValueChange={setSoundOn}
         />
         <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
+      </Section>
+
+      <Section title="Favourite toggle">
+        <View className="flex-row gap-12">
+          <FavouriteToggle label="Favourite" value={favouriteOff} onValueChange={setFavouriteOff} />
+          <FavouriteToggle
+            label="Favourite"
+            value
+            onValueChange={() => {}}
+            context="A card for the gallery"
+          />
+        </View>
       </Section>
 
       <Section title="Segmented control">

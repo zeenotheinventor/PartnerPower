@@ -220,6 +220,8 @@ describe('press feedback in the route tree', () => {
       expect(playSound.mock.calls).toEqual([['done']]);
       // The round may end on this card, which adds the round complete haptic after the press.
       expect(triggerHaptic.mock.calls[0]).toEqual(['done']);
+      // The summary may now be up, and its list of cards reads the favourites after it shows.
+      await act(async () => {});
     });
 
     it('should play and fire nothing when both switches are off', async () => {
@@ -241,6 +243,7 @@ describe('press feedback in the route tree', () => {
 
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       await letTimePass();
 
       expect(roundCompleteCount()).toBe(1);
@@ -256,6 +259,7 @@ describe('press feedback in the route tree', () => {
         within(dialog).getByRole('button', { name: copy.roundPlay.endDialogConfirm }),
       );
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       await letTimePass();
 
       expect(roundCompleteCount()).toBe(1);
@@ -275,6 +279,7 @@ describe('press feedback in the route tree', () => {
       await startTenCardRound();
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       await letTimePass();
 
       fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.playAgain }));
@@ -283,6 +288,7 @@ describe('press feedback in the route tree', () => {
 
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       await letTimePass();
 
       expect(roundCompleteCount()).toBe(2);
@@ -294,6 +300,7 @@ describe('press feedback in the route tree', () => {
 
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       await letTimePass();
 
       expect(triggerHaptic).not.toHaveBeenCalled();
@@ -303,6 +310,7 @@ describe('press feedback in the route tree', () => {
       await startTenCardRound();
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+      await act(async () => {});
       jest.clearAllMocks();
 
       await letTimePass();

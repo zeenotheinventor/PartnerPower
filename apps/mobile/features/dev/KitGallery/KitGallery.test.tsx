@@ -50,6 +50,15 @@ describe('KitGallery', () => {
     ).toBeOnTheScreen();
   });
 
+  it('should show a favourite toggle in both states, and turn the off one on when pressed', async () => {
+    await renderThemed(<KitGallery />);
+    expect(screen.getAllByRole('switch', { name: 'Favourite', checked: true })).toHaveLength(1);
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Favourite', checked: false }));
+
+    expect(screen.getAllByRole('switch', { name: 'Favourite', checked: true })).toHaveLength(2);
+  });
+
   it('should show a pressable card and a disabled one', async () => {
     await renderThemed(<KitGallery />);
 

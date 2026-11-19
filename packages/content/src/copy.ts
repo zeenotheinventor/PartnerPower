@@ -126,6 +126,12 @@ export const copy = {
     playAgain: 'Play again',
     settings: 'Settings',
     home: 'Home',
+    playedHeading: "This round's dares",
+    favouriteSaveFailed: "Couldn't save that favourite. Try again.",
+  },
+  // The name of the favourite control wherever a card has one.
+  favourite: {
+    label: 'Favourite',
   },
   // The words that lead a question, so question text holds only the clause after them. Guess your
   // partner and secret match have no lead.

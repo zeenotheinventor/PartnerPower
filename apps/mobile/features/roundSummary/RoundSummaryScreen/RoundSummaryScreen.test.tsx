@@ -1,10 +1,14 @@
 import { copy, fillCopy } from '@getfreak/content';
 import type { Deck, RoundAction, RoundSetup } from '@getfreak/core';
-import { fireEvent, screen } from 'nativewind/test';
+import { act, fireEvent, screen } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
 import { createMockFeedback } from '../../../feedback/createMockFeedback';
 import { FeedbackContext } from '../../../feedback/FeedbackProvider';
+import { PersonalDataProvider } from '../../../personal';
+import type { PersonalDataSource } from '../../../personal';
+import type { PersonalRepository } from '../../../storage';
+import { createInMemoryPersonalRepository } from '../../../storage/personal/createInMemoryPersonalRepository';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { RoundProvider, useRound, type RoundContextValue } from '../../round/RoundProvider';
 import { RoundSummaryScreen } from './RoundSummaryScreen';
@@ -57,6 +61,29 @@ const tied: RoundAction[] = [{ type: 'done' }, { type: 'done' }, { type: 'end' }
 
 let latestRound: RoundContextValue | undefined;
 
+function makeRepository(): PersonalRepository {
+  return createInMemoryPersonalRepository({
+    getShippedCards: () => deck.cards,
+    randomUUID: () => '00000000-0000-4000-8000-000000000001',
+    now: () => 1,
+  });
+}
+
+// The personal store opens when the test says so, inside an act, so nothing updates outside one.
+let personalRepository: PersonalRepository;
+let personalSource: PersonalDataSource;
+let openPersonalStore: () => Promise<void>;
+
+function prepareEmptyPersonalStore() {
+  personalRepository = makeRepository();
+  let open: (repository: PersonalRepository) => void = () => {};
+  personalSource = {
+    load: () => new Promise<PersonalRepository>((resolve) => (open = resolve)),
+    createEmpty: makeRepository,
+  };
+  openPersonalStore = () => act(async () => open(personalRepository));
+}
+
 function PlayedRound({ actions, children }: { actions: RoundAction[]; children: ReactNode }) {
   const round = useRound();
   const { startNewRound, dispatch } = round;
@@ -78,21 +105,26 @@ function summaryTree(
 ) {
   return (
     <FeedbackContext.Provider value={feedback}>
-      <RoundProvider>
-        <PlayedRound actions={actions}>
-          {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
-        </PlayedRound>
-      </RoundProvider>
+      <PersonalDataProvider source={personalSource}>
+        <RoundProvider>
+          <PlayedRound actions={actions}>
+            {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
+          </PlayedRound>
+        </RoundProvider>
+      </PersonalDataProvider>
     </FeedbackContext.Provider>
   );
 }
 
 async function renderSummary(actions: RoundAction[] = aBoldest, feedback = createMockFeedback()) {
   const view = await renderThemed(summaryTree(actions, feedback));
+  await openPersonalStore();
   return { view, feedback };
 }
 
 describe('RoundSummaryScreen', () => {
+  beforeEach(prepareEmptyPersonalStore);
+
   afterEach(() => {
     mockBack.mockClear();
     mockReplace.mockClear();
@@ -130,6 +162,7 @@ describe('RoundSummaryScreen', () => {
       const { view, feedback } = await renderSummary();
 
       view.rerender(summaryTree(aBoldest, feedback, { screenKey: 1 }));
+      await act(async () => {});
 
       expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
     });
@@ -255,6 +288,53 @@ describe('RoundSummaryScreen', () => {
     fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.home }));
 
     expect(mockDismissTo).toHaveBeenCalledWith('/');
+  });
+
+  describe('the cards played', () => {
+    const favouriteName = copy.favourite.label;
+
+    it('should list the cards played with a favourite control each, and not the one that was passed', async () => {
+      await renderSummary();
+
+      expect(
+        screen.getByRole('header', { name: copy.roundSummary.playedHeading }),
+      ).toBeOnTheScreen();
+      expect(screen.getAllByRole('switch', { name: favouriteName })).toHaveLength(2);
+    });
+
+    it('should keep the card text from the deck the round started from', async () => {
+      await renderSummary();
+
+      screen.getAllByRole('switch', { name: favouriteName }).forEach((control) => {
+        const cardText = control.props.accessibilityHint;
+        expect(deck.cards.map((card) => card.text)).toContain(cardText);
+        expect(screen.getByText(cardText)).toBeOnTheScreen();
+      });
+    });
+
+    it('should keep a favourite in the repository', async () => {
+      await renderSummary();
+
+      const [firstControl] = screen.getAllByRole('switch', { name: favouriteName });
+      if (!firstControl) throw new Error('The summary has no favourite control');
+      fireEvent.press(firstControl);
+      await act(async () => {});
+
+      expect(await personalRepository.listFavourites()).toHaveLength(1);
+    });
+
+    it('should put Play again, Settings and Home above the cards', async () => {
+      await renderSummary();
+
+      const screenText = JSON.stringify(screen.toJSON());
+
+      expect(screenText.indexOf(copy.roundSummary.playAgain)).toBeLessThan(
+        screenText.indexOf(copy.roundSummary.playedHeading),
+      );
+      expect(screenText.indexOf(copy.roundSummary.home)).toBeLessThan(
+        screenText.indexOf(copy.roundSummary.playedHeading),
+      );
+    });
   });
 
   it('should not offer Play again when no round has been started', async () => {
