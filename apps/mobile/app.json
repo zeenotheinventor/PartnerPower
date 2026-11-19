@@ -15,15 +15,31 @@
     },
     "orientation": "portrait",
     "userInterfaceStyle": "automatic",
+    "icon": "./assets/images/icon.png",
     "ios": {
       "bundleIdentifier": "com.sojisoft.getfreak"
     },
     "android": {
-      "package": "com.sojisoft.getfreak"
+      "package": "com.sojisoft.getfreak",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/images/adaptive-foreground.png",
+        "monochromeImage": "./assets/images/adaptive-monochrome.png",
+        "backgroundColor": "#231340"
+      }
     },
     "plugins": [
-      ["expo-router", { "sitemap": false }],
-      "expo-sqlite",
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
       [
         "expo-audio",
         {
@@ -32,7 +48,25 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ],
+      [
+        "expo-splash-screen",
+        {
+          "image": "./assets/images/splash-icon.png",
+          "imageWidth": 200,
+          "resizeMode": "contain",
+          "backgroundColor": "#FFF0F4",
+          "dark": {
+            "backgroundColor": "#231340"
+          }
+        }
+      ]
     ],
     "extra": {
       "eas": {

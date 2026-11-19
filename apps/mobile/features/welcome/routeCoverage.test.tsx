@@ -80,3 +80,27 @@ describe('every route file in the app', () => {
     },
   );
 });
+
+// Expo Router turns every file under `app/` into a route, and the release bundle includes them all.
+// A test file there pulls the testing library into the app and breaks the release build, which no
+// test run notices. Tests live beside the code they cover, outside this folder.
+describe('the app folder', () => {
+  function listEveryFile(directory = ''): string[] {
+    return readdirSync(path.join(appDirectory, directory), { withFileTypes: true }).flatMap(
+      (entry) => {
+        const relativePath = path.join(directory, entry.name);
+        return entry.isDirectory() ? listEveryFile(relativePath) : [relativePath];
+      },
+    );
+  }
+
+  it('should hold no test files, because Expo Router would bundle them as routes', () => {
+    expect(listEveryFile().filter((file) => /\.(test|spec)\./.test(file))).toEqual([]);
+  });
+
+  it('should hold only files Expo Router can read as routes or layouts', () => {
+    expect(listEveryFile().filter((file) => !routeExtensions.includes(path.extname(file)))).toEqual(
+      [],
+    );
+  });
+});

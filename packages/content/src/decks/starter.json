@@ -897,6 +897,182 @@
       "kind": "together",
       "text": "Have sex until you've both come, taking turns deciding how. Either of you can slow down or stop at any time.",
       "source": "shipped"
+    },
+    {
+      "id": "starter-c1-33",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner's neck until the timer runs out. Slow kisses, no rushing.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 15
+      }
+    },
+    {
+      "id": "starter-c1-34",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Hold your partner close and whisper sweet things in their ear until the timer runs out.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 20
+      }
+    },
+    {
+      "id": "starter-c1-35",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Run your fingertips up and down your partner's arm until the timer runs out. They can ask for more.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 25
+      }
+    },
+    {
+      "id": "starter-c1-36",
+      "category": "c1",
+      "kind": "solo",
+      "text": "Kiss your partner softly and slowly, anywhere above the collarbone, until the timer runs out.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 30
+      }
+    },
+    {
+      "id": "starter-c2-33",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss and stroke your partner's chest and stomach, under their top, until the timer runs out. They can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 30
+      }
+    },
+    {
+      "id": "starter-c2-34",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Kiss your partner's inner thighs and hips until the timer runs out. They can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 35
+      }
+    },
+    {
+      "id": "starter-c2-35",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Rub your partner over their underwear until the timer runs out. Let them guide your pace.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 40
+      }
+    },
+    {
+      "id": "starter-c2-36",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Slide your hand inside your partner's underwear and touch them until the timer runs out. They set the pace.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 45
+      }
+    },
+    {
+      "id": "starter-c3-33",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Lick and suck your partner's clit or cock, slowly and gently, until the timer runs out. They can tap out.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 40
+      }
+    },
+    {
+      "id": "starter-c3-34",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Lick your partner slowly between their legs until the timer runs out. No hands, and they can tap out.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 45
+      }
+    },
+    {
+      "id": "starter-c3-35",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Go down on your partner until the timer runs out. They set the pace and can tap out.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 50
+      }
+    },
+    {
+      "id": "starter-c3-36",
+      "category": "c3",
+      "kind": "solo",
+      "text": "Lie back and let your partner go down on you until the timer runs out. Tell them what feels good.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 55
+      }
+    },
+    {
+      "id": "starter-c4-33",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Have sex slowly until the timer runs out, with eye contact the whole way. Either of you can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 55
+      }
+    },
+    {
+      "id": "starter-c4-34",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Have sex until the timer runs out. The one on top sets the pace and either of you can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 60
+      }
+    },
+    {
+      "id": "starter-c4-35",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Have sex from behind until the timer runs out. The one in front sets the pace and can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 60
+      }
+    },
+    {
+      "id": "starter-c4-36",
+      "category": "c4",
+      "kind": "solo",
+      "text": "Have sex until the timer runs out, and the one underneath says exactly how they want it. Either of you can say stop.",
+      "source": "shipped",
+      "effect": {
+        "type": "timer",
+        "seconds": 60
+      }
     }
   ]
 }

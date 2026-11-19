@@ -4,7 +4,7 @@ An 18+ mobile app of games for couples, played together on one phone.
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend. Native modules: `expo-sqlite` for storage, `expo-audio` for button sounds and `expo-haptics` for vibration feedback.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend. Native modules: `expo-sqlite` (SQLCipher build) for storage, `expo-secure-store` and `expo-crypto` for the key to the encrypted store, `expo-audio` for button sounds and `expo-haptics` for vibration feedback.
 
 ## Layout
 
