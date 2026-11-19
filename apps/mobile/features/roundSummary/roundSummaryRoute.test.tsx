@@ -55,6 +55,8 @@ async function startRoundFromSetup() {
   await launchApp(setupRoute);
   enterNames();
   fireEvent.press(screen.getByRole('radio', { name: copy.roundSetup.lengthTen }));
+  // Surprises are on by default. This round is the plain one.
+  fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
   await pressStart();
 }
 
@@ -154,6 +156,8 @@ describe('the round summary in the route tree', () => {
       enterNames();
       fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
       fireEvent.press(screen.getByRole('radio', { name: copy.roundSetup.lengthTen }));
+      // Surprises are on by default. This round is the plain one.
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
       await pressStart();
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
@@ -177,6 +181,8 @@ describe('the round summary in the route tree', () => {
       await launchApp(setupRoute);
       enterNames();
       fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+      // Surprises are on by default. This round is the plain one.
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
       await pressStart();
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
@@ -205,6 +211,8 @@ describe('the round summary in the route tree', () => {
       await waitFor(() => expect(currentPathname()).toBe(setupRoute));
       enterNames();
       fireEvent.press(screen.getByRole('radio', { name: copy.roundSetup.lengthTen }));
+      // Surprises are on by default. This round is the plain one.
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
       fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
       await pressStart();
       playUntilTheSummary();
