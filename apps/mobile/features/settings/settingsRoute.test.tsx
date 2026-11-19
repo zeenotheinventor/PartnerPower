@@ -26,6 +26,19 @@ jest.mock('expo-secure-store', () => ({
   },
 }));
 
+// The hash is the real SHA-256, so a PIN that is set can be checked again. The native module is not
+// available under Jest.
+jest.mock('expo-crypto', () => {
+  const { sha256Hex } = jest.requireActual<typeof import('../../lock/testing/sha256Hex')>(
+    '../../lock/testing/sha256Hex',
+  );
+  return {
+    CryptoDigestAlgorithm: { SHA256: 'SHA-256' },
+    digestStringAsync: (_algorithm: string, text: string) => Promise.resolve(sha256Hex(text)),
+    getRandomBytes: (byteCount: number) => Uint8Array.from({ length: byteCount }, (_, i) => i),
+  };
+});
+
 async function settle() {
   await act(async () => {
     await jest.advanceTimersByTimeAsync(1000);
@@ -106,6 +119,72 @@ describe('Settings in the real route tree', () => {
 
       fireEvent.press(screen.getByRole('button', { name: copy.privacy.backLabel }));
       await waitFor(() => expect(currentPathname()).toBe('/settings'));
+    });
+  });
+
+  describe('the app lock', () => {
+    const lockRow = (value: string) =>
+      screen.getByRole('button', { name: `${copy.settings.lockLabel}, ${value}` });
+
+    async function typePin(pin: string) {
+      [...pin].forEach((key) => fireEvent.press(screen.getByRole('button', { name: key })));
+      await settle();
+    }
+
+    async function openAppLock(value: string) {
+      fireEvent.press(lockRow(value));
+      await waitFor(() => expect(currentPathname()).toBe('/app-lock'));
+      await settle();
+    }
+
+    async function turnTheLockOn() {
+      await openAppLock(copy.settings.lockOff);
+      fireEvent.press(screen.getByRole('button', { name: copy.lockSetup.start }));
+      await typePin('4821');
+      await typePin('4821');
+      fireEvent.press(screen.getByRole('button', { name: copy.lockSetup.done }));
+      await waitFor(() => expect(currentPathname()).toBe('/settings'));
+      await settle();
+    }
+
+    it('should read On, PIN from the stored hash, and open the lock settings from the row', async () => {
+      await openSettingsFromTheHub();
+      await settle();
+
+      await openAppLock(copy.settings.lockOnPin);
+
+      expect(screen.getByText(copy.lockSettings.statusOn)).toBeOnTheScreen();
+      fireEvent.press(screen.getByRole('button', { name: copy.lockSetup.backLabel }));
+      await waitFor(() => expect(currentPathname()).toBe('/settings'));
+    });
+
+    it('should turn the lock on from Settings, and show it on the row when the player is back', async () => {
+      mockSecureItems.clear();
+      await openSettingsFromTheHub();
+      await settle();
+      expect(lockRow(copy.settings.lockOff)).toBeOnTheScreen();
+
+      await turnTheLockOn();
+
+      expect(lockRow(copy.settings.lockOnPin)).toBeOnTheScreen();
+      expect(mockSecureItems.has('lockPinHash')).toBe(true);
+    });
+
+    it('should turn the lock off with the PIN, and show Off when the player is back', async () => {
+      mockSecureItems.clear();
+      await openSettingsFromTheHub();
+      await settle();
+      await turnTheLockOn();
+
+      await openAppLock(copy.settings.lockOnPin);
+      fireEvent.press(screen.getByRole('button', { name: copy.lockSettings.turnOff }));
+      await typePin('4821');
+      await waitFor(() => expect(currentPathname()).toBe('/settings'));
+      await settle();
+
+      expect(lockRow(copy.settings.lockOff)).toBeOnTheScreen();
+      expect(mockSecureItems.has('lockPinHash')).toBe(false);
+      expect(mockSecureItems.has('lockBiometricsChoice')).toBe(false);
     });
   });
 

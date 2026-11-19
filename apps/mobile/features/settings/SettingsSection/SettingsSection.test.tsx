@@ -26,6 +26,17 @@ describe('SettingsSection', () => {
     });
   });
 
+  it('should leave the caption out when it has no label', async () => {
+    await renderThemed(
+      <SettingsSection>
+        <Text>Only row</Text>
+      </SettingsSection>,
+    );
+
+    expect(screen.getByText('Only row')).toBeOnTheScreen();
+    expect(screen.queryByText('Privacy')).toBeNull();
+  });
+
   it('should show every row it is given', async () => {
     await renderThemed(
       <SettingsSection label="Privacy">
