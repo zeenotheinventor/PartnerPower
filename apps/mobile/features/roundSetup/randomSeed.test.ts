@@ -20,8 +20,4 @@ describe('randomSeed', () => {
 
     expect(randomSeed()).toBeLessThan(2 ** 32);
   });
-
-  it('fails on purpose for the FRK-85 shard proof', () => {
-    expect(1).toBe(2);
-  });
 });
