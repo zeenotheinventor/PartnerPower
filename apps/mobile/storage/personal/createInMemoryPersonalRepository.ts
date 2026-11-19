@@ -1,7 +1,41 @@
-import { limits, playerCardSchema, type CustomDeck, type PlayerCard } from '@getfreak/core';
+import {
+  discoverySchema,
+  limits,
+  newDiscoverySchema,
+  playerCardSchema,
+  type CustomDeck,
+  type CustomQuestion,
+  type Discovery,
+  type PlayerCard,
+} from '@getfreak/core';
 
-import { checkCardDraftText, checkDeckDraft } from './rules';
-import type { PersonalRepository, PersonalRepositoryOptions, SaveResult } from './types';
+import {
+  buildPlayerQuestion,
+  changeInvalidatesDiscoveries,
+  checkCardDraftText,
+  checkDeckDraft,
+  checkQuestionDraftText,
+  discoveryDate,
+  discoveryPlayer,
+  isOptionOffered,
+  isStorableDiscovery,
+  offeredOptionIds,
+} from './rules';
+import type {
+  DiscoveryKey,
+  PersonalRepository,
+  PersonalRepositoryOptions,
+  QuestionProblem,
+  SaveResult,
+} from './types';
+
+function isSameDiscovery(discovery: Discovery, key: DiscoveryKey): boolean {
+  return (
+    discovery.kind === key.kind &&
+    discovery.questionId === key.questionId &&
+    discoveryPlayer(discovery) === discoveryPlayer(key)
+  );
+}
 
 /**
  * A repository that keeps everything in memory, with the same behaviour as the one over the
@@ -10,8 +44,11 @@ import type { PersonalRepository, PersonalRepositoryOptions, SaveResult } from '
 export function createInMemoryPersonalRepository(
   options: PersonalRepositoryOptions,
 ): PersonalRepository {
-  const { getShippedCards, randomUUID } = options;
+  const { getShippedCards, getShippedQuestions, randomUUID, now } = options;
   let playerCards: PlayerCard[] = [];
+  let playerQuestions: CustomQuestion[] = [];
+  // Every discovery that was added, including those for questions that are missing for now.
+  let discoveries: Discovery[] = [];
   let favourites: string[] = [];
   // A deck keeps every card id it was saved with, including ids that are missing for now.
   let decks: CustomDeck[] = [];
@@ -21,6 +58,13 @@ export function createInMemoryPersonalRepository(
     return new Set([
       ...getShippedCards().map((card) => card.id),
       ...playerCards.map((card) => card.id),
+    ]);
+  }
+
+  function knownQuestionIds(): Set<string> {
+    return new Set([
+      ...getShippedQuestions().map((question) => question.id),
+      ...playerQuestions.map((question) => question.id),
     ]);
   }
 
@@ -105,6 +149,67 @@ export function createInMemoryPersonalRepository(
     },
     async deleteDeck(id) {
       decks = decks.filter((deck) => deck.id !== id);
+    },
+    async listPlayerQuestions() {
+      return [...playerQuestions];
+    },
+    async savePlayerQuestion(draft): Promise<SaveResult<CustomQuestion, QuestionProblem>> {
+      const existing = playerQuestions.find((question) => question.id === draft.id);
+      const shippedTexts = getShippedQuestions().flatMap((question) => question.text ?? []);
+      const otherTexts = playerQuestions
+        .filter((question) => question !== existing)
+        .flatMap((question) => question.text ?? []);
+      const checked = checkQuestionDraftText(draft, shippedTexts, otherTexts);
+      if (!checked.ok) return checked;
+      if (!existing && playerQuestions.length >= limits.playerQuestions) {
+        return { ok: false, reason: 'limit' };
+      }
+      const question = buildPlayerQuestion(
+        existing ? existing.id : `pq-${randomUUID()}`,
+        draft,
+        checked.value,
+      );
+      if (existing && changeInvalidatesDiscoveries(existing, question)) {
+        discoveries = discoveries.filter((discovery) => discovery.questionId !== existing.id);
+      }
+      playerQuestions = existing
+        ? playerQuestions.map((stored) => (stored === existing ? question : stored))
+        : [...playerQuestions, question];
+      return { ok: true, saved: question };
+    },
+    async deletePlayerQuestion(id) {
+      playerQuestions = playerQuestions.filter((question) => question.id !== id);
+      discoveries = discoveries.filter((discovery) => discovery.questionId !== id);
+    },
+    async listDiscoveries() {
+      const known = knownQuestionIds();
+      const offered = offeredOptionIds(getShippedQuestions(), playerQuestions);
+      return discoveries.filter(
+        (discovery) => known.has(discovery.questionId) && isOptionOffered(discovery, offered),
+      );
+    },
+    async addDiscoveries(drafts) {
+      const date = discoveryDate(now());
+      if (date === undefined) return;
+      for (const draft of drafts) {
+        const parsed = newDiscoverySchema.safeParse(draft);
+        if (!parsed.success || !isStorableDiscovery(parsed.data)) continue;
+        const discovery = discoverySchema.parse(
+          parsed.data.kind === 'answer'
+            ? { ...parsed.data, answererName: discoveryPlayer(parsed.data), date }
+            : { ...parsed.data, date },
+        );
+        discoveries = [
+          ...discoveries.filter((stored) => !isSameDiscovery(stored, parsed.data)),
+          discovery,
+        ];
+      }
+    },
+    async removeDiscovery(key) {
+      discoveries = discoveries.filter((discovery) => !isSameDiscovery(discovery, key));
+    },
+    async clearDiscoveries() {
+      discoveries = [];
     },
     takeRecoveryNotice() {
       const isDue = isRecoveryNoticeDue;
