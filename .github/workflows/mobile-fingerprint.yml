@@ -1,0 +1,130 @@
+name: Mobile fingerprint
+
+# Native code reaches the app only through apps/mobile's dependencies and Expo config, since nothing
+# under packages/ may add a native module. These paths are what can change the fingerprint (eas.json,
+# the Expo config in app.json, the files it names under assets/, the config plugins in plugins/,
+# and the installed native packages, which come from package.json, the lockfile and the Node
+# version). Some of them, such as .nvmrc, the root package.json and pnpm-workspace.yaml, are not
+# hashed directly and matter only through what they install. A pull request that touches none of them cannot change it and gets no run.
+# GitHub matches the paths against the whole pull request, not the last push. A pull request whose
+# later push reverts its only native change gets no further run, so the earlier "changed" comment
+# stays and is wrong. Delete it by hand in that case.
+on:
+  pull_request:
+    paths:
+      - 'apps/mobile/package.json'
+      - 'apps/mobile/app.json'
+      - 'apps/mobile/app.config.ts'
+      - 'apps/mobile/eas.json'
+      - 'apps/mobile/fingerprint.config.js'
+      - 'apps/mobile/.fingerprintignore'
+      - 'apps/mobile/assets/**'
+      - 'apps/mobile/plugins/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - '.nvmrc'
+      - '.github/workflows/mobile-fingerprint.yml'
+
+# A newer push to the same pull request makes the older run pointless.
+concurrency:
+  group: mobile-fingerprint-${{ github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  # Warns on a pull request when it changes the native fingerprint of the mobile app, meaning an
+  # EAS Update cannot ship it and a new build is needed. The expo/expo-github-action/fingerprint
+  # action is not used. It posts no comment itself, it only reports a diff, and it compares
+  # against a database that has to be built up by runs on main. Instead this job fingerprints both
+  # sides with the @expo/fingerprint CLI that expo already installs, so the comparison does not
+  # depend on any earlier run. It is not a required check, so it never blocks a merge.
+  mobile-fingerprint:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    permissions:
+      contents: read
+      pull-requests: write
+    env:
+      GH_TOKEN: ${{ github.token }}
+      PULL_REQUEST_NUMBER: ${{ github.event.pull_request.number }}
+    steps:
+      # The checkout is the merge of the pull request into its base, so its first parent is the
+      # base tip. Depth 2 fetches both parents.
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: pnpm/action-setup@v4
+      # The setup action in .github/actions/setup is not used, because it installs once and this
+      # job installs twice. Like it, this job restores the pnpm store under the same key and never
+      # saves it, so a pull request that changes the lockfile does not save its own copy. The runs
+      # of ci.yml on main save it. The two installs below use the restored store and fetch
+      # whatever the lockfile has beyond it.
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+      - name: Find the pnpm store
+        id: pnpm-store
+        run: echo "path=$(pnpm store path --silent)" >> "$GITHUB_OUTPUT"
+      - name: Restore the pnpm store
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{ steps.pnpm-store.outputs.path }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('pnpm-lock.yaml') }}
+          restore-keys: pnpm-store-${{ runner.os }}-
+      - name: Fingerprint the merged pull request
+        run: |
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm --filter @getfreak/mobile exec fingerprint fingerprint:generate > "$RUNNER_TEMP/head.json"
+      # Dependencies are installed again at the base because native modules are part of the
+      # fingerprint.
+      - name: Fingerprint the base
+        run: |
+          git checkout --detach HEAD^1
+          pnpm install --frozen-lockfile --ignore-scripts
+          pnpm --filter @getfreak/mobile exec fingerprint fingerprint:generate > "$RUNNER_TEMP/base.json"
+      # One comment per pull request, found by its marker and updated on every push. A comment that
+      # reported a change is rewritten when a later push that still matches the paths above brings
+      # the fingerprints back in line.
+      - name: Comment on the pull request
+        run: |
+          set -euo pipefail
+          base_hash=$(jq -r .hash "$RUNNER_TEMP/base.json")
+          head_hash=$(jq -r .hash "$RUNNER_TEMP/head.json")
+          comment_id=$(gh api --paginate "repos/$GITHUB_REPOSITORY/issues/$PULL_REQUEST_NUMBER/comments" \
+            --jq '.[] | select(.body | startswith("<!-- getfreak-mobile-fingerprint -->")) | .id' | sed -n 1p)
+
+          if [ "$base_hash" = "$head_hash" ]; then
+            if [ -z "$comment_id" ]; then
+              echo "Fingerprint unchanged and no earlier comment to update."
+              exit 0
+            fi
+            {
+              echo "<!-- getfreak-mobile-fingerprint -->"
+              echo "**Native fingerprint unchanged.** An earlier push changed it, this one does not. Hash: \`$head_hash\`."
+            } > "$RUNNER_TEMP/comment.md"
+          else
+            pnpm --filter @getfreak/mobile exec fingerprint fingerprint:diff "$RUNNER_TEMP/base.json" "$RUNNER_TEMP/head.json" > "$RUNNER_TEMP/diff.json"
+            changed_count=$(jq 'length' "$RUNNER_TEMP/diff.json")
+            {
+              echo "<!-- getfreak-mobile-fingerprint -->"
+              echo "**Native fingerprint changed.** This pull request cannot ship as an EAS Update, a new native build is needed."
+              echo
+              echo "Base: \`$base_hash\`"
+              echo "Head: \`$head_hash\`"
+              echo
+              echo "Changed sources:"
+              jq -r '.[:30][] | "- \(.op): `\((.addedSource // .removedSource // .afterSource) | (.filePath // .id))`"' "$RUNNER_TEMP/diff.json"
+              if [ "$changed_count" -gt 30 ]; then
+                echo "- and $((changed_count - 30)) more"
+              fi
+            } > "$RUNNER_TEMP/comment.md"
+          fi
+
+          if [ -z "$comment_id" ]; then
+            gh api --method POST "repos/$GITHUB_REPOSITORY/issues/$PULL_REQUEST_NUMBER/comments" -F body=@"$RUNNER_TEMP/comment.md"
+          else
+            gh api --method PATCH "repos/$GITHUB_REPOSITORY/issues/comments/$comment_id" -F body=@"$RUNNER_TEMP/comment.md"
+          fi

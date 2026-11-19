@@ -94,7 +94,7 @@ Open the project, then **Issues**, then the issue.
 On a report:
 
 - `release` is the commit the JavaScript was built from, when the update was published with
-  `EXPO_PUBLIC_COMMIT_SHA` set, as the README's command does. Otherwise it is the runtime version.
+  `EXPO_PUBLIC_COMMIT_SHA` set, as the update workflow and the README's command do. Otherwise it is the runtime version.
 - `dist` is the id of the running update. For the JavaScript built into the app it may be that
   build's own id or empty. Check on a device.
 - The tag `runtimeVersion` is the native fingerprint, which says which build the phone has.
@@ -113,15 +113,17 @@ npx eas-cli update:list --branch preview
 - **Development and preview builds** skip the upload. `eas.json` sets `SENTRY_DISABLE_AUTO_UPLOAD`
   for both, so they build without the token. Reports from the JavaScript built into those builds
   show minified stacks. Reports from an update show readable ones once its maps are uploaded.
-- **Updates** are uploaded by hand after `eas update`, with the command in the README. It needs
-  `SENTRY_AUTH_TOKEN` in your shell. The update works without it.
+- **Updates** are uploaded by the update workflow right after the publish, when `SENTRY_AUTH_TOKEN`
+  is set as a secret on its GitHub environment (see [updates](updates.md)). The update works
+  without it. For a manual publish, upload by hand with the command in the README, with
+  `SENTRY_AUTH_TOKEN` in your shell.
 
 ## 6. Secrets, by name only
 
-| Name                     | Where it lives                                              |
-| ------------------------ | ----------------------------------------------------------- |
-| `EXPO_PUBLIC_SENTRY_DSN` | EAS environment variable, `production` and `preview`        |
-| `SENTRY_AUTH_TOKEN`      | EAS secret for `production`, and your shell when publishing |
+| Name                     | Where it lives                                                                                     |
+| ------------------------ | -------------------------------------------------------------------------------------------------- |
+| `EXPO_PUBLIC_SENTRY_DSN` | EAS environment variable, `production` and `preview`                                               |
+| `SENTRY_AUTH_TOKEN`      | EAS secret for `production`, the `preview` GitHub environment, and your shell for a manual publish |
 
 Neither is in a committed file, so neither changes the native fingerprint. The repository is
 public. Never paste a DSN or the token into a ticket, a pull request, a commit or a document.
