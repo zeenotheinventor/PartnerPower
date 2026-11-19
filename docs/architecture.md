@@ -504,6 +504,10 @@ protection. There is no workflow-level path filter, so `checks` always reports. 
 pull request cancels its older run, pushes to `main` get their own scoped run, and a full run can be
 started by hand. The shared setup lives in `.github/actions/setup`.
 
+Installable builds are made with EAS Build from `apps/mobile/eas.json`. The `preview` profile makes
+an internal release APK that raises its version code on every build. The profiles pin Node 26.13.1
+and pnpm 9.11.0, and the README has the steps.
+
 ## Privacy
 
 - No analytics and no error reporting in milestones 1 and 2. Both are decided in the launch
