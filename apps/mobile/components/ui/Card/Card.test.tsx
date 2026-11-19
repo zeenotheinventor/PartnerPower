@@ -1,6 +1,7 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { StyleSheet, Text } from 'react-native';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 
 import { hostViewInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -257,5 +258,36 @@ describe('Card', () => {
         });
       });
     });
+  });
+});
+
+describe('Card press feedback', () => {
+  it('should give the tap feedback when pressed', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Card label="Open" onPress={onPress}>
+        <Text>Open</Text>
+      </Card>,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Open' }));
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('should give the locked feedback and do nothing else when disabled', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Card label="Open" disabled onPress={onPress}>
+        <Text>Open</Text>
+      </Card>,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Open', disabled: true }));
+
+    expect(feedback.locked).toHaveBeenCalledTimes(1);
+    expect(feedback.tap).not.toHaveBeenCalled();
+    expect(onPress).not.toHaveBeenCalled();
   });
 });

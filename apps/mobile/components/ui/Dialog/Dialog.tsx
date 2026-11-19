@@ -1,6 +1,7 @@
 import { useEffect } from 'react';
 import { AccessibilityInfo, Modal, ScrollView, Text, View } from 'react-native';
 
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { Button } from '../Button';
 import type { DialogProps } from './types';
 
@@ -25,6 +26,11 @@ export function Dialog({
   error,
   busy = false,
 }: DialogProps) {
+  const { sheetOpen } = useFeedback();
+  useEffect(() => {
+    if (visible) sheetOpen();
+  }, [visible, sheetOpen]);
+
   // iOS does not read a live region, so the error is also announced.
   useEffect(() => {
     if (error) AccessibilityInfo.announceForAccessibility(error);

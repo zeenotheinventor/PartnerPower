@@ -24,5 +24,9 @@ export function FeedbackProvider({ children, device }: FeedbackProviderProps) {
     if (!hapticsOn) phone.cancelHaptics();
   }, [hapticsOn, phone]);
 
+  // Rebuilding the calls, or leaving, drops a game moment that is still waiting, so it cannot fire
+  // later under the old settings.
+  useEffect(() => () => feedback.cancelScheduled(), [feedback]);
+
   return <FeedbackContext.Provider value={feedback}>{children}</FeedbackContext.Provider>;
 }

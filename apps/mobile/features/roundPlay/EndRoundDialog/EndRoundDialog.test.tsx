@@ -1,6 +1,7 @@
 import { copy } from '@getfreak/content';
 import { fireEvent, screen } from 'nativewind/test';
 
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { EndRoundDialog } from './EndRoundDialog';
 
@@ -54,5 +55,23 @@ describe('EndRoundDialog', () => {
     fireEvent(screen.getByRole('header', { name: copy.roundPlay.endDialogTitle }), 'requestClose');
 
     expect(onCancel).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('EndRoundDialog feedback', () => {
+  it('should play the opening swoosh once when it opens', async () => {
+    const feedback = await renderWithMockFeedback(
+      <EndRoundDialog visible onConfirm={jest.fn()} onCancel={jest.fn()} />,
+    );
+
+    expect(feedback.sheetOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('should play nothing while it stays closed', async () => {
+    const feedback = await renderWithMockFeedback(
+      <EndRoundDialog visible={false} onConfirm={jest.fn()} onCancel={jest.fn()} />,
+    );
+
+    expect(feedback.sheetOpen).not.toHaveBeenCalled();
   });
 });

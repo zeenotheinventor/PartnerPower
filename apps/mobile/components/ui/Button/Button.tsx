@@ -1,6 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { useFeedback } from '../../../feedback/FeedbackProvider';
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { ButtonProps, ButtonVariant } from './types';
 
 // The edge is a decorative view that starts 4px below the top of the button and runs to the
@@ -29,24 +29,19 @@ export function Button({
   disabled = false,
   feedback = 'tap',
 }: ButtonProps) {
-  const pressFeedback = useFeedback();
   const sizeClass = fullWidth ? 'w-full' : 'self-start';
   const disabledClass = disabled ? 'opacity-50' : '';
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="button"
-      accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={() => {
-        // Fired first and never waited on, so the action is not delayed.
-        if (feedback !== 'none') pressFeedback[feedback]();
-        onPress();
-      }}
+      feedback={feedback}
+      onPress={onPress}
       className={`group ${sizeClass} ${disabledClass}`}
     >
       <View className={edgeClasses[variant]} />
       <Text className={faceClasses[variant]}>{label}</Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

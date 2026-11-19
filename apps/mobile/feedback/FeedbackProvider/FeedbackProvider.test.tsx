@@ -71,6 +71,24 @@ describe('FeedbackProvider', () => {
     expect(device.cancelHaptics).toHaveBeenCalled();
   });
 
+  it('should drop a game moment that is still waiting when a setting changes', async () => {
+    jest.useFakeTimers();
+    const device = createFakeDevice();
+    const { result } = renderFeedback(device);
+    await waitFor(() => expect(result.current.settings.isLoading).toBe(false));
+    result.current.feedback.done();
+    result.current.feedback.deal();
+
+    await act(() => result.current.settings.setSoundOn(false));
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(2000);
+    });
+    jest.useRealTimers();
+
+    expect(device.playSound).toHaveBeenCalledTimes(1);
+    expect(device.playSound).toHaveBeenCalledWith('done');
+  });
+
   it('should use the stored settings from the start', async () => {
     const device = createFakeDevice();
     const backend = createInMemoryBackend();

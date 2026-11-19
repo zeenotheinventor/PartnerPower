@@ -4,6 +4,7 @@ import { act, fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo, Modal } from 'react-native';
 
 import type { ClearEverythingResult } from '../../../storage/clearEverything';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { ClearEverythingDialog } from './ClearEverythingDialog';
 
@@ -238,5 +239,15 @@ describe('ClearEverythingDialog', () => {
 
       expect(onCancel).toHaveBeenCalledTimes(1);
     });
+  });
+});
+
+describe('ClearEverythingDialog feedback', () => {
+  it('should play the opening swoosh once when it opens', async () => {
+    const feedback = await renderWithMockFeedback(
+      <ClearEverythingDialog clearEverything={jest.fn()} onCancel={jest.fn()} />,
+    );
+
+    expect(feedback.sheetOpen).toHaveBeenCalledTimes(1);
   });
 });

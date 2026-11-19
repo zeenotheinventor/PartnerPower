@@ -308,7 +308,7 @@ describe('press feedback in the route tree', () => {
       expect(triggerHaptic).not.toHaveBeenCalled();
     });
 
-    it('should play no sound of its own', async () => {
+    it('should play the round complete jingle once, with the haptic', async () => {
       await startTenCardRound();
       playUntilTheSummary();
       await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
@@ -317,7 +317,7 @@ describe('press feedback in the route tree', () => {
 
       await letTimePass();
 
-      expect(playSound).not.toHaveBeenCalled();
+      expect(playSound.mock.calls).toEqual([['roundComplete']]);
     });
   });
 });

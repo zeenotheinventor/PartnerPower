@@ -13,8 +13,25 @@ function createFakeDevice() {
 
 const allOn = { soundOn: true, hapticsOn: true };
 
+const allMoments = [
+  'tap',
+  'done',
+  'pass',
+  'toggleOn',
+  'toggleOff',
+  'select',
+  'back',
+  'locked',
+  'deal',
+  'stepUp',
+  'handover',
+  'sheetOpen',
+  'roundComplete',
+  'timerEnd',
+] as const satisfies readonly FeedbackMoment[];
+
 describe('createFeedback', () => {
-  describe.each(['tap', 'done', 'pass'] as const)('the %s moment', (moment) => {
+  describe.each(allMoments)('the %s moment', (moment) => {
     it('should play its own sound and fire its own haptic, sound first', () => {
       const { device, calls } = createFakeDevice();
 
@@ -42,42 +59,108 @@ describe('createFeedback', () => {
     });
   });
 
-  describe('the roundComplete moment', () => {
-    it('should fire its own haptic and play no sound', () => {
-      const { device } = createFakeDevice();
+  describe('the scheduling of game moments', () => {
+    beforeEach(() => jest.useFakeTimers());
+    afterEach(() => jest.useRealTimers());
 
-      createFeedback(device, allOn).roundComplete();
+    it('should wait for the press sound to finish before the deal, sound and haptic together', () => {
+      const { device, calls } = createFakeDevice();
+      const feedback = createFeedback(device, allOn);
 
-      expect(device.triggerHaptic).toHaveBeenCalledTimes(1);
-      expect(device.triggerHaptic).toHaveBeenCalledWith('roundComplete');
-      expect(device.playSound).not.toHaveBeenCalled();
+      feedback.done();
+      feedback.deal();
+      expect(calls).toEqual(['sound:done', 'haptic:done']);
+
+      jest.advanceTimersByTime(250);
+      expect(calls).toEqual(['sound:done', 'haptic:done', 'sound:deal', 'haptic:deal']);
     });
 
-    it('should fire nothing when haptics are off', () => {
-      const { device } = createFakeDevice();
+    it('should skip the deal, sound and haptic, when another press lands first', () => {
+      const { device, calls } = createFakeDevice();
+      const feedback = createFeedback(device, allOn);
 
-      createFeedback(device, { soundOn: true, hapticsOn: false }).roundComplete();
+      feedback.done();
+      feedback.deal();
+      feedback.tap();
+      jest.advanceTimersByTime(2000);
 
-      expect(device.triggerHaptic).not.toHaveBeenCalled();
+      expect(calls).toEqual(['sound:done', 'haptic:done', 'sound:tap', 'haptic:tap']);
     });
-  });
 
-  describe('the timerEnd moment', () => {
-    it('should fire its own haptic and play no sound', () => {
+    it('should drop a waiting moment when told to', () => {
       const { device } = createFakeDevice();
+      const feedback = createFeedback(device, allOn);
+      feedback.done();
+      feedback.roundComplete();
 
-      createFeedback(device, allOn).timerEnd();
+      feedback.cancelScheduled();
+      jest.advanceTimersByTime(2000);
 
-      expect(device.triggerHaptic).toHaveBeenCalledTimes(1);
+      expect(device.playSound).toHaveBeenCalledTimes(1);
+    });
+
+    it('should fire the timer end at once over a playing press sound, sound and haptic', () => {
+      const { device, calls } = createFakeDevice();
+      const feedback = createFeedback(device, allOn);
+
+      feedback.done();
+      feedback.timerEnd();
+      feedback.locked();
+      jest.advanceTimersByTime(2000);
+
+      expect(calls).toEqual([
+        'sound:done',
+        'haptic:done',
+        'sound:timerEnd',
+        'haptic:timerEnd',
+        'sound:locked',
+        'haptic:locked',
+      ]);
+    });
+
+    it('should keep a timer end that has fired when scheduled moments are cancelled', () => {
+      const { device } = createFakeDevice();
+      const feedback = createFeedback(device, allOn);
+
+      feedback.timerEnd();
+      feedback.cancelScheduled();
+
+      expect(device.playSound).toHaveBeenCalledWith('timerEnd');
       expect(device.triggerHaptic).toHaveBeenCalledWith('timerEnd');
-      expect(device.playSound).not.toHaveBeenCalled();
     });
 
-    it('should fire nothing when haptics are off', () => {
+    it('should still follow the switches for the timer end', () => {
+      const soundOff = createFakeDevice().device;
+      const hapticsOff = createFakeDevice().device;
+
+      createFeedback(soundOff, { soundOn: false, hapticsOn: true }).timerEnd();
+      createFeedback(hapticsOff, { soundOn: true, hapticsOn: false }).timerEnd();
+
+      expect(soundOff.playSound).not.toHaveBeenCalled();
+      expect(soundOff.triggerHaptic).toHaveBeenCalledWith('timerEnd');
+      expect(hapticsOff.playSound).toHaveBeenCalledWith('timerEnd');
+      expect(hapticsOff.triggerHaptic).not.toHaveBeenCalled();
+    });
+
+    it('should fire a haptic-only deal at once, not behind a sound nobody hears', () => {
       const { device } = createFakeDevice();
+      const feedback = createFeedback(device, { soundOn: false, hapticsOn: true });
 
-      createFeedback(device, { soundOn: true, hapticsOn: false }).timerEnd();
+      feedback.done();
+      feedback.deal();
 
+      expect(device.triggerHaptic).toHaveBeenCalledWith('deal');
+    });
+
+    it('should follow the switches when the waiting moment finally fires', () => {
+      const { device } = createFakeDevice();
+      const feedback = createFeedback(device, { soundOn: true, hapticsOn: false });
+
+      feedback.done();
+      feedback.deal();
+      jest.advanceTimersByTime(250);
+
+      expect(device.playSound).toHaveBeenCalledWith('deal');
       expect(device.triggerHaptic).not.toHaveBeenCalled();
     });
   });
@@ -94,9 +177,7 @@ describe('createFeedback', () => {
     const { device } = createFakeDevice();
     const feedback = createFeedback(device, { soundOn: false, hapticsOn: false });
 
-    (['tap', 'done', 'pass', 'roundComplete', 'timerEnd'] satisfies FeedbackMoment[]).forEach(
-      (moment) => feedback[moment](),
-    );
+    allMoments.forEach((moment) => feedback[moment]());
 
     expect(device.playSound).not.toHaveBeenCalled();
     expect(device.triggerHaptic).not.toHaveBeenCalled();
