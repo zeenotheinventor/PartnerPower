@@ -8,6 +8,7 @@ import {
   pinHashSchema,
   remainingWaitMilliseconds,
   shouldLock,
+  triesLeftBeforeWait,
   waitAfterFailureMilliseconds,
 } from './lock';
 
@@ -71,6 +72,24 @@ describe('isValidPin', () => {
     ['full-width digits', '１２３４'],
   ])('should reject %s', (_description, pin) => {
     expect(isValidPin(pin)).toBe(false);
+  });
+});
+
+describe('triesLeftBeforeWait', () => {
+  it.each([
+    [0, 5],
+    [1, 4],
+    [2, 3],
+    [3, 2],
+    [4, 1],
+  ])('should leave %i wrong PINs with %i tries before the wait', (failedCount, triesLeft) => {
+    expect(triesLeftBeforeWait(failedCount)).toBe(triesLeft);
+  });
+
+  it('should count again from five after a wait starts', () => {
+    expect(triesLeftBeforeWait(5)).toBe(5);
+    expect(triesLeftBeforeWait(8)).toBe(2);
+    expect(triesLeftBeforeWait(9)).toBe(1);
   });
 });
 

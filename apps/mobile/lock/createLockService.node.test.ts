@@ -105,6 +105,54 @@ describe('the lock being on', () => {
   });
 });
 
+describe('telling listeners the lock changed', () => {
+  it('should tell a listener when a PIN is set and when it is cleared', async () => {
+    const lock = createFixture().makeService();
+    const listener = jest.fn();
+    lock.subscribe(listener);
+
+    await lock.setPin(rightPin);
+    expect(listener).toHaveBeenCalledTimes(1);
+
+    await lock.clearPin();
+    expect(listener).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not tell a listener about a PIN that was refused', async () => {
+    const lock = createFixture().makeService();
+    const listener = jest.fn();
+    lock.subscribe(listener);
+
+    await lock.setPin('12');
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('should stop telling a listener once it has unsubscribed', async () => {
+    const lock = createFixture().makeService();
+    const listener = jest.fn();
+    const unsubscribe = lock.subscribe(listener);
+
+    unsubscribe();
+    await lock.setPin(rightPin);
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+
+  it('should not tell a listener when clearing fails, because the lock is still on', async () => {
+    const fixture = createFixture();
+    const lock = fixture.makeService();
+    await lock.setPin(rightPin);
+    const listener = jest.fn();
+    lock.subscribe(listener);
+    jest.spyOn(fixture.secureStorage, 'remove').mockRejectedValue(new Error('Storage failed'));
+
+    await expect(lock.clearPin()).rejects.toThrow();
+
+    expect(listener).not.toHaveBeenCalled();
+  });
+});
+
 describe('setting a PIN', () => {
   it('should keep a salted SHA-256 hash and not the PIN', async () => {
     const fixture = createFixture();
@@ -162,7 +210,7 @@ describe('setting a PIN', () => {
 
     await lock.setPin(wrongPin);
 
-    expect(await lock.checkPin(rightPin)).toEqual({ status: 'wrong' });
+    expect(await lock.checkPin(rightPin)).toEqual({ status: 'wrong', triesLeftBeforeWait: 4 });
     expect(await lock.checkPin(wrongPin)).toEqual({ status: 'correct' });
   });
 
@@ -191,7 +239,20 @@ describe('checking a PIN', () => {
     const lock = createFixture().makeService();
     await lock.setPin(rightPin);
 
-    expect(await lock.checkPin(wrongPin)).toEqual({ status: 'wrong' });
+    expect(await lock.checkPin(wrongPin)).toEqual({ status: 'wrong', triesLeftBeforeWait: 4 });
+  });
+
+  it('should say how many tries are left before a wait, counting down with each wrong PIN', async () => {
+    const lock = createFixture().makeService();
+    await lock.setPin(rightPin);
+
+    const triesLeft = [];
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      const result = await lock.checkPin(wrongPin);
+      triesLeft.push(result.status === 'wrong' ? result.triesLeftBeforeWait : undefined);
+    }
+
+    expect(triesLeft).toEqual([4, 3, 2, 1]);
   });
 
   it('should refuse text that is not a PIN, and count it', async () => {
@@ -199,7 +260,7 @@ describe('checking a PIN', () => {
     const lock = fixture.makeService();
     await lock.setPin(rightPin);
 
-    expect(await lock.checkPin('48210')).toEqual({ status: 'wrong' });
+    expect(await lock.checkPin('48210')).toEqual({ status: 'wrong', triesLeftBeforeWait: 4 });
     expect((await getAttempts(fixture))?.failedCount).toBe(1);
   });
 
@@ -230,8 +291,11 @@ describe('checking a PIN', () => {
     await lock.checkPin(rightPin);
 
     expect(await getAttempts(fixture)).toBeUndefined();
-    for (let attempt = 0; attempt < 4; attempt += 1) {
-      expect(await lock.checkPin(wrongPin)).toEqual({ status: 'wrong' });
+    for (let attempt = 1; attempt <= 4; attempt += 1) {
+      expect(await lock.checkPin(wrongPin)).toEqual({
+        status: 'wrong',
+        triesLeftBeforeWait: 5 - attempt,
+      });
     }
   });
 });
@@ -250,7 +314,12 @@ describe('the wait after wrong PINs', () => {
 
     const results = await makeFiveWrongTries(lock);
 
-    expect(results.slice(0, 4)).toEqual(Array(4).fill({ status: 'wrong' }));
+    expect(results.slice(0, 4)).toEqual([
+      { status: 'wrong', triesLeftBeforeWait: 4 },
+      { status: 'wrong', triesLeftBeforeWait: 3 },
+      { status: 'wrong', triesLeftBeforeWait: 2 },
+      { status: 'wrong', triesLeftBeforeWait: 1 },
+    ]);
     expect(results[4]).toEqual({ status: 'waiting', remainingMilliseconds: 30_000 });
   });
 
@@ -332,7 +401,12 @@ describe('the wait after wrong PINs', () => {
 
     const results = await makeFiveWrongTries(lock);
 
-    expect(results.slice(0, 4)).toEqual(Array(4).fill({ status: 'wrong' }));
+    expect(results.slice(0, 4)).toEqual([
+      { status: 'wrong', triesLeftBeforeWait: 4 },
+      { status: 'wrong', triesLeftBeforeWait: 3 },
+      { status: 'wrong', triesLeftBeforeWait: 2 },
+      { status: 'wrong', triesLeftBeforeWait: 1 },
+    ]);
     expect(results[4]).toEqual({ status: 'waiting', remainingMilliseconds: 60_000 });
   });
 
@@ -362,7 +436,7 @@ describe('the wait after wrong PINs', () => {
     await lock.setPin(rightPin);
     fixture.secureBackend.entries.set('lockAttempts', JSON.stringify({ failedCount: 'many' }));
 
-    expect(await lock.checkPin(wrongPin)).toEqual({ status: 'wrong' });
+    expect(await lock.checkPin(wrongPin)).toEqual({ status: 'wrong', triesLeftBeforeWait: 4 });
     expect(await getAttempts(fixture)).toEqual({ failedCount: 1, waitEndsAt: 0 });
   });
 

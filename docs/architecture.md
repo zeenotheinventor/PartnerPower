@@ -585,7 +585,7 @@ guess question was played) and the discoveries made in the round.
 ```
 apps/mobile/
   app/
-    _layout.tsx          root layout: providers and the root navigator with the entry guard
+    _layout.tsx          root layout: providers, the lock gate and the root navigator with the entry guard
     +not-found.tsx       sends an unknown path to the one screen that is open to the player
     index.tsx            hub
     settings.tsx         the settings screen
@@ -631,7 +631,7 @@ apps/mobile/
   features/settings/     the settings screen, its sections, the clear everything dialog and the privacy policy screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on, and the setup row
-  features/decks/        the deck picker, the Favourites view, the deck choice and the one function that builds the deck of a round
+  features/decks/        the deck picker, the Favourites view, the custom deck editor, the deck choice and the one function that builds the deck of a round
   features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
@@ -643,6 +643,7 @@ apps/mobile/
   features/questionsSummary/ the Drink If round summary screen and its player score block
   features/secretMatch/  the secret match screens: the provider, the intro, the answering view, the handoff, the reveal and the cover
   features/lockSetup/    turning the app lock on and changing it: the App lock row of Settings, the explainer, choosing a PIN, the biometrics offer, and the lock's settings
+  features/lock/         the lock gate that covers the app, the lock screen, the privacy cover and the app mark
   features/reminderSetup/ the Reminder row of Settings and the reminder's settings screen
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
@@ -674,8 +675,9 @@ apps/mobile/
   it each screen would hold its own list, and the home count and the setup count would go stale after
   the editor saves. Nothing in it logs.
 - **The deck choice** is held once for the `games/dares` route group by `DeckChoiceProvider`
-  (`features/decks`). `useDeckChoice` gives `choice` (`'starter'` or `'favourites'`) and
-  `chooseDeck`. It is the starter deck each time the route group is entered, and is not remembered.
+  (`features/decks`). `useDeckChoice` gives `choice` (`'starter'`, `'favourites'` or
+  `custom:<deck id>`, made by `customDeckChoice`) and `chooseDeck`. It is the starter deck each time
+  the route group is entered, and is not remembered.
 - **Question round state** works the same way for `questions`. The layout renders
   `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
   `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
@@ -759,8 +761,8 @@ names: `Deck` (a pressable card named "Deck, Starter deck") that opens the picke
 Both are `SetupRow`s.
 
 - **One function builds the deck.** `buildRoundDeck` (`features/decks`) takes the choice, the starter
-  deck, the player's dares, whether they are mixed in and the favourite ids, and gives the `Deck`
-  that Start passes to `startRound`. A rule about which cards a phone may deal, such as leaving out
+  deck, the player's dares, whether they are mixed in, the favourite ids and the stored custom
+  decks, and gives the `Deck` that Start passes to `startRound`. A rule about which cards a phone may deal, such as leaving out
   vibration cards on a phone that cannot vibrate, goes in this one place.
 - **Starter deck.** It is the deck the app ships, with the player's dares dealt in when `Mix in my
 dares` is on. The switch shows only for the starter deck. The My dares row stays for every deck,
@@ -771,6 +773,15 @@ dares` is on. The switch shows only for the starter deck. The My dares row stays
   the categories, the together cards and the surprises. `useFavouriteIds` reads the ids from the
   repository each time a screen gains focus, so a change made on another screen shows when the
   setup is back.
+- **Custom decks.** A deck the player made and named, stored through the repository as a list of
+  card ids (`saveDeck`, `listDecks`, `deleteDeck`). `buildRoundDeck` gives the cards of the starter
+  deck and the player's dares whose ids the stored deck lists, so a card that has gone is left out
+  and the deck is never stale. It holds exactly those cards: the mix switch does not apply, and every
+  deal rule applies as to any deck, the level, the categories, the together cards and the surprises.
+  `useCustomDecks` reads the stored decks each time a screen gains focus, as `useFavouriteIds` does
+  for the favourites, so a deck saved on another screen shows when setup is back. A custom deck
+  has no name until they have been read, and Start waits for them when one is the deck. A deck
+  with no cards in play shows the same hint as any other deck.
 - **Cards in play.** `countCardsInPlay` counts the cards of the built deck in the categories that
   are on, leaving out timer cards, which only the timer surprise deals (`isDealable` in `core`).
   Setup says "{count} cards at this level" above Start. With none, a hint replaces it, as a polite
@@ -781,10 +792,25 @@ dares` is on. The switch shows only for the starter deck. The My dares row stays
 - **Picker** (`decks`). The starter deck and Favourites, each a pressable `Card` with `selected`,
   holding the name and a count chip. A tap chooses the deck and goes back to setup. Favourites has a
   `View` button beside it that opens the Favourites view without choosing it. Favourites can be
-  chosen with no cards. Custom decks join this list.
-- **Play again** on the summary rebuilds a Favourites round from the favourites as they are when it
-  is pressed, through `buildRoundDeck`, so a card turned on or off on the summary counts. A starter
-  deck round replays the deck it started with, which keeps the mix switch as it was.
+  chosen with no cards. Each custom deck follows them, newest last, as a card with its name and
+  count, and an `Edit` button beside it that opens the editor without choosing the deck. `New deck`
+  ends the list. At 20 decks it is disabled and the reason sits under it.
+- **Play again** on the summary rebuilds a Favourites or custom deck round from what is stored when
+  it is pressed, through `buildRoundDeck`, so a card turned on or off on the summary, or a deck
+  changed since, counts. A starter deck round replays the deck it started with, which keeps the mix
+  switch as it was. With nothing in play the player is sent to setup, which says why.
+- **Deck editor** (`decks/new`, `decks/[id]`). A name field (1 to 30 characters, with a count), the
+  total and one count chip per category, then the cards that can go in: `My dares`, the player's
+  dares, and `Favourites`, the shipped favourites plus any shipped card the deck already holds that
+  is no longer a favourite. Each is grouped by category, and a card is a `Card` with `selected`. It
+  is a `FlatList` over one flat list of rows (`deckEditorRows`), because a player can have hundreds
+  of dares. Save sits in the `Screen` footer. An empty name shows its message under the field. An
+  empty deck can be saved. At 200 cards the cards not in the deck are disabled, the ones in it stay
+  on so one can be taken out, and the reason sits in the footer above Save. A deck is saved through
+  `saveDeck` and the screen goes back to the picker without choosing it. `Delete deck` is at the end
+  of the list and asks with the kit `Dialog`. Deleting the deck that setup has chosen chooses the
+  starter deck again. A dare deleted from My dares is taken out of every deck by the repository, so
+  the editor never lists it.
 - **Favourites view** (`decks/favourites`). The count in the header, then the cards grouped by
   category in rank order, each a static card in its category colour with a `FavouriteToggle`. A card
   turned off stays in place, off, until the player leaves, so a tap by mistake can be undone, and
@@ -1623,16 +1649,17 @@ error message can hold stored text. The screens get it from `useClearEverything(
 `RootRemount` above it.
 
 1. Cancel every scheduled notification (`expo-notifications`).
-2. Clear secure storage (`secureStorage.clearAll`), which removes the PIN hash, the biometrics
-   choice, the wrong PIN count and the database key.
-3. `storage.clearAll()`, which closes and deletes the encrypted database and clears the key-value
+2. `storage.clearAll()`, which closes and deletes the encrypted database and clears the key-value
    store.
-4. Write the install marker back. Step 3 removed it, and without it the next launch would take
+3. Clear secure storage (`secureStorage.clearAll`), which removes the PIN hash, the biometrics
+   choice, the wrong PIN count and the database key. It runs last, and only when steps 1 and 2
+   worked, so a wipe that fails part way (from Forgot PIN) leaves the lock on.
+4. Write the install marker back. Step 2 removed it, and without it the next launch would take
    the app for a fresh install and clear a PIN set since.
 5. Remount the root.
 
-- Every step is safe to run twice. A step that fails does not stop the others, so as little as
-  possible is left behind. The marker is not written and the root is not remounted when any step
+- Every step is safe to run twice. A step that fails does not stop the ones before secure
+  storage, so as little as possible is left behind. The marker is not written and the root is not remounted when any step
   failed, and the result says so. A retry runs all the steps again and finishes.
 - `RootRemount` (in `app/_layout.tsx`, around the providers that read stored data) holds its
   children under a changing `key`, so remounting mounts every provider again from empty storage.
@@ -1752,8 +1779,8 @@ module, `storage/personal`, and nothing else touches it.
 ## App lock
 
 The rules are pure and live in `packages/core/src/lock.ts`. The service that keeps the PIN is
-`apps/mobile/lock`. The screens that turn it on and change it are in `features/lockSetup` (FRK-65,
-described below). The lock screen that shows it (FRK-66) is a separate ticket.
+`apps/mobile/lock`. The screens that turn it on and change it are in `features/lockSetup` (FRK-65)
+and the lock screen that asks for the PIN is in `features/lock` (FRK-66). Both are described below.
 
 - **Off by default.** Nothing asks at first launch. A player turns it on in Settings. It needs a
   4 digit PIN, and biometrics are an optional extra on top of it, offered only when the phone has
@@ -1832,6 +1859,49 @@ unless a test puts a fake above it with `LockServiceContext`.
   They go to `onSubmit` and nowhere else. They are never logged, never in an accessibility name or
   text, and never stored outside the lock service. The fourth dot is held for 150 ms so it is seen
   before the step moves on.
+
+### The lock screen
+
+`features/lock/LockGate` wraps `EntryStack` in the root layout, inside `RootRemount` so that Clear
+everything resets it. It is an overlay above the navigator and not a route, so the entry guard does
+not change and the route tree stays mounted under it. A round in progress is where it was after
+unlocking, and a route test (`lockRoute.test.tsx`) starts a round, moves to card 3, locks, unlocks
+and finds card 3.
+
+- **When it locks.** `useLockGate` reads whether the lock is on at launch and shows nothing of the
+  app until that read answers, so no screen shows before the lock screen. A read that fails counts
+  as locked. When the app comes back after the `background` app state, `shouldLock` from the core
+  decides, using the clock at the moment it left and the moment it returned. The iOS `inactive` state
+  never starts the time away. After 60 seconds or more the gate is `checking` again (covered, with
+  the app mounted) until the lock is read, then `locked` or `unlocked`. A lock screen that is already
+  up is left as it is. The wait after wrong PINs is in secure storage, so it survives a restart. The
+  time away is in memory, because a restart always locks.
+- **What is behind it.** While the phase is not `unlocked`, the app is hidden from screen readers
+  (`accessibilityElementsHidden` and `importantForAccessibility="no-hide-descendants"`) and takes no
+  touches. The lock screen is a native `Modal`, so it also sits above a dialog the app had open, and
+  its `onRequestClose` does nothing, so the Android back button cannot dismiss it. A hardware back
+  listener that takes the press is added too, which covers the moment before the modal shows. A deep
+  link opens in the mounted navigator, behind the lock, and shows after unlocking.
+- **The lock screen** (`LockScreen`) is `PinEntryStep` with a hero (the app mark and "Enter your
+  PIN") in place of the header. It has no back control and shows no app name. A wrong PIN shows its
+  error and clears the dots, and from the third wrong PIN in a run the line counts the tries left,
+  from `triesLeftBeforeWait` in the core and the `wrong` result of `checkPin`. After 5 wrong PINs the
+  keypad is disabled and `useWaitCountdown` counts the wait down, and a wait that is already running
+  shows when the screen opens. If biometrics are on and the phone still has them, the phone prompt
+  shows once each time the lock screen appears. Cancelling it leaves the keypad and a link to try
+  again. The prompt and the link run inside `whileBiometricsPromptIsOpen`, so the iOS `inactive`
+  state while Face ID is up is not read as leaving the app.
+- **Forgot PIN?** opens `ClearEverythingDialog` with `variant="forgotPin"`. Confirming runs Clear
+  everything, which remounts the root: the gate starts again with the lock gone and the app lands on
+  the 18+ screen. Cancel returns to the lock screen.
+- **The app switcher.** While the lock is on, iOS shows `PrivacyCover` (the app mark alone on the
+  theme background) as soon as the app is not `active`, in the tree and in a `Modal` above any open
+  dialog. Android sets `FLAG_SECURE` through `expo-screen-capture` (`useBlockScreenCapture`), which
+  also blocks screenshots. Whether the lock is on is read again each time the service says it
+  changed (`LockService.subscribe`), so both follow the switch in Settings, and neither runs while the
+  lock is off. The screenshot listener of `expo-screen-capture` is not used, and the
+  `DETECT_SCREEN_CAPTURE` permission is not requested (FRK-86 removed its block, because it crashed Android 14 and later).
+- **The app mark** is `assets/images/splash-mark-1024.png`, shown by `AppMark` at 64 or 200 dp.
 
 ## Reminder
 

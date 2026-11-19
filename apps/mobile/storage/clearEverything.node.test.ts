@@ -1,3 +1,5 @@
+import { pinHashSchema } from '@getfreak/core';
+
 import { createClearEverything } from './clearEverything';
 import { createInMemoryBackend } from './createInMemoryBackend';
 import { createSecureStorage } from './createSecureStorage';
@@ -142,16 +144,16 @@ describe('clearEverything', () => {
     expect(phone.remountRoot).toHaveBeenCalledTimes(1);
   });
 
-  it('should cancel notifications, then clear secure storage, then the database and the key-value store, then remount', async () => {
+  it('should cancel notifications, then clear the database and the key-value store, then secure storage last, then remount', async () => {
     const phone = await createFilledPhone();
 
     await phone.clearEverything();
 
     // The database and the key-value store are cleared together by `storage.clearAll`, so they
     // may finish in either order.
-    expect(phone.events.slice(0, 2)).toEqual(['notifications', 'secureStorage']);
-    expect(phone.events.slice(2, 4).sort()).toEqual(['database', 'keyValueStore']);
-    expect(phone.events.slice(4)).toEqual(['remount']);
+    expect(phone.events.slice(0, 1)).toEqual(['notifications']);
+    expect(phone.events.slice(1, 3).sort()).toEqual(['database', 'keyValueStore']);
+    expect(phone.events.slice(3)).toEqual(['secureStorage', 'remount']);
   });
 
   it('should start the database again empty, with a new key, after the root remounts', async () => {
@@ -201,16 +203,29 @@ describe('clearEverything', () => {
     },
   );
 
-  it('should still run the later steps when one fails, so as little as possible is left behind', async () => {
+  it('should still clear the database and the key-value store when notifications fail, so as little as possible is left behind', async () => {
     const phone = await createFilledPhone();
     phone.failing.add('notifications');
 
     await phone.clearEverything();
 
-    expect(phone.secureBackend.entries.size).toBe(0);
     expect(phone.hasDatabaseFile()).toBe(false);
     expect(phone.keyValueBackend.entries.has('playerNames')).toBe(false);
   });
+
+  it.each<StepName>(['notifications', 'database', 'keyValueStore'])(
+    'should keep the PIN hash, and so the lock, when the %s step fails',
+    async (step) => {
+      const phone = await createFilledPhone();
+      phone.failing.add(step);
+
+      const result = await phone.clearEverything();
+
+      expect(result).toEqual({ ok: false });
+      expect(phone.events).not.toContain('secureStorage');
+      expect(await phone.secureStorage.get('lockPinHash', pinHashSchema)).toBeDefined();
+    },
+  );
 
   it('should finish when it is run again after a failure part way', async () => {
     const phone = await createFilledPhone();

@@ -11,6 +11,7 @@ import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { drawnCharacters } from '../../../testing/drawnCharacters';
+import { customDeckChoice } from '../../decks/customDeckChoice';
 import {
   DeckChoiceProvider,
   useDeckChoice,
@@ -22,14 +23,22 @@ import { RoundProvider } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { RoundSetupScreen } from './RoundSetupScreen';
 
+const mockFocusSetters = new Set<(isFocused: boolean) => void>();
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = true;
 jest.mock('expo-router', () => ({
-  useFocusEffect: (callback: () => void) => {
-    const { useEffect } = jest.requireActual<typeof import('react')>('react');
-    useEffect(callback, [callback]);
+  useFocusEffect: (callback: () => void | (() => void)) => {
+    const { useEffect, useState } = jest.requireActual<typeof import('react')>('react');
+    const [isFocused, setIsFocused] = useState(true);
+    useEffect(() => {
+      mockFocusSetters.add(setIsFocused);
+      return () => {
+        mockFocusSetters.delete(setIsFocused);
+      };
+    }, []);
+    useEffect(() => (isFocused ? callback() : undefined), [callback, isFocused]);
   },
   useRouter: () => ({
     push: mockPush,
@@ -828,6 +837,219 @@ describe('RoundSetupScreen', () => {
         await pressStart();
 
         expect(jest.mocked(startRound).mock.calls[0]?.[0].surprises).toEqual(playableSurprises);
+      });
+    });
+
+    describe('a custom deck', () => {
+      // The deck is stored before the screen shows. It lists cards of the test deck by their ids in
+      // the store, and the dares the test writes by position, so a card can be named in the list.
+      async function renderWithCustomDeck({
+        name = 'Placeholder deck',
+        cardIds = [],
+        dareCount = 0,
+        listedDareNumbers = [],
+        holdDecks = false,
+      }: {
+        name?: string;
+        cardIds?: string[];
+        dareCount?: number;
+        listedDareNumbers?: number[];
+        holdDecks?: boolean;
+      } = {}) {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        const listed = [...cardIds];
+        for (let number = 1; number <= dareCount; number += 1) {
+          const saved = await fixture.repository.savePlayerCard({
+            category: 'c2',
+            kind: 'solo',
+            text: `Placeholder dare ${number}`,
+          });
+          if (saved.ok && listedDareNumbers.includes(number)) listed.push(saved.saved.id);
+        }
+        const savedDeck = await fixture.repository.saveDeck({ name, cardIds: listed });
+        if (!savedDeck.ok) throw new Error('The test deck was not saved');
+        if (holdDecks)
+          jest.spyOn(fixture.repository, 'listDecks').mockReturnValue(new Promise(() => {}));
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        if (dareCount > 0)
+          await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+        return { held, deckChoice: customDeckChoice(savedDeck.saved.id), fixture };
+      }
+
+      it('should show the name the player gave the deck on the Deck row', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({ name: 'Placeholder deck' });
+
+        act(() => held.current?.chooseDeck(deckChoice));
+
+        expect(
+          await screen.findByRole('button', {
+            name: fillCopy(copy.roundSetup.deckRowName, {
+              label: copy.roundSetup.deckLabel,
+              value: 'Placeholder deck',
+            }),
+          }),
+        ).toBeOnTheScreen();
+      });
+
+      it('should not show the mix switch for a custom deck', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({ dareCount: 1 });
+
+        act(() => held.current?.chooseDeck(deckChoice));
+
+        expect(mixSwitch()).not.toBeOnTheScreen();
+      });
+
+      it('should deal only the cards the deck lists, dares included, and leave the rest out', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({
+          cardIds: ['card-2'],
+          dareCount: 2,
+          listedDareNumbers: [2],
+        });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await screen.findByText(fillCopy(copy.roundSetup.inPlay, { count: 2 }));
+
+        await pressStart();
+
+        const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(deck?.cards.map((card) => card.text)).toEqual(['Card 2', 'Placeholder dare 2']);
+      });
+
+      it('should start with the surprises the round has, as it does for any deck', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({ cardIds: ['card-1', 'card-2'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await screen.findByText(fillCopy(copy.roundSetup.inPlay, { count: 2 }));
+
+        await pressStart();
+
+        expect(jest.mocked(startRound).mock.calls[0]?.[0].surprises).toEqual(playableSurprises);
+      });
+
+      it('should say there are no cards, and hold Start, for a deck with no cards', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({ cardIds: [] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+
+        expect(await screen.findByText(copy.roundSetup.noCardsInPlay)).toBeOnTheScreen();
+        expect(startButton()).toBeDisabled();
+      });
+
+      it('should count only the cards of the categories that are on', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({ cardIds: ['card-1', 'card-2'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+
+        expect(
+          await screen.findByText(fillCopy(copy.roundSetup.inPlayOne, { count: 1 })),
+        ).toBeOnTheScreen();
+      });
+
+      // The picker opens over setup, and closes again, which gives setup focus once more.
+      const setFocus = (isFocused: boolean) =>
+        act(async () => mockFocusSetters.forEach((set) => set(isFocused)));
+
+      it('should wait for the decks to be read again when the deck was saved after the last read', async () => {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        const saved = await fixture.repository.saveDeck({
+          name: 'Placeholder deck',
+          cardIds: ['card-1'],
+        });
+        if (!saved.ok) throw new Error('The test deck was not saved');
+        // The read on the next focus is slow.
+        jest.spyOn(fixture.repository, 'listDecks').mockReturnValue(new Promise(() => {}));
+
+        await setFocus(false);
+        act(() => held.current?.chooseDeck(customDeckChoice(saved.saved.id)));
+        await setFocus(true);
+
+        expect(startButton()).toBeDisabled();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+        expect(held.current?.choice).toBe(customDeckChoice(saved.saved.id));
+      });
+
+      it('should hold Start until the edited deck has been read, then deal its new cards', async () => {
+        const { held, deckChoice, fixture } = await renderWithCustomDeck({ cardIds: ['card-1'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await screen.findByText(fillCopy(copy.roundSetup.inPlayOne, { count: 1 }));
+        // The deck is edited while the picker is open, and the read on the next focus is slow.
+        await setFocus(false);
+        const deckId = deckChoice.slice('custom:'.length);
+        await fixture.repository.saveDeck({
+          id: deckId,
+          name: 'Placeholder deck',
+          cardIds: ['card-2'],
+        });
+        const readEditedDecks = await fixture.repository.listDecks();
+        let finishRead: () => void = () => {};
+        jest.spyOn(fixture.repository, 'listDecks').mockReturnValue(
+          new Promise((resolve) => {
+            finishRead = () => resolve(readEditedDecks);
+          }),
+        );
+
+        await setFocus(true);
+
+        expect(startButton()).toBeDisabled();
+
+        await act(async () => finishRead());
+        await pressStart();
+
+        const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(deck?.cards.map((card) => card.text)).toEqual(['Card 2']);
+      });
+
+      it('should fall back to the starter deck when the decks cannot be read, and let Start work', async () => {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        jest.spyOn(fixture.repository, 'listDecks').mockRejectedValue(new Error('unreadable'));
+
+        await setFocus(false);
+        act(() => held.current?.chooseDeck(customDeckChoice('d-gone')));
+        await setFocus(true);
+
+        await waitFor(() => expect(held.current?.choice).toBe('starter'));
+        expect(startButton()).not.toBeDisabled();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+
+      it('should fall back to the starter deck when the chosen deck is no longer stored', async () => {
+        const { held, deckChoice, fixture } = await renderWithCustomDeck({ cardIds: ['card-1'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await fixture.repository.deleteDeck(deckChoice.slice('custom:'.length));
+
+        await setFocus(false);
+        await setFocus(true);
+
+        await waitFor(() => expect(held.current?.choice).toBe('starter'));
+        expect(startButton()).not.toBeDisabled();
+      });
+
+      it('should hold Start, with no count and no hint, while the decks are being read', async () => {
+        const { held, deckChoice } = await renderWithCustomDeck({
+          cardIds: ['card-1'],
+          holdDecks: true,
+        });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+
+        expect(startButton()).toBeDisabled();
+        expect(screen.queryByText(/cards at this level/)).not.toBeOnTheScreen();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
       });
     });
 

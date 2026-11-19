@@ -4,6 +4,7 @@ import path from 'node:path';
 const appRoot = path.resolve(__dirname, '..');
 const skippedFolders = ['node_modules', '.expo', 'dist', 'coverage', 'ios', 'android'];
 const helperFolder = 'lock/testing/';
+const routeTestHelperFolder = 'features/welcome/testing/';
 
 function sourceFilesIn(folder: string): string[] {
   return readdirSync(folder, { withFileTypes: true }).flatMap((entry) => {
@@ -20,9 +21,15 @@ function importsLockTestHelpers(source: string): boolean {
 }
 
 // The helpers hold fakes, `jest` calls and a hash that is not the real one. A file that ships must
-// never reach them, or they would end up in the app. Tests, and the helpers themselves, may.
+// never reach them, or they would end up in the app. Tests, and the helpers themselves, may. So may
+// the folder that launches the app for route tests. A bundle of the release build holds none of
+// them.
 function mayUseHelpers(relativePath: string): boolean {
-  return /\.test\.tsx?$/.test(relativePath) || relativePath.startsWith(helperFolder);
+  return (
+    /\.test\.tsx?$/.test(relativePath) ||
+    relativePath.startsWith(helperFolder) ||
+    relativePath.startsWith(routeTestHelperFolder)
+  );
 }
 
 describe('the lock test helpers', () => {

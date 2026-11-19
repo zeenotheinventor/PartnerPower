@@ -10,7 +10,7 @@ import type { PinEntryStepProps } from './types';
 
 const dotsName = (count: number) => fillCopy(copy.pin.dots, { count, length: 4 });
 
-async function renderStep(props: Partial<PinEntryStepProps> = {}) {
+async function renderStep(props: Partial<Extract<PinEntryStepProps, { title: string }>> = {}) {
   const onSubmit = jest.fn<Promise<string | undefined>, [string]>(() => Promise.resolve(undefined));
   await renderThemed(<PinEntryStep title="Choose a PIN" onSubmit={onSubmit} {...props} />);
   await act(async () => {});
@@ -48,6 +48,17 @@ describe('PinEntryStep', () => {
 
     expect(screen.getByRole('header', { name: 'Choose a PIN' })).toBeOnTheScreen();
     expect(screen.getByText('4 digits you will remember.')).toBeOnTheScreen();
+  });
+
+  it('should show a hero in place of the header, with no heading of its own', async () => {
+    const onSubmit = jest.fn<Promise<string | undefined>, [string]>(() =>
+      Promise.resolve(undefined),
+    );
+    await renderThemed(<PinEntryStep hero={<Text>A hero</Text>} onSubmit={onSubmit} />);
+
+    expect(screen.getByText('A hero')).toBeOnTheScreen();
+    expect(screen.queryByRole('header')).toBeNull();
+    expect(screen.getByRole('button', { name: '1' })).toBeOnTheScreen();
   });
 
   it('should have no back button when it is not told what to do', async () => {

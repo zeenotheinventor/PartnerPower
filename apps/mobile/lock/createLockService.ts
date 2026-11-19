@@ -4,6 +4,7 @@ import {
   lockAttemptsSchema,
   pinHashSchema,
   remainingWaitMilliseconds,
+  triesLeftBeforeWait,
   waitAfterFailureMilliseconds,
 } from '@getfreak/core';
 
@@ -46,6 +47,9 @@ export function createLockService({
     return turn;
   }
 
+  const listeners = new Set<() => void>();
+  const tellListeners = () => listeners.forEach((listener) => listener());
+
   const readAttempts = () => secureStorage.get('lockAttempts', lockAttemptsSchema);
 
   return {
@@ -59,6 +63,7 @@ export function createLockService({
       const hash = await hashPin(salt, pin);
       await secureStorage.set('lockPinHash', { salt, hash });
       await secureStorage.remove('lockAttempts');
+      tellListeners();
       return { ok: true };
     },
 
@@ -82,7 +87,9 @@ export function createLockService({
           failedCount,
           waitEndsAt: wait > 0 ? now() + wait : 0,
         });
-        return wait > 0 ? { status: 'waiting', remainingMilliseconds: wait } : { status: 'wrong' };
+        return wait > 0
+          ? { status: 'waiting', remainingMilliseconds: wait }
+          : { status: 'wrong', triesLeftBeforeWait: triesLeftBeforeWait(failedCount) };
       }),
 
     async getWaitRemainingMilliseconds() {
@@ -96,6 +103,7 @@ export function createLockService({
       await secureStorage.remove('lockBiometricsChoice');
       await secureStorage.remove('lockAttempts');
       await secureStorage.remove('lockPinHash');
+      tellListeners();
     },
 
     async getBiometricsAvailability() {
@@ -130,5 +138,12 @@ export function createLockService({
     },
 
     setBiometricsChoice: (isChosen) => secureStorage.set('lockBiometricsChoice', isChosen),
+
+    subscribe(listener) {
+      listeners.add(listener);
+      return () => {
+        listeners.delete(listener);
+      };
+    },
   };
 }

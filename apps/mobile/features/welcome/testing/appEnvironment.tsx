@@ -1,8 +1,10 @@
-import { act, renderRouter } from 'expo-router/testing-library';
+import { copy } from '@getfreak/content';
+import { act, fireEvent, renderRouter, screen } from 'expo-router/testing-library';
 import backend from 'expo-sqlite/kv-store';
 
 import type { PersonalRepository } from '../../../storage';
 import { createNativeFeedbackDevice } from '../../../feedback/nativeFeedbackDevice';
+import { sha256Hex } from '../../../lock/testing/sha256Hex';
 
 // Importing this file first sets up what the real route tree needs under Jest. The real storage
 // module runs over an in-memory backend, so the native module is not needed and a "second launch"
@@ -98,5 +100,30 @@ export async function launchApp(initialUrl: string, context: RouterContext = './
   await act(async () => {
     await jest.advanceTimersByTimeAsync(1000);
   });
+  return view;
+}
+
+/** The PIN that `storedPinHash` stands for, for a test that opens an app with the lock on. */
+export const testPin = '4821';
+
+const testSalt = 'a'.repeat(32);
+
+/** What the secure store holds for a lock whose PIN is `testPin`. The hash is the real one. */
+export function storedPinHash() {
+  return JSON.stringify({ salt: testSalt, hash: sha256Hex(`${testSalt}:${testPin}`) });
+}
+
+/**
+ * Renders the app as `launchApp` does, then types `testPin` if the lock screen is up, so a test
+ * that is not about the lock starts on the screen it opened. A test about the lock uses `launchApp`.
+ */
+export async function launchUnlockedApp(initialUrl: string, context: RouterContext = './app') {
+  const view = await launchApp(initialUrl, context);
+  if (screen.queryByRole('header', { name: copy.lock.title })) {
+    [...testPin].forEach((key) => fireEvent.press(screen.getByRole('button', { name: key })));
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1000);
+    });
+  }
   return view;
 }
