@@ -204,6 +204,61 @@ describe('copy', () => {
     );
   });
 
+  it('should give the secret match screens every line as non-empty text', () => {
+    expect(Object.keys(copy.secretMatch).sort()).toEqual(
+      [
+        'back',
+        'backLabel',
+        'count',
+        'coverBody',
+        'coverTitle',
+        'daresBody',
+        'daresTitle',
+        'done',
+        'handoffButton',
+        'handoffLine',
+        'handoffTitle',
+        'how1',
+        'how2',
+        'how3',
+        'howLabel',
+        'lookAway',
+        'maybe',
+        'no',
+        'noneBody',
+        'noneTheo',
+        'noneTitle',
+        'passOf',
+        'promiseBody',
+        'promiseTitle',
+        'revealCountMany',
+        'revealCountOne',
+        'revealTheo',
+        'revealTitle',
+        'saved',
+        'savingOff',
+        'start',
+        'stop',
+        'stopBody',
+        'stopCancel',
+        'stopConfirm',
+        'stopTitle',
+        'strengthMaybe',
+        'strengthYes',
+        'theoLine',
+        'title',
+        'tooFew',
+        'yes',
+        'yourAnswer',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.secretMatch);
+  });
+
+  it('should keep the secret match lines free of dashes and semicolons', () => {
+    Object.values(copy.secretMatch).forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+  });
+
   it('should give the round screen every line as non-empty text', () => {
     expect(Object.keys(copy.roundPlay).sort()).toEqual(
       [

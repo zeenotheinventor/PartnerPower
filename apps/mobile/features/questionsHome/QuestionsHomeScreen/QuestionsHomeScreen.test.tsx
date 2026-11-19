@@ -18,11 +18,7 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
-const comingSoonEntryNames = [
-  copy.questionsHome.matchTitle,
-  copy.questionsHome.discoveriesTitle,
-  copy.questionsHome.ownTitle,
-];
+const comingSoonEntryNames = [copy.questionsHome.discoveriesTitle, copy.questionsHome.ownTitle];
 
 describe('QuestionsHomeScreen', () => {
   afterEach(() => {
@@ -73,6 +69,14 @@ describe('QuestionsHomeScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/games/questions/setup');
   });
 
+  it('should open the secret match intro from Secret match', async () => {
+    await renderThemed(<QuestionsHomeScreen />);
+
+    fireEvent.press(screen.getByRole('button', { name: copy.questionsHome.matchTitle }));
+
+    expect(mockPush).toHaveBeenCalledWith('/games/questions/match');
+  });
+
   it.each(comingSoonEntryNames)(
     'should show %s as coming soon, disabled, and open nothing',
     async (title) => {
@@ -88,7 +92,7 @@ describe('QuestionsHomeScreen', () => {
     },
   );
 
-  it('should mark exactly the three entries that are not on as coming soon', async () => {
+  it('should mark exactly the two entries that are not on as coming soon', async () => {
     await renderThemed(<QuestionsHomeScreen />);
 
     expect(screen.getAllByText(copy.hub.comingSoon)).toHaveLength(comingSoonEntryNames.length);
