@@ -43,6 +43,13 @@ describe('privacyPolicy', () => {
       expect(updateText).toContain('Expo');
     });
 
+    it('should name Expo and the update check, and point to its own privacy policy', () => {
+      expect(updateSection?.heading).toBe('Checking for updates');
+      expect(updateText).toContain('Expo');
+      expect(updateText).toMatch(/check/);
+      expect(updateText).toContain("Expo's own privacy policy covers what it receives.");
+    });
+
     it('should say what the check sends, including the crash report and the IP address', () => {
       expect(updateText).toMatch(/crash report/i);
       expect(updateText).toMatch(/IP address/);

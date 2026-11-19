@@ -50,7 +50,7 @@ export const privacyPolicy: PrivacyPolicy = {
       heading: 'Checking for updates',
       paragraphs: [
         'When the app opens, it checks with Expo, the service that delivers app updates, whether a newer version is available. That check sends technical details about the app version and your phone, such as whether it is an iPhone or an Android phone, and a random number made when the app was installed. It also sends a crash report if the app crashed last time.',
-        'Like any request over the internet, the check shows Expo your IP address. The app never sends anything you type or play. Expo looks after what it receives under its own privacy policy.',
+        "Like any request over the internet, the check shows Expo your IP address. The app never sends anything you type or play. Expo's own privacy policy covers what it receives.",
       ],
     },
     {
