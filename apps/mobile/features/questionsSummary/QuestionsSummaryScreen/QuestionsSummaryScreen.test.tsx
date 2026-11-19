@@ -333,11 +333,14 @@ describe('QuestionsSummaryScreen', () => {
       expect(await screen.findByText(copy.questionsSummary.discoveriesOne)).toBeOnTheScreen();
     });
 
-    it('should show no link while there is no Discoveries screen to open', async () => {
+    it('should link the discoveries card to the Discoveries screen, with the line that says they are saved', async () => {
       await renderSummary();
       await screen.findByText(discoveriesTitle(2));
 
-      expect(screen.queryByRole('button', { name: discoveriesTitle(2) })).not.toBeOnTheScreen();
+      expect(screen.getByText(copy.questionsSummary.discoveriesBody)).toBeOnTheScreen();
+      fireEvent.press(screen.getByRole('button', { name: discoveriesTitle(2) }));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/questions/discoveries');
     });
 
     it('should not save twice when the store reloads and the effect runs again', async () => {

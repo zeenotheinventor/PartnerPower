@@ -8,6 +8,8 @@ export type ChipProps = {
   accent?: boolean;
   /** Makes the chip a button. */
   onPress?: () => void;
+  /** The name of a pressable chip whose visible word needs its context, such as "Remove, {text}". */
+  accessibilityLabel?: string;
   /** For a pressable chip. A category chip is filled when selected and outlined when it is not. */
   selected?: boolean;
 };

@@ -1,5 +1,6 @@
 import { copy } from '@getfreak/content';
 
+import { discoveriesRoute } from '../questionsSummary/discoveriesRoute';
 import { homeEntries } from './homeEntries';
 
 describe('homeEntries', () => {
@@ -21,12 +22,29 @@ describe('homeEntries', () => {
     ]);
   });
 
-  it('should switch on Play a round, which opens setup, and Secret match, which opens its intro', () => {
+  it('should switch on Play a round, Secret match and Discoveries, each with its screen', () => {
     expect(homeEntries.map((entry) => entry.route)).toEqual([
       '/games/questions/setup',
       '/games/questions/match',
+      '/games/questions/discoveries',
       null,
-      null,
+    ]);
+  });
+
+  it('should open Discoveries where the summary card and the secret match link open it', () => {
+    const discoveries = homeEntries.find(
+      (entry) => entry.title === copy.questionsHome.discoveriesTitle,
+    );
+
+    expect(discoveries?.route).toBe(discoveriesRoute);
+  });
+
+  it('should count discoveries on the Discoveries entry only', () => {
+    expect(homeEntries.map((entry) => entry.count)).toEqual([
+      undefined,
+      undefined,
+      'discoveries',
+      undefined,
     ]);
   });
 });

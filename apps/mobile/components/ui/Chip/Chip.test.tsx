@@ -31,6 +31,14 @@ describe('Chip', () => {
     expect(onPress).toHaveBeenCalledTimes(1);
   });
 
+  it('should be named by its accessibility label when it has one, so a short word has its context', async () => {
+    await renderThemed(
+      <Chip label="Remove" accessibilityLabel="Remove, Item" onPress={jest.fn()} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Remove, Item' })).toBeOnTheScreen();
+  });
+
   it('should expose that it is selected', async () => {
     await renderThemed(<Chip label="Level 1" onPress={jest.fn()} selected />);
 

@@ -1,12 +1,22 @@
-import { copy } from '@getfreak/content';
+import { copy, fillCopy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { Card, Character, Chip, Header, Screen } from '../../../components/ui';
-import { homeEntries } from '../homeEntries';
+import { useDiscoveries } from '../../../personal';
+import { homeEntries, type HomeEntry } from '../homeEntries';
 
 export function QuestionsHomeScreen() {
   const router = useRouter();
+  const { isLoading, discoveries } = useDiscoveries();
+
+  // The count shows once the list has been read, so the row never says "Nothing yet" by mistake.
+  const countLabelOf = (count: HomeEntry['count']) => {
+    if (count !== 'discoveries' || isLoading) return undefined;
+    return discoveries.length === 0
+      ? copy.questionsHome.discoveriesNone
+      : fillCopy(copy.questionsHome.discoveriesCount, { count: discoveries.length });
+  };
 
   // A deep link can open this screen with nothing behind it, so it falls back to the hub.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -27,12 +37,19 @@ export function QuestionsHomeScreen() {
         </View>
       </View>
 
-      {homeEntries.map(({ title, body, route }) => {
+      {homeEntries.map(({ title, body, route, count }) => {
         const isComingSoon = route === null;
+        const countLabel = countLabelOf(count);
         return (
           <Card
             key={title}
-            label={isComingSoon ? `${title}, ${copy.hub.comingSoon}` : title}
+            label={
+              isComingSoon
+                ? `${title}, ${copy.hub.comingSoon}`
+                : countLabel
+                  ? fillCopy(copy.questionsHome.entryLabel, { title, count: countLabel })
+                  : title
+            }
             disabled={isComingSoon}
             onPress={() => {
               if (route !== null) router.push(route);
@@ -44,6 +61,7 @@ export function QuestionsHomeScreen() {
                 <Text className="type-body text-muted">{body}</Text>
               </View>
               {isComingSoon ? <Chip label={copy.hub.comingSoon} /> : null}
+              {countLabel ? <Chip label={countLabel} /> : null}
             </View>
           </Card>
         );

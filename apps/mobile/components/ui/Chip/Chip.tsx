@@ -72,7 +72,14 @@ function lookOf(tone: ChipTone, selected: boolean | undefined): ChipLook {
   return selected === false ? 'outlined' : 'filled';
 }
 
-export function Chip({ label, category, accent = false, onPress, selected }: ChipProps) {
+export function Chip({
+  label,
+  category,
+  accent = false,
+  onPress,
+  accessibilityLabel,
+  selected,
+}: ChipProps) {
   const tone: ChipTone = accent ? 'accent' : (category ?? 'neutral');
   const look = lookOf(tone, selected);
 
@@ -89,6 +96,7 @@ export function Chip({ label, category, accent = false, onPress, selected }: Chi
   return (
     <Pressable
       accessibilityRole="button"
+      accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected }}
       onPress={onPress}
       className={`${containerClasses[tone][look]} ${pressablePadding}`}
