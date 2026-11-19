@@ -8,6 +8,7 @@
     "feedback/sounds.test.ts",
     "storage/**/*.node.test.ts",
     "lock/**/*.node.test.ts",
+    "reminder/**/*.node.test.ts",
     "storage/personal/testing/nodeSqlite.ts",
     "feedback/pressablesUseFeedback.test.ts"
   ]

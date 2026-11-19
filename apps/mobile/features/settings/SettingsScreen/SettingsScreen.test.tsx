@@ -5,6 +5,8 @@ import type { ReactNode } from 'react';
 
 import { LockServiceContext } from '../../../lock';
 import { createTestLock } from '../../../lock/testing/createTestLock';
+import { ReminderServiceContext } from '../../../reminder';
+import { createTestReminder } from '../../../reminder/testing/createTestReminder';
 import { SettingsProvider, useSettings } from '../../../settings';
 import type { ClearEverythingResult } from '../../../storage/clearEverything';
 import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
@@ -48,11 +50,13 @@ function AfterSettingsLoad({ children }: { children: ReactNode }) {
 async function renderScreen(backend = createInMemoryBackend()) {
   await renderThemed(
     <LockServiceContext.Provider value={createTestLock().lock}>
-      <SettingsProvider storage={createStorage(backend)}>
-        <AfterSettingsLoad>
-          <SettingsScreen />
-        </AfterSettingsLoad>
-      </SettingsProvider>
+      <ReminderServiceContext.Provider value={createTestReminder().reminder}>
+        <SettingsProvider storage={createStorage(backend)}>
+          <AfterSettingsLoad>
+            <SettingsScreen />
+          </AfterSettingsLoad>
+        </SettingsProvider>
+      </ReminderServiceContext.Provider>
     </LockServiceContext.Provider>,
   );
   await waitFor(() => expect(screen.getByRole('header')).toBeOnTheScreen());
@@ -194,6 +198,36 @@ describe('SettingsScreen', () => {
       fireEvent.press(screen.getByRole('button', { name: /^App lock/ }));
 
       expect(mockPush).toHaveBeenCalledWith('/app-lock');
+    });
+  });
+
+  describe('the Reminder row', () => {
+    it('should sit in the Privacy section, between the App lock row and the privacy policy row', async () => {
+      await renderScreen();
+
+      const labels = screen
+        .getAllByRole('button')
+        .map((button) => button.props.accessibilityLabel)
+        .filter(Boolean);
+      const reminderPosition = labels.findIndex((label: string) =>
+        label.startsWith(copy.settings.reminderLabel),
+      );
+      expect(reminderPosition).toBeGreaterThan(
+        labels.findIndex((label: string) => label.startsWith(copy.settings.lockLabel)),
+      );
+      expect(reminderPosition).toBeLessThan(labels.indexOf(copy.settings.privacyLabel));
+    });
+
+    it('should say Off, and open the Reminder screen', async () => {
+      await renderScreen();
+
+      fireEvent.press(
+        screen.getByRole('button', {
+          name: `${copy.settings.reminderLabel}, ${copy.settings.reminderOff}`,
+        }),
+      );
+
+      expect(mockPush).toHaveBeenCalledWith('/reminder');
     });
   });
 

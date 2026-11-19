@@ -7,6 +7,7 @@ import { Header, Screen, SettingsRow, Toggle } from '../../../components/ui';
 import { useSettings } from '../../../settings';
 import { useClearEverything } from '../../../storage/useClearEverything';
 import { AppLockRow } from '../../lockSetup/AppLockRow';
+import { ReminderRow } from '../../reminderSetup/ReminderRow';
 import { ClearEverythingDialog } from '../ClearEverythingDialog';
 import { getAppVersionLabel } from '../getAppVersionLabel';
 import { SettingsSection } from '../SettingsSection';
@@ -47,6 +48,7 @@ export function SettingsScreen() {
       </SettingsSection>
       <SettingsSection label={copy.settings.privacySection}>
         <AppLockRow />
+        <ReminderRow />
         <SettingsRow label={copy.settings.privacyLabel} onPress={() => router.push(privacyRoute)} />
       </SettingsSection>
       <SettingsSection label={copy.settings.clearSection}>
