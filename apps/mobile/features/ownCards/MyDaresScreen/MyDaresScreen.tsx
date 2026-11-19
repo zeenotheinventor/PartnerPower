@@ -83,7 +83,10 @@ export function MyDaresScreen() {
               <View
                 accessible
                 accessibilityRole="header"
-                accessibilityLabel={categoryNames[group.categoryId]}
+                accessibilityLabel={fillCopy(copy.ownCards.groupHeading, {
+                  category: categoryNames[group.categoryId],
+                  count: group.cards.length,
+                })}
                 className="flex-row items-center gap-8"
               >
                 <Chip label={categoryNames[group.categoryId]} category={group.categoryId} />

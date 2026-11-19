@@ -1,5 +1,5 @@
 import { limits, type PlayerCard } from '@getfreak/core';
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
 import { usePersonalData } from '../../../personal';
 import type { PersonalRepository } from '../../../storage';
@@ -33,19 +33,39 @@ export function OwnCardsProvider({ children }: { children: ReactNode }) {
     };
   }, [repository]);
 
+  // A reload can swap the repository while a write is under way. Only a write to the repository
+  // that is current may change the list.
+  const currentRepository = useRef(repository);
+  useEffect(() => {
+    currentRepository.current = repository;
+  }, [repository]);
+
   // The write has already happened, so a list that cannot be read again is left as it was.
   const refresh = useCallback(async () => {
     try {
-      setCards(await repository.listPlayerCards());
+      const listed = await repository.listPlayerCards();
+      if (currentRepository.current === repository) setCards(listed);
     } catch {
       // Left as it was.
     }
   }, [repository]);
 
+  // A saved dare is merged in at once, so it shows even if the read after it fails. The read then
+  // makes the list match the store.
   const save = useCallback(
     async (draft: OwnCardDraft) => {
       const result = await repository.savePlayerCard(draft);
-      if (result.ok) await refresh();
+      if (result.ok) {
+        const saved = result.saved;
+        if (currentRepository.current === repository) {
+          setCards((current) =>
+            current.some((card) => card.id === saved.id)
+              ? current.map((card) => (card.id === saved.id ? saved : card))
+              : [...current, saved],
+          );
+        }
+        await refresh();
+      }
       return result;
     },
     [repository, refresh],

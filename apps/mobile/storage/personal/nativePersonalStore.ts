@@ -5,7 +5,8 @@ import { expoDatabaseFactory } from './createExpoDatabaseFactory';
 import { createInMemoryPersonalRepository } from './createInMemoryPersonalRepository';
 import { createPersonalStore } from './createPersonalStore';
 import { createDatabaseKey } from './databaseKey';
-import { secureKeyStore } from './secureKeyStore';
+import { secureStorage } from '../defaultSecureStorage';
+import { createSecureKeyStore } from './secureKeyStore';
 
 const getShippedCards = () => decks.flatMap((deck) => deck.cards);
 const getShippedQuestions = () =>
@@ -21,7 +22,7 @@ const getShippedQuestions = () =>
 // `clearAll` in the storage module clears it.
 export const personalStore = createPersonalStore({
   factory: expoDatabaseFactory,
-  keyStore: secureKeyStore,
+  keyStore: createSecureKeyStore(secureStorage),
   generateKey: () => createDatabaseKey(getRandomBytes),
   getShippedCards,
   getShippedQuestions,

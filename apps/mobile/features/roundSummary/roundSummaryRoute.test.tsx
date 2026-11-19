@@ -105,6 +105,20 @@ describe('the round summary in the route tree', () => {
     expect(screen.getByText(copy.roundSummary.tieLine)).toBeOnTheScreen();
   });
 
+  it('should let a card of the round be kept as a favourite', async () => {
+    await reachTheSummary();
+    await act(async () => {});
+    const [firstControl] = screen.getAllByRole('switch', { name: copy.favourite.label });
+    if (!firstControl) throw new Error('The summary has no favourite control');
+
+    fireEvent.press(firstControl);
+    await act(async () => {});
+
+    expect(
+      screen.getAllByRole('switch', { name: copy.favourite.label, checked: true }),
+    ).toHaveLength(1);
+  });
+
   describe('Play again', () => {
     it('should open a fresh round with the same settings and a new seed', async () => {
       await reachTheSummary();

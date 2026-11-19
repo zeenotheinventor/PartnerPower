@@ -62,13 +62,17 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.roundSetup);
   });
 
+  it('should give the shared kit lines as non-empty text', () => {
+    expect(Object.keys(copy.ui)).toEqual(['characterCount']);
+    expectEveryValueToBeText(copy.ui);
+  });
+
   it('should give the My dares screens every line as non-empty text', () => {
     expect(Object.keys(copy.ownCards).sort()).toEqual(
       [
         'add',
         'backLabel',
         'categoryLabel',
-        'characterCount',
         'deleteButton',
         'deleteCancel',
         'deleteConfirm',
@@ -79,6 +83,7 @@ describe('copy', () => {
         'emptyError',
         'emptyList',
         'fieldLabel',
+        'groupHeading',
         'kindLabel',
         'kindSolo',
         'kindTogether',
@@ -233,8 +238,10 @@ describe('copy', () => {
         'drinkLabelOne',
         'drinksMany',
         'drinksOne',
+        'favouriteSaveFailed',
         'home',
         'playAgain',
+        'playedHeading',
         'playerSummary',
         'playerSummaryBoldest',
         'settings',
@@ -244,6 +251,11 @@ describe('copy', () => {
       ].sort(),
     );
     expectEveryValueToBeText(copy.roundSummary);
+  });
+
+  it('should give the favourite control its name as non-empty text', () => {
+    expect(Object.keys(copy.favourite)).toEqual(['label']);
+    expectEveryValueToBeText(copy.favourite);
   });
 
   it('should give the welcome screen every line as non-empty text', () => {

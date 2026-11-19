@@ -111,7 +111,7 @@ export function DareEditorForm({ dare }: DareEditorFormProps) {
           multiline
           count={tidyCardText(text).length}
           maxCount={limits.cardTextLength}
-          countHint={fillCopy(copy.ownCards.characterCount, {
+          countHint={fillCopy(copy.ui.characterCount, {
             count: tidyCardText(text).length,
             max: limits.cardTextLength,
           })}

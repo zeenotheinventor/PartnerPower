@@ -158,6 +158,45 @@ describe('OwnCardsProvider', () => {
     expect(saved).toEqual({ ok: false, reason: 'limit' });
   });
 
+  it('should still list a saved dare when the read after the save fails', async () => {
+    const { result, repository } = await renderOwnCards();
+    jest.spyOn(repository, 'listPlayerCards').mockRejectedValue(new Error('disk'));
+
+    await act(async () => {
+      await result.current.save(draft);
+    });
+
+    expect(result.current.cards).toEqual([expect.objectContaining({ text: 'Placeholder dare 1' })]);
+  });
+
+  it('should show a changed dare once, with its new text, when the read after the save fails', async () => {
+    const { result, repository } = await renderOwnCards();
+    let id = '';
+    await act(async () => {
+      const first = await result.current.save(draft);
+      id = first.ok ? first.saved.id : '';
+    });
+    jest.spyOn(repository, 'listPlayerCards').mockRejectedValue(new Error('disk'));
+
+    await act(async () => {
+      await result.current.save({ ...draft, id, text: 'Placeholder dare 2' });
+    });
+
+    expect(result.current.cards).toEqual([
+      expect.objectContaining({ id, text: 'Placeholder dare 2' }),
+    ]);
+  });
+
+  it('should not list a dare twice when the read after the save returns it', async () => {
+    const { result } = await renderOwnCards();
+
+    await act(async () => {
+      await result.current.save(draft);
+    });
+
+    expect(result.current.cards).toHaveLength(1);
+  });
+
   it('should need a provider above it', () => {
     jest.spyOn(console, 'error').mockImplementation(() => {});
 

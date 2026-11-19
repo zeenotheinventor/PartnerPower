@@ -53,7 +53,7 @@ export function RoundSetupScreen() {
   const router = useRouter();
   const { playerNames, savePlayerNames } = useSettings();
   const { startNewRound } = useRound();
-  const { cards: ownCards } = useOwnCards();
+  const { cards: ownCards, isLoading: isOwnCardsLoading } = useOwnCards();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -70,12 +70,20 @@ export function RoundSetupScreen() {
   // Not remembered either. It is on whenever there is a dare, because a couple who wrote dares want
   // to see them, and it only decides whether they are dealt in with the starter deck.
   const [mixOn, setMixOn] = useState(true);
+  // When the dares go from none back to some, the switch starts on again, as it does for a first dare.
+  const [previousOwnCount, setPreviousOwnCount] = useState(ownCards.length);
+  if (previousOwnCount !== ownCards.length) {
+    setPreviousOwnCount(ownCards.length);
+    if (previousOwnCount === 0) setMixOn(true);
+  }
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  const canStart = names.every((name) => tidyName(name) !== '');
-  const myDaresValue =
-    ownCards.length === 0
+  // Start waits for the dares to be read, so a round never starts without the dares it should mix.
+  const canStart = !isOwnCardsLoading && names.every((name) => tidyName(name) !== '');
+  const myDaresValue = isOwnCardsLoading
+    ? undefined
+    : ownCards.length === 0
       ? copy.roundSetup.myDaresNone
       : fillCopy(copy.roundSetup.myDaresCount, { count: ownCards.length });
 
@@ -163,10 +171,14 @@ export function RoundSetupScreen() {
 
       <View className="gap-8">
         <Card
-          label={fillCopy(copy.roundSetup.myDaresRowName, {
-            label: copy.roundSetup.myDaresLabel,
-            value: myDaresValue,
-          })}
+          label={
+            myDaresValue === undefined
+              ? copy.roundSetup.myDaresLabel
+              : fillCopy(copy.roundSetup.myDaresRowName, {
+                  label: copy.roundSetup.myDaresLabel,
+                  value: myDaresValue,
+                })
+          }
           onPress={() => router.push(myDaresRoute)}
         >
           <View className="flex-row items-center gap-12">
@@ -174,7 +186,7 @@ export function RoundSetupScreen() {
               <Text className="type-caption uppercase text-muted">
                 {copy.roundSetup.myDaresLabel}
               </Text>
-              <Text className="type-heading text-foreground">{myDaresValue}</Text>
+              <Text className="type-heading text-foreground">{myDaresValue ?? ' '}</Text>
             </View>
             <View className="mr-4 h-12 w-12 rotate-45 border-r-4 border-t-4 border-muted" />
           </View>

@@ -621,14 +621,15 @@ apps/mobile/
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
   features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
-  features/roundSummary/ the end of round summary screen and the player score block
+  features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
   features/questionsPlay/  the Drink If play stand-in
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
-  storage/               the storage module
+  storage/               the storage module: settings, secure storage, the install marker, clear everything
+  lock/                  the lock service: the PIN, wrong PINs and their wait, and biometrics
 ```
 
 ### State
@@ -695,7 +696,7 @@ screen's. The screens map the problem codes to the messages in `content`, in `ca
 ### Summary screen
 
 `features/roundSummary/RoundSummaryScreen` shows `summarise` of the round from `useRound()`. Nothing
-on it is stored or logged.
+on it is stored or logged, except that a player can keep a played card as a favourite (below).
 
 - The heading is "Round over!", with a line giving the cards played and the categories reached,
   in the singular for one. Each player has a `PlayerScore` block that reads as one group, such as
@@ -712,6 +713,23 @@ on it is stored or logged.
   level, categories, length and names of the last round. Home goes to the hub with `dismissTo`,
   which leaves the route group and discards the round and `lastStart`. A new visit to the game
   starts setup at its defaults. The names are still remembered, because they are settings.
+- Below the buttons, `PlayedCards` lists the round's cards under the heading "This round's dares",
+  in the order they were played. Each is a static `Card` with `grouped={false}` and the card's
+  category, so the text and the control are read separately. It holds the category `Chip`, the name
+  of the player who played it (a together card has an accent Together chip and no name), the card
+  text and a `FavouriteToggle`. Skipped cards are left out and free pass cards are listed. The text
+  comes from `lastStart.deck`, and a played card the deck no longer has is left out. The list is
+  part of the scrolling `Screen`, because a round is short and the design says so. The three
+  buttons sit above it so they stay in reach on a long round.
+- A favourite is turned on or off at once and written through `usePersonalData().repository`
+  (`setFavourite`). One card's writes run in turn, so two quick presses cannot race. When a card has no
+  write left, its control shows what the store holds, which is the last write that went through. If
+  the favourites cannot be read, every control starts off. A failed write shows "Couldn't save that
+  favourite. Try again." under that card as a polite live region with the alert role, and announces it on iOS with
+  `AccessibilityInfo.announceForAccessibility`. One message shows at a time. It clears when that
+  control next changes. The list reads the favourites once the store has loaded, and a press does
+  nothing before then, because a write to the placeholder store is lost. Only a favourite's card
+  id is kept. The round, the players and the card text are never stored.
 - Going back by the system back button or the iOS swipe goes to setup, as Settings does.
 - The round complete haptic fires when the summary first shows, once for the round. The
   screen guards it, keyed on the finished round object in a module level `WeakSet`, so a render, an
@@ -863,6 +881,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
+| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                              |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
@@ -1095,9 +1114,91 @@ interface Storage {
 - `createStorage(backend, clearPersonalStore)` takes the way to clear the personal store. `clearAll`
   clears both the key-value entries and the personal store. It tries both even when the first
   fails, then reports the first failure, so a retry finishes the job. Tests cover it.
-  Any later store (files, secure items) must be added to `clearAll` in the same change.
+  Secure items are cleared by `secureStorage.clearAll`, and `clearEverything` runs both. Any later
+  store (files, secure items) must be added to one of them in the same change.
 - Settings are the keys in `StorageKey`. `questionPreferences` (FRK-38) holds only the
-  keep-discoveries switch. Nothing else from a round is kept.
+  keep-discoveries switch. Nothing else from a round is kept, except the id of a card a player
+  chooses to favourite on the summary, which goes to the personal store.
+
+### Secure storage
+
+The same module owns secure storage, which is the Keychain on iOS and Keystore-backed storage on
+Android, through `expo-secure-store`. Nothing else imports it.
+
+```ts
+interface SecureStorage {
+  get<T>(key: SecureKey, schema: ZodType<T>): Promise<T | undefined>;
+  set<T>(key: SecureKey, value: T): Promise<void>;
+  remove(key: SecureKey): Promise<void>;
+  clearAll(): Promise<void>;
+}
+```
+
+- **Closed list.** `secureKeys` is a list, and `SecureKey` is the type made from it, so `clearAll`
+  reaches every item by construction. The items are `personalDatabaseKey`, `lockPinHash`,
+  `lockAttempts` and `lockBiometricsChoice`. The name is the name of the item on the phone, so it
+  is never renamed.
+- **Values.** Every value is written as JSON and checked with a schema on read. A value that is
+  missing or fails its schema counts as absent. The schemas for the lock items are in `core`
+  (`lock.ts`). FRK-41 wrote the database key as bare text, and an upgraded phone keeps it, so a
+  value that fails as JSON is tried once as plain text against the same schema. Only a text item
+  can match, which is how the old key is still read.
+- **Accessibility.** Every item is written with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, in one place
+  (`defaultSecureStorage`), so none can be written without it.
+- **`clearAll`.** It removes every item in the list, tries all of them even when one fails, then
+  reports the first failure. Removing an item that is not there is fine, so it is safe to run twice.
+- **Tests** run over an in-memory backend, the same `createInMemoryBackend` the key-value tests
+  use, because the secure backend needs only `getItem`, `setItem` and `removeItem`.
+- Nothing logs. A parse or validation error can echo a PIN hash or the key, so none is passed up.
+
+### Install marker
+
+iOS keeps Keychain items after the app is deleted, so a reinstall could find an old PIN or database
+key. `ensureInstallMarker` runs before anything reads settings, the database key or the lock. In
+the root layout, `InstallMarkerGate` runs it and renders its children only once it is done.
+
+- The marker is the key `installMarker` (the value `true`) in the key-value store, which goes when
+  the app is deleted.
+- If the marker is missing, secure storage is cleared first and the marker is written after, so a
+  launch cut short in between runs the check again. The exception is an upgrade: a phone that ran
+  a build with no marker holds `entryConfirmation` in the key-value store, which a reinstall does
+  not. The marker is then written and nothing is cleared, so the database key survives.
+- A marker that cannot be read clears nothing, because a failed read does not say it is a fresh
+  install. A clear or a write that fails leaves the marker unwritten. In both cases the check runs
+  again at the next launch, and the app is never blocked. If a native call never answers, the
+  gate shows its children after 3 seconds anyway. The check then skips the clear and the marker
+  write, so a late answer cannot wipe secure items the running app has read.
+- It never throws and never logs.
+
+### Clear everything
+
+`createClearEverything` takes its steps as parameters and gives one function that returns
+`{ ok: true }` or `{ ok: false }`. It never throws, and the result holds no error, because an
+error message can hold stored text. The screens get it from `useClearEverything()`, which needs a
+`RootRemount` above it.
+
+1. Cancel every scheduled notification (`expo-notifications`).
+2. Clear secure storage (`secureStorage.clearAll`), which removes the PIN hash, the biometrics
+   choice, the wrong PIN count and the database key.
+3. `storage.clearAll()`, which closes and deletes the encrypted database and clears the key-value
+   store.
+4. Write the install marker back. Step 3 removed it, and without it the next launch would take
+   the app for a fresh install and clear a PIN set since.
+5. Remount the root.
+
+- Every step is safe to run twice. A step that fails does not stop the others, so as little as
+  possible is left behind. The marker is not written and the root is not remounted when any step
+  failed, and the result says so. A retry runs all the steps again and finishes.
+- `RootRemount` (in `app/_layout.tsx`, around the providers that read stored data) holds its
+  children under a changing `key`, so remounting mounts every provider again from empty storage.
+  A provider that a later milestone adds there needs no reset method. `InstallMarkerGate` sits
+  outside it, so a remount does not run the check again.
+- Afterwards the app is as on first launch: the entry guard sees no confirmation and shows the 18+
+  screen. It keeps the app, permissions given in the phone's settings and store purchases.
+- A test fills a phone with names, settings, 250 player cards and 150 discoveries and checks every
+  store is empty afterwards, then fails each step in turn and retries. Another renders the real
+  root layout with entry confirmed, runs `useClearEverything()` from a stand-in screen and expects
+  the 18+ confirmation screen.
 
 ### Personal store
 
@@ -1108,10 +1209,10 @@ module, `storage/personal`, and nothing else touches it.
   (`["expo-sqlite", { "useSQLCipher": true }]` in `app.json`). The database is opened with a random
   256-bit key, written as 64 hex characters and given to SQLCipher in its raw form
   (`PRAGMA key = "x'...'"`), so it runs no password derivation.
-- **The key.** It is made on first launch from `expo-crypto`'s random bytes and kept in
-  `expo-secure-store` with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, so it is readable only while the phone
-  is unlocked and never leaves this device. It is read only to open the database. It is never
-  logged.
+- **The key.** It is made on first launch from `expo-crypto`'s random bytes and kept in secure
+  storage (see Secure storage) under the item `personalDatabaseKey`, so it is readable only while
+  the phone is unlocked and never leaves this device. A stored value that is not 64 hex characters
+  counts as absent. It is read only to open the database. It is never logged.
 - **Schema.** Step 1 of the migrations makes four tables. `player_card` has `id`, `category` and
   `kind` (checked against the core ids), `text` (checked 1 to 140 characters), `created_at` and
   `updated_at`. `favourite` has `card_id` and `created_at`. `deck` has `id`, `name` (checked 1 to
@@ -1189,18 +1290,69 @@ module, `storage/personal`, and nothing else touches it.
   connection that does not have the key, so it cannot be used on an encrypted database.
 - **`clearAll`.** It closes the database, deletes `personal.db` and its `-journal` and `-wal` files, and deletes the key. Each step is
   safe to run twice. A later load makes a new key and an empty database.
-- **After `clearAll`.** The repository the provider holds points at a closed database. Whatever runs
-  clear everything (FRK-53) must call `usePersonalData().reload()` after `storage.clearAll()`, or
-  remount the provider. `reload` sets `isLoading` and opens a new database with a new key.
+- **After `clearAll`.** The repository the provider holds points at a closed database. Clear
+  everything remounts the root (see Clear everything), so the provider opens a new database with a
+  new key. A caller that runs `storage.clearAll()` by itself must call
+  `usePersonalData().reload()` after it. `reload` sets `isLoading` and opens a new database.
 - **While loading.** Screens must not write while `isLoading` is true, because a write to the
   placeholder store is dropped when the real repository arrives. The same holds after `loadFailed`,
   where writes last for the session only.
-- **Android backup.** The `expo-secure-store` plugin sets `fullBackupContent` and
-  `dataExtractionRules` that include only shared preferences and exclude SecureStore, so the key is
-  not backed up and, with it, the database is unreadable from a backup. It does not set
-  `allowBackup`. FRK-58 should set `android.allowBackup: false`.
+- **Android backup.** `android.allowBackup` is `false` (FRK-58). The `expo-secure-store` plugin also
+  sets `fullBackupContent` and `dataExtractionRules` that include only shared preferences and
+  exclude SecureStore, so the key is not backed up and, with it, the database is unreadable from a
+  backup.
 - **Native build.** SQLCipher, `expo-secure-store` and `expo-crypto` are native, so this needs a
   new build.
+
+## App lock
+
+The rules are pure and live in `packages/core/src/lock.ts`. The service that keeps the PIN is
+`apps/mobile/lock`. The screens that use them (FRK-63, FRK-65, FRK-66) are separate tickets.
+
+- **Off by default.** Nothing asks at first launch. A player turns it on in Settings. It needs a
+  4 digit PIN, and biometrics are an optional extra on top of it, offered only when the phone has
+  them set up.
+- **The PIN.** `isValidPin` accepts exactly 4 ASCII digits. It is kept as
+  `SHA-256(salt + ":" + PIN)` with a random 16 byte salt, in the secure item `lockPinHash`. Whether
+  the lock is on is read from the presence of that hash, so there is no flag that could disagree.
+  Four digits are only 10,000 values, so the hash alone does not stop someone who can read the
+  secure item. What holds is that the item is readable only on this unlocked phone, and the wait.
+- **When it locks.** `shouldLock(wentToBackgroundAt, now)` is true on a cold start (no time given),
+  after 60 seconds or more away, and when the clock went backwards. `countsAsBackground` is true
+  only for the `background` app state, so the iOS `inactive` state (the notification shade,
+  Control Center, a call banner) never starts the time away. The 60 seconds is a constant, not a
+  setting, and it applies mid-round too.
+- **Wrong PINs.** `waitAfterFailureMilliseconds` gives no wait until the fifth wrong PIN in a row,
+  then 30 seconds. Each further run of five doubles it, up to 15 minutes. The count and the end of
+  the wait are the secure item `lockAttempts`, so a restart does not reset them. A try made during a
+  wait is not looked at and not counted. The right PIN, or a pass at the biometrics prompt, starts
+  the count again. Wrong PINs never erase anything. `remainingWaitMilliseconds` is capped at the
+  longest wait, so a clock set far back cannot lock a player out for good.
+- **No recovery.** A forgotten PIN is fixed by Clear everything, which needs no PIN. Biometrics
+  still unlock if they were turned on.
+- **The service.** `createLockService` takes the secure storage, a biometrics device, a SHA-256
+  function, random bytes and a clock, so tests pass fakes. `lockService` is the one the app uses.
+  It can set a PIN (which also starts the wrong PIN count again), check a PIN, clear the PIN (which
+  removes the hash, the count and the biometrics choice), say whether the lock is on, give the
+  time left of a wait, say whether biometrics are available and which kind, ask for biometrics, and
+  read and set the biometrics choice. Checks run one at a time, so a burst of tries cannot get
+  past the count.
+- **What it leaves to the screens.** Changing the PIN or turning the lock off needs the current
+  PIN or biometrics. The service does not ask, so the screen must. A call that cannot reach secure
+  storage rejects, and the lock screen treats that as locked.
+- **Biometrics.** Available means the phone has the hardware and the player has set up a face or
+  finger. The kind is face, then fingerprint, then iris. The prompt does not offer the phone
+  passcode, because biometrics are never a way round the PIN. The prompt text comes from the
+  caller.
+- **Face ID text.** The usage text is in `app.json` through the `expo-local-authentication` plugin,
+  because the native build reads it before any JavaScript runs. That is an exception to "copy lives
+  in content". Change it there.
+- **Nothing logs** a PIN, a hash, a salt, a key or a stored value, and no error message holds one.
+  Tests spy on the console.
+- **Native modules.** `expo-local-authentication`, `expo-notifications` and `expo-screen-capture`
+  are added now so the milestone needs one new build. `expo-screen-capture` is first used by the
+  lock screen, and `expo-notifications` by the reminder. This needs a new build. The Android
+  permissions the modules add are listed under Checks and CI.
 
 ## Styling
 
@@ -1319,10 +1471,15 @@ files. Agents never run `eas build` or `eas submit`.
 `app.json` holds the native settings a store build needs. On iOS: iPhone only, the encryption flag
 `ITSAppUsesNonExemptEncryption` set to `true` (the answer in `docs/compliance.md`, since SQLCipher
 ships), and a privacy manifest declaring the required reason APIs the app and its libraries use.
-On Android: backups off, and `blockedPermissions` removing the three permissions that the Expo
-template adds and the app never uses (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
-`SYSTEM_ALERT_WINDOW`). `appConfig.test.ts` guards these, and also that nothing the lock, reminder
-and vibration work needs is ever blocked. These native changes alter the runtime version
+On Android: backups off, and `blockedPermissions` removing the permissions the app never uses.
+Those are the three the Expo template adds (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
+`SYSTEM_ALERT_WINDOW`), `READ_MEDIA_IMAGES` and `DETECT_SCREEN_CAPTURE` from `expo-screen-capture`
+(they serve its screenshot listener only), `com.google.android.c2dm.permission.RECEIVE` from the
+Firebase Messaging library inside `expo-notifications` (push), and the launcher badge permissions
+that the badge library inside `expo-notifications` declares. The reminder and the lock need none of
+them. `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `USE_BIOMETRIC`, `USE_FINGERPRINT`, `VIBRATE`,
+`INTERNET`, `ACCESS_NETWORK_STATE`, `WAKE_LOCK` and `MODIFY_AUDIO_SETTINGS` stay.
+`appConfig.test.ts` guards both lists. These native changes alter the runtime version
 fingerprint, so the next build is a reinstall and updates made before it do not reach it.
 
 ## Privacy
@@ -1352,6 +1509,18 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
   to Expo. Never put player text in an `Error` message.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
+- The PIN is never stored. Only a salted SHA-256 hash is, in the secure store, readable only while
+  the phone is unlocked and only on this device. Nothing logs a PIN, a hash, a salt, a key or a
+  stored value, and an error message never holds one. The secure storage, install marker, clear
+  everything and lock tests spy on the console to check it. See App lock.
+- A fresh install starts clean: the install marker clears secure items that iOS kept after a
+  delete. Clear everything removes every stored item, the database and every scheduled
+  notification. See Storage.
+- The reminder is a local notification, so no push token is ever requested. Never call
+  `getExpoPushTokenAsync` or `getDevicePushTokenAsync`. `expo-notifications` bundles the Firebase
+  Messaging library on Android, which stays idle without a `google-services.json`, and the app has
+  none. Its iOS privacy manifest declares only the user defaults reason that is already in
+  `privacyManifests`, so that union did not change.
 - Test fixtures contain placeholder text only.
 
 ## Working conventions
@@ -1381,6 +1550,7 @@ its area under `docs/decisions/`:
 - [Questions](decisions/questions.md)
 - [Secret match](decisions/secret-match.md)
 - [Storage](decisions/storage.md)
+- [App lock](decisions/lock.md)
 - [Privacy](decisions/privacy.md)
 - [Press feedback and effects](decisions/feedback.md)
 - [Updates](decisions/updates.md)

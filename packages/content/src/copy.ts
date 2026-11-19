@@ -1,5 +1,9 @@
 export const copy = {
   appName: 'Get Freak',
+  // Lines the kit's callers share.
+  ui: {
+    characterCount: '{count} of {max} characters',
+  },
   welcome: {
     greeting: 'Hold up. ID check.',
     question: 'Are you 18 or over?',
@@ -73,7 +77,7 @@ export const copy = {
     tooLongError: 'Keep it to 140 characters.',
     duplicateError: "You've already got that one.",
     writeFailed: "Couldn't save that. Try again.",
-    characterCount: '{count} of {max} characters',
+    groupHeading: '{category}, {count}',
     deleteTitle: 'Delete this dare?',
     deleteBody: 'It goes from your favourites and decks too.',
     deleteConfirm: 'Delete',
@@ -198,6 +202,12 @@ export const copy = {
     playAgain: 'Play again',
     settings: 'Settings',
     home: 'Home',
+    playedHeading: "This round's dares",
+    favouriteSaveFailed: "Couldn't save that favourite. Try again.",
+  },
+  // The name of the favourite control wherever a card has one.
+  favourite: {
+    label: 'Favourite',
   },
   // The words that lead a question, so question text holds only the clause after them. Guess your
   // partner and secret match have no lead.

@@ -133,7 +133,11 @@ describe('MyDaresScreen', () => {
         .getAllByRole('header')
         .map((heading) => heading.props.accessibilityLabel)
         .filter(Boolean);
-      expect(groupNames).toEqual([categoryNames.c1, categoryNames.c3, categoryNames.c4]);
+      expect(groupNames).toEqual(
+        [categoryNames.c1, categoryNames.c3, categoryNames.c4].map((category) =>
+          fillCopy(copy.ownCards.groupHeading, { category, count: 1 }),
+        ),
+      );
     });
 
     it('should leave out a category that has no dares', async () => {
@@ -141,8 +145,30 @@ describe('MyDaresScreen', () => {
       await addDare(fixture, 'Placeholder dare 1', 'c2');
       await renderList(fixture);
 
-      expect(screen.queryByRole('header', { name: categoryNames.c1 })).not.toBeOnTheScreen();
-      expect(screen.getByRole('header', { name: categoryNames.c2 })).toBeOnTheScreen();
+      expect(
+        screen.queryByRole('header', {
+          name: fillCopy(copy.ownCards.groupHeading, { category: categoryNames.c1, count: 1 }),
+        }),
+      ).not.toBeOnTheScreen();
+      expect(
+        screen.getByRole('header', {
+          name: fillCopy(copy.ownCards.groupHeading, { category: categoryNames.c2, count: 1 }),
+        }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should name each group with its category and how many dares it holds', async () => {
+      const fixture = makeOwnCardsFixture();
+      await addDare(fixture, 'Placeholder dare 1', 'c1');
+      await addDare(fixture, 'Placeholder dare 2', 'c1');
+      await addDare(fixture, 'Placeholder dare 3', 'c1');
+      await renderList(fixture);
+
+      expect(
+        screen.getByRole('header', {
+          name: fillCopy(copy.ownCards.groupHeading, { category: categoryNames.c1, count: 3 }),
+        }),
+      ).toBeOnTheScreen();
     });
 
     it('should show how many dares each group holds', async () => {
