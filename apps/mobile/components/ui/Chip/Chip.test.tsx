@@ -141,4 +141,15 @@ describe('Chip press feedback', () => {
     expect(feedback.select).toHaveBeenCalledTimes(1);
     expect(onPress).toHaveBeenCalledTimes(1);
   });
+
+  it('should give the tap feedback instead when it is told to', async () => {
+    const feedback = await renderWithMockFeedback(
+      <Chip label="Level 1" feedback="tap" onPress={jest.fn()} />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Level 1' }));
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+    expect(feedback.select).not.toHaveBeenCalled();
+  });
 });

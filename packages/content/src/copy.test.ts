@@ -373,6 +373,8 @@ describe('copy', () => {
       [
         'backLabel',
         'discoveriesBody',
+        'discoveriesCount',
+        'discoveriesNone',
         'discoveriesTitle',
         'entryLabel',
         'matchBody',
@@ -389,6 +391,55 @@ describe('copy', () => {
       ].sort(),
     );
     expectEveryValueToBeText(copy.questionsHome);
+  });
+
+  it('should give the Discoveries screen every line as non-empty text, free of dashes and semicolons', () => {
+    expect(Object.keys(copy.discoveries).sort()).toEqual(
+      [
+        'aboutAnswer',
+        'aboutLabel',
+        'agreeAnswer',
+        'agreeLabel',
+        'backLabel',
+        'clearAll',
+        'clearBody',
+        'clearCancel',
+        'clearConfirm',
+        'clearTitle',
+        'emptyBody',
+        'emptyMatch',
+        'emptyPlay',
+        'emptyTheo',
+        'emptyTitle',
+        'matchesLabel',
+        'offBody',
+        'offCancel',
+        'offConfirm',
+        'offTitle',
+        'remove',
+        'removeDone',
+        'removeFailed',
+        'removeLabel',
+        'saveToggle',
+        'saveToggleCaption',
+        'savingOffNotice',
+        'subtitle',
+        'title',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.discoveries);
+    Object.values(copy.discoveries).forEach((line) => expect(hasDashOrSemicolon(line)).toBe(false));
+  });
+
+  it('should leave a place for each name, option and text in the Discoveries lines', () => {
+    expect(copy.discoveries.aboutLabel).toContain('{name}');
+    expect(copy.discoveries.aboutAnswer).toContain('{name}');
+    expect(copy.discoveries.aboutAnswer).toContain('{option}');
+    expect(copy.discoveries.agreeAnswer).toContain('{option}');
+    expect(copy.discoveries.removeLabel).toContain('{text}');
+    expect(copy.questionsHome.discoveriesCount).toContain('{count}');
+    expect(copy.questionsHome.entryLabel).toContain('{title}');
+    expect(copy.questionsHome.entryLabel).toContain('{count}');
   });
 
   it('should give the Drink If setup every line as non-empty text', () => {
