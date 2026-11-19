@@ -8,11 +8,15 @@ export class TestReportError extends Error {
   }
 }
 
+// The channels of builds that report errors. The project has no preview stage, so the live
+// channel is the one that matters. `preview` is the channel of the builds made before that was
+// decided, and it goes when FRK-84 retires it.
+const channelsThatReport: readonly unknown[] = ['production', 'preview'];
+
 /**
- * Whether this build may throw a test error. Only a build that listens to the preview channel may.
- * A store build may not, and neither may a development build, which never reports, or a launch
- * with no channel.
+ * Whether this build may throw a test error. A build that listens to a channel that reports may.
+ * A development build may not, since it never reports, and neither may a launch with no channel.
  */
 export function isTestErrorAllowed(channel: unknown = Updates.channel): boolean {
-  return channel === 'preview';
+  return channelsThatReport.includes(channel);
 }

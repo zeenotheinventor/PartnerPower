@@ -31,14 +31,14 @@ describe('the test error route', () => {
     mockUpdates.channel = null;
   });
 
-  it('should throw the test error on the preview channel', () => {
-    mockUpdates.channel = 'preview';
+  it.each(['production', 'preview'])('should throw the test error on the %s channel', (channel) => {
+    mockUpdates.channel = channel;
 
     expect(() => render(<TestErrorRoute />)).toThrow(TestReportError);
     expect(mockRedirect).not.toHaveBeenCalled();
   });
 
-  it.each(['production', 'development', null])(
+  it.each(['development', null])(
     'should send a build on the %p channel back to the first screen',
     (channel) => {
       mockUpdates.channel = channel;

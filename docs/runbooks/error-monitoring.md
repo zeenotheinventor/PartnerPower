@@ -40,8 +40,9 @@ Do these once. Until they are done the app sends nothing and runs as normal.
    npx eas-cli env:set --environment production --environment preview --name EXPO_PUBLIC_SENTRY_DSN --visibility plaintext
    ```
 
-   The `preview` environment is there so the build on your own phone reports too. Leave it out to
-   keep preview builds silent.
+   The project has no preview stage, and the live environment is `production`. The `preview`
+   environment is included only because the build on the owner's phone still uses it, from before
+   that was decided. FRK-84 retires it.
 
 5. **Set the auth token.** It lets a build upload source maps, so stacks are readable. In Sentry,
    open **Settings**, then **Developer Settings**, then **Organization Tokens**, and create one
@@ -53,11 +54,11 @@ Do these once. Until they are done the app sends nothing and runs as normal.
    ```
 
 6. **Make a new build.** Sentry is a native module, so an existing build does not have it. Build
-   and install the preview profile as usual.
+   and install it as usual.
 
 ## 2. Send a test error
 
-On a phone with a preview build, open this link, for example from a note or a message to
+On a phone with the app installed, open this link, for example from a note or a message to
 yourself:
 
 ```
@@ -68,8 +69,7 @@ The app shows its crash screen. In Sentry, an issue named `TestReportError` appe
 minute. Check that it has no message, no user, no IP address and no device id. "Start again" takes
 you back to the first screen.
 
-A store build ignores the link and opens the first screen. So does a development build, which
-never reports.
+A development build ignores the link and opens the first screen, because it never reports.
 
 ## 3. Read a report
 

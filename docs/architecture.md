@@ -1365,9 +1365,10 @@ live.
   placeholder, such as `[deckId]`, and no id or typed value is recorded. Tap and console breadcrumbs
   are dropped, because both are worded from what is on screen.
 - Sessions, client reports, traces, screenshots, the view hierarchy and session replay are all off.
-- `app/dev/test-error` throws `TestReportError` on purpose in a build that listens to the preview
-  channel, so the owner can check that a report arrives. A store build is sent to the first
-  screen, and so is a development build, which never reports.
+- `app/dev/test-error` throws `TestReportError` on purpose in an installed build, so the owner can
+  check that a report arrives. It works on the channels that report, `production` and, until
+  FRK-84 retires it, `preview`. A development build, which never reports, is sent to the first
+  screen.
 - Each build profile in `eas.json` names its environment, so the DSN reaches only the builds whose
   environment has it.
 - Every screen of the root navigator sits inside a `ScreenCrashBoundary`, through the navigator's
