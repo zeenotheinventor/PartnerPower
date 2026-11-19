@@ -100,7 +100,14 @@
       [
         "expo-local-authentication",
         {
-          "faceIDPermission": "Use Face ID to unlock Get Freak."
+          "faceIDPermission": "Unlock the app with Face ID."
+        }
+      ],
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/images/notification-icon-96.png",
+          "color": "#FF3D7F"
         }
       ],
       [

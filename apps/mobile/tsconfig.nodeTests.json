@@ -2,6 +2,7 @@
   "extends": "./tsconfig.json",
   "compilerOptions": { "types": ["jest", "node"] },
   "include": [
+    "appConfig.test.ts",
     "tailwind/rawColorGuard.test.ts",
     "features/welcome/routeCoverage.test.tsx",
     "feedback/sounds.test.ts",
