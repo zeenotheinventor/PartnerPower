@@ -349,7 +349,7 @@ function isSteppingUp(state: RoundState, card: Card): boolean {
 }
 
 /** Timer cards are written to last their timer, so only the timer surprise deals them. */
-function isDealable(card: Card): boolean {
+export function isDealable(card: Card): boolean {
   return card.effect?.type !== 'timer';
 }
 

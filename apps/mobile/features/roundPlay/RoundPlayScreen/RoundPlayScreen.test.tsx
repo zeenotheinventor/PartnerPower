@@ -17,6 +17,8 @@ import { useReducedMotion } from 'react-native-reanimated';
 import { Children, isValidElement, useEffect, type ReactNode } from 'react';
 
 import { Button } from '../../../components/ui';
+import { createMockFeedback } from '../../../feedback/createMockFeedback';
+import { FeedbackContext } from '../../../feedback/FeedbackProvider';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { effectDuration } from '../pressEffect/motion';
@@ -145,7 +147,11 @@ function StartRound({
   return children;
 }
 
-async function renderPlay(round?: RoundSetup, roundDeck: Deck = deck) {
+async function renderPlay(
+  round?: RoundSetup,
+  roundDeck: Deck = deck,
+  feedback = createMockFeedback(),
+) {
   const play = (
     <>
       <RoundProbe />
@@ -153,15 +159,17 @@ async function renderPlay(round?: RoundSetup, roundDeck: Deck = deck) {
     </>
   );
   return renderThemed(
-    <RoundProvider>
-      {round ? (
-        <StartRound round={round} roundDeck={roundDeck}>
-          {play}
-        </StartRound>
-      ) : (
-        play
-      )}
-    </RoundProvider>,
+    <FeedbackContext.Provider value={feedback}>
+      <RoundProvider>
+        {round ? (
+          <StartRound round={round} roundDeck={roundDeck}>
+            {play}
+          </StartRound>
+        ) : (
+          play
+        )}
+      </RoundProvider>
+    </FeedbackContext.Provider>,
   );
 }
 
@@ -1244,5 +1252,116 @@ describe('RoundPlayScreen', () => {
         ]);
       });
     });
+  });
+});
+
+describe('RoundPlayScreen feedback', () => {
+  afterEach(() => {
+    mockPreventsRemove = false;
+    mockOnRemovePrevented = undefined;
+    latest.round = undefined;
+  });
+
+  async function renderWithFeedback(round: RoundSetup) {
+    const feedback = createMockFeedback();
+    await renderPlay(round, deck, feedback);
+    return feedback;
+  }
+
+  it('should chime for the hand over when the pass the phone screen shows, and not deal yet', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+
+    expect(feedback.handover).toHaveBeenCalledTimes(1);
+    expect(feedback.deal).not.toHaveBeenCalled();
+  });
+
+  it('should deal when the card shows after the phone is taken', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+
+    takeThePhone();
+
+    expect(feedback.deal).toHaveBeenCalledTimes(1);
+  });
+
+  it('should deal again for the next card', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+
+    pressDone();
+    takeThePhone();
+
+    expect(feedback.deal).toHaveBeenCalledTimes(2);
+    expect(feedback.handover).toHaveBeenCalledTimes(2);
+  });
+
+  it('should sting when the category steps up, and deal after it', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    playUntilCard(5);
+    const dealsBefore = feedback.deal.mock.calls.length;
+
+    pressDone();
+    expect(feedback.stepUp).toHaveBeenCalledTimes(1);
+    expect(feedback.deal).toHaveBeenCalledTimes(dealsBefore);
+
+    press(copy.roundPlay.stepUpButton);
+    if (screen.queryByRole('button', { name: copy.roundPlay.handoffButton })) takeThePhone();
+    expect(feedback.deal).toHaveBeenCalledTimes(dealsBefore + 1);
+  });
+
+  it('should deal when Not this one swaps the card', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+
+    press(copy.roundPlay.notThisOne);
+    expect(feedback.deal).toHaveBeenCalledTimes(1);
+    press(copy.roundPlay.skipTitle);
+
+    expect(feedback.deal).toHaveBeenCalledTimes(2);
+  });
+
+  it('should deal when switching a category off swaps the card', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+    press(copy.roundPlay.notThisOne);
+
+    fireEvent.press(screen.getByRole('switch', { name: categoryNames.c1 }));
+
+    expect(feedback.deal).toHaveBeenCalledTimes(2);
+  });
+
+  it('should not deal again just because the sheet or the dialog opens or closes', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+
+    press(copy.roundPlay.notThisOne);
+    press(copy.roundPlay.sheetClose);
+    press(copy.roundPlay.endRound);
+    press(copy.roundPlay.endDialogCancel);
+
+    expect(feedback.deal).toHaveBeenCalledTimes(1);
+  });
+
+  it('should give the End round pill and the Not this one link the ordinary tap', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+    feedback.tap.mockClear();
+
+    press(copy.roundPlay.endRound);
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+    press(copy.roundPlay.endDialogCancel);
+    feedback.tap.mockClear();
+    press(copy.roundPlay.notThisOne);
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+  });
+
+  it('should open the sheet with the swoosh', async () => {
+    const feedback = await renderWithFeedback(twoCategories);
+    takeThePhone();
+    expect(feedback.sheetOpen).not.toHaveBeenCalled();
+
+    press(copy.roundPlay.notThisOne);
+
+    expect(feedback.sheetOpen).toHaveBeenCalledTimes(1);
   });
 });

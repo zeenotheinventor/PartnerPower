@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { SegmentedControlProps } from './types';
 
 // The checked option is a face on the accent colour that sits on a depth edge, as a primary button
@@ -34,10 +35,11 @@ export function SegmentedControl<Value extends string | number>({
         {options.map((option) => {
           const isChecked = option.value === value;
           return (
-            <Pressable
+            <FeedbackPressable
               key={option.value}
               accessibilityRole="radio"
               accessibilityState={{ checked: isChecked }}
+              feedback="select"
               onPress={() => onValueChange(option.value)}
               className="group flex-1"
             >
@@ -45,7 +47,7 @@ export function SegmentedControl<Value extends string | number>({
               <Text className={isChecked ? checkedFaceClasses : uncheckedFaceClasses}>
                 {option.label}
               </Text>
-            </Pressable>
+            </FeedbackPressable>
           );
         })}
       </View>

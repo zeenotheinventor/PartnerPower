@@ -1,6 +1,7 @@
-import { Pressable, Text } from 'react-native';
+import { Text } from 'react-native';
 
 import type { CategoryId } from '@getfreak/core';
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { ChipProps } from './types';
 
 type ChipTone = CategoryId | 'neutral' | 'accent';
@@ -94,14 +95,15 @@ export function Chip({
   }
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected }}
+      feedback="select"
       onPress={onPress}
       className={`${containerClasses[tone][look]} ${pressablePadding}`}
     >
       <Text className={labelClasses[tone][look]}>{label}</Text>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

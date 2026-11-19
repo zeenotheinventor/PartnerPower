@@ -1,11 +1,17 @@
 import { copy, fillCopy } from '@getfreak/content';
-import { isRoundOver, summarise, type RoundState } from '@getfreak/core';
+import { isRoundOver, summarise, type Deck, type RoundState } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, Character, Screen, SpeechBubble } from '../../../components/ui';
 import { useFeedback } from '../../../feedback/FeedbackProvider';
+import { usePersonalData } from '../../../personal';
+import { buildRoundDeck } from '../../decks/buildRoundDeck';
+import { countCardsInPlay } from '../../decks/countCardsInPlay';
+import { useDeckChoice } from '../../decks/DeckChoiceProvider';
+import { getStarterDeck } from '../../decks/getStarterDeck';
+import { useOwnCards } from '../../ownCards/OwnCardsProvider';
 import { useRound } from '../../round/RoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
 import { PlayedCards } from '../PlayedCards';
@@ -29,6 +35,9 @@ export function RoundSummaryScreen() {
   const router = useRouter();
   const { round, lastStart, startNewRound } = useRound();
   const summary = round ? summarise(round) : undefined;
+  const { choice: deckChoice } = useDeckChoice();
+  const { cards: ownCards } = useOwnCards();
+  const { repository } = usePersonalData();
 
   // The celebration buzz fires when the summary first shows, once for the round. The round is
   // remembered outside the screen, so a screen that mounts again for the same round does not fire
@@ -52,8 +61,38 @@ export function RoundSummaryScreen() {
   const playAgain = () => {
     if (!lastStart || hasStarted.current) return;
     hasStarted.current = true;
-    startNewRound({ ...lastStart.setup, seed: randomSeed() }, lastStart.deck);
-    router.replace(playRoute);
+    const begin = (deck: Deck) => {
+      startNewRound({ ...lastStart.setup, seed: randomSeed() }, deck);
+      router.replace(playRoute);
+    };
+    if (deckChoice !== 'favourites') {
+      begin(lastStart.deck);
+      return;
+    }
+    // Favourites is built from the list as it is now, so a card turned on or off on this screen
+    // counts. A list that cannot be read counts as empty.
+    repository
+      .listFavourites()
+      .then(
+        (cardIds) => new Set(cardIds),
+        () => new Set<string>(),
+      )
+      .then((favouriteIds) => {
+        const deck = buildRoundDeck({
+          choice: deckChoice,
+          starterDeck: getStarterDeck(),
+          ownCards,
+          mixInOwnCards: false,
+          favouriteIds,
+        });
+        // Setup holds Start when nothing is in play, and so does this. Setup says why.
+        if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
+          hasStarted.current = false;
+          router.replace(setupRoute);
+          return;
+        }
+        begin(deck);
+      });
   };
 
   // Going to the hub ends the route group, which discards the round.

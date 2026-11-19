@@ -1,6 +1,7 @@
 import { copy } from '@getfreak/content';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { FeedbackPressable } from '../../../components/ui';
 import { ProgressBar } from '../ProgressBar';
 import type { TurnTopBarProps } from './types';
 
@@ -9,13 +10,13 @@ export function TurnTopBar({ countLabel, progress, onEndRound }: TurnTopBarProps
   return (
     <>
       <View className="flex-row items-center justify-between gap-8">
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onEndRound}
           className="min-h-48 justify-center rounded-pill border-2 border-border bg-surface px-12"
         >
           <Text className="type-caption text-foreground">{copy.roundPlay.endRound}</Text>
-        </Pressable>
+        </FeedbackPressable>
         <Text className="type-caption text-muted">{countLabel}</Text>
       </View>
 

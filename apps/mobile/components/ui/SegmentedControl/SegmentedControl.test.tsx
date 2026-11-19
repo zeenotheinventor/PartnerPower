@@ -1,5 +1,6 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen, within } from 'nativewind/test';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { SegmentedControl } from './SegmentedControl';
@@ -134,5 +135,25 @@ describe('SegmentedControl', () => {
         backgroundColor: theme.accent.toLowerCase(),
       });
     });
+  });
+});
+
+describe('SegmentedControl press feedback', () => {
+  it('should give the select feedback when an option is chosen', async () => {
+    const onValueChange = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <SegmentedControl
+        label="Size"
+        options={levelOptions}
+        value="two"
+        onValueChange={onValueChange}
+      />,
+    );
+
+    fireEvent.press(screen.getByRole('radio', { name: 'Third' }));
+
+    expect(feedback.select).toHaveBeenCalledTimes(1);
+    expect(feedback.tap).not.toHaveBeenCalled();
+    expect(onValueChange).toHaveBeenCalledWith('three');
   });
 });

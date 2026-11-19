@@ -81,15 +81,16 @@ describe('round setup in the route tree', () => {
     ).toBeOnTheScreen();
   });
 
-  it('should say the round has no cards when no deck ships', async () => {
+  it('should hold Start and say why when no deck ships', async () => {
     mockDecks.splice(0, mockDecks.length);
     await launchApp(setupRoute);
     enterNames('Player A', 'Player B');
 
-    await pressStart();
-    await waitFor(() => expect(currentPathname()).toBe(playRoute));
+    fireEvent.press(screen.getByRole('button', { name: copy.roundSetup.start }));
 
-    expect(screen.getByText(copy.roundPlay.noCards)).toBeOnTheScreen();
+    expect(screen.getByText(copy.roundSetup.noCardsInPlay)).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: copy.roundSetup.start })).toBeDisabled();
+    expect(currentPathname()).toBe(setupRoute);
   });
 
   it('should fall back to setup from a round screen opened by a deep link', async () => {

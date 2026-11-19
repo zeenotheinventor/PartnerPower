@@ -1,8 +1,9 @@
 import { cssInterop } from 'nativewind';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Platform, Pressable, Text, View } from 'react-native';
+import { AccessibilityInfo, Animated, Platform, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { ToastProps } from './types';
 
 // The safe area view needs the interop so that it accepts a class name.
@@ -71,7 +72,7 @@ export function Toast({ message, dismissHint, onDismiss }: ToastProps) {
       <View pointerEvents="box-none" className="flex-1 justify-end p-16">
         {/* The fade is an animated value, which a class cannot express, so it is the one style. */}
         <Animated.View style={{ opacity }}>
-          <Pressable
+          <FeedbackPressable
             accessibilityRole="button"
             accessibilityLabel={message}
             accessibilityHint={dismissHint}
@@ -80,7 +81,7 @@ export function Toast({ message, dismissHint, onDismiss }: ToastProps) {
             className="rounded-xl border-2 border-border bg-surface px-16 py-12"
           >
             <Text className="type-body text-foreground">{message}</Text>
-          </Pressable>
+          </FeedbackPressable>
         </Animated.View>
       </View>
     </ThemedSafeAreaView>

@@ -1,6 +1,7 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { StyleSheet, Text } from 'react-native';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 
 import { hostViewInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -212,6 +213,133 @@ describe('Card', () => {
       });
     });
   });
+  describe('when it can be selected', () => {
+    it('should read as a button that is not selected when selected is false', async () => {
+      await renderThemed(
+        <Card label="Deck one" onPress={jest.fn()} selected={false}>
+          <Text>Card 1</Text>
+        </Card>,
+      );
+
+      expect(screen.getByRole('button', { name: 'Deck one', selected: false })).toBeOnTheScreen();
+      expect(screen.queryByRole('button', { name: 'Deck one', selected: true })).toBeNull();
+    });
+
+    it('should read as a button that is selected when selected is true', async () => {
+      await renderThemed(
+        <Card label="Deck one" onPress={jest.fn()} selected>
+          <Text>Card 1</Text>
+        </Card>,
+      );
+
+      expect(screen.getByRole('button', { name: 'Deck one', selected: true })).toBeOnTheScreen();
+    });
+
+    it('should still call the handler when pressed, and still dim when disabled', async () => {
+      const onPress = jest.fn();
+      await renderThemed(
+        <>
+          <Card label="Deck one" onPress={onPress} selected={false}>
+            <Text>Card 1</Text>
+          </Card>
+          <Card label="Deck two" onPress={onPress} selected={false} disabled>
+            <Text>Card 2</Text>
+          </Card>
+        </>,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Deck one' }));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(screen.getByRole('button', { name: 'Deck two', disabled: true })).toHaveStyle({
+        opacity: 0.5,
+      });
+    });
+
+    it('should draw its children and a mark beside them', async () => {
+      await renderThemed(
+        <Card label="Deck one" onPress={jest.fn()} selected>
+          <Text>Card 1</Text>
+        </Card>,
+      );
+
+      const card = screen.getByRole('button', { name: 'Deck one' });
+      const face = hostViewInside(card, 1);
+      expect(face).toHaveStyle({ flexDirection: 'row', alignItems: 'center' });
+      expect(screen.getByText('Card 1')).toBeOnTheScreen();
+    });
+
+    describe.each(themeNames)('with the device in %s mode', (themeName) => {
+      const theme = colorThemes[themeName];
+
+      it.each(categoryIds)(
+        'should keep the colour of category %s when it is not selected',
+        async (category) => {
+          await renderThemed(
+            <Card label="Deck one" category={category} onPress={jest.fn()} selected={false}>
+              <Text>Card 1</Text>
+            </Card>,
+            themeName,
+          );
+
+          const card = screen.getByRole('button', { name: 'Deck one' });
+          expect(hostViewInside(card, 0)).toHaveStyle({
+            backgroundColor: theme.category[category].toLowerCase(),
+          });
+          expect(hostViewInside(card, 1)).toHaveStyle({
+            borderColor: theme.category[category].toLowerCase(),
+          });
+        },
+      );
+
+      it('should draw an empty ring as its mark when it is not selected', async () => {
+        await renderThemed(
+          <Card label="Deck one" onPress={jest.fn()} selected={false}>
+            <Text>Card 1</Text>
+          </Card>,
+          themeName,
+        );
+
+        const face = hostViewInside(screen.getByRole('button', { name: 'Deck one' }), 1);
+        const mark = hostViewInside(face, 1);
+        expect(mark).toHaveStyle({
+          borderColor: theme.border.toLowerCase(),
+          backgroundColor: theme.surface.toLowerCase(),
+        });
+      });
+
+      it('should take the accent edge and border, whatever its category, when selected', async () => {
+        await renderThemed(
+          <Card label="Deck one" category="c3" onPress={jest.fn()} selected>
+            <Text>Card 1</Text>
+          </Card>,
+          themeName,
+        );
+
+        const card = screen.getByRole('button', { name: 'Deck one' });
+        expect(hostViewInside(card, 0)).toHaveStyle({
+          backgroundColor: theme.accentDeep.toLowerCase(),
+        });
+        expect(hostViewInside(card, 1)).toHaveStyle({ borderColor: theme.accent.toLowerCase() });
+      });
+
+      it('should fill its mark with the accent and draw a tick in it when selected', async () => {
+        await renderThemed(
+          <Card label="Deck one" onPress={jest.fn()} selected>
+            <Text>Card 1</Text>
+          </Card>,
+          themeName,
+        );
+
+        const face = hostViewInside(screen.getByRole('button', { name: 'Deck one' }), 1);
+        const mark = hostViewInside(face, 1);
+        const tick = hostViewInside(mark, 0);
+        expect(mark).toHaveStyle({ backgroundColor: theme.accent.toLowerCase() });
+        expect(tick).toHaveStyle({ borderColor: theme.onAccent.toLowerCase() });
+      });
+    });
+  });
+
   describe('when it is face down', () => {
     const faceDown = <Card faceDown title="Hidden card" mark="?" label="Hidden card, face down" />;
 
@@ -257,5 +385,36 @@ describe('Card', () => {
         });
       });
     });
+  });
+});
+
+describe('Card press feedback', () => {
+  it('should give the tap feedback when pressed', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Card label="Open" onPress={onPress}>
+        <Text>Open</Text>
+      </Card>,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Open' }));
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('should give the locked feedback and do nothing else when disabled', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Card label="Open" disabled onPress={onPress}>
+        <Text>Open</Text>
+      </Card>,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Open', disabled: true }));
+
+    expect(feedback.locked).toHaveBeenCalledTimes(1);
+    expect(feedback.tap).not.toHaveBeenCalled();
+    expect(onPress).not.toHaveBeenCalled();
   });
 });

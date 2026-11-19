@@ -2,10 +2,9 @@ import { createAudioPlayer, setAudioModeAsync } from 'expo-audio';
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
-import doneSound from '../assets/sounds/done.wav';
-import passSound from '../assets/sounds/pass.wav';
-import tapSound from '../assets/sounds/tap.wav';
 import { createNativeFeedbackDevice } from './nativeFeedbackDevice';
+import { soundAssets } from './soundAssets';
+import type { FeedbackMoment } from './types';
 
 jest.mock('expo-audio', () => ({
   createAudioPlayer: jest.fn(),
@@ -13,21 +12,44 @@ jest.mock('expo-audio', () => ({
 }));
 
 // Jest gives every asset file the same number, so each sound is given its own to tell them apart.
-jest.mock('../assets/sounds/tap.wav', () => ({ __esModule: true, default: 101 }));
-jest.mock('../assets/sounds/done.wav', () => ({ __esModule: true, default: 102 }));
-jest.mock('../assets/sounds/pass.wav', () => ({ __esModule: true, default: 103 }));
+jest.mock('./soundAssets', () => ({
+  soundAssets: {
+    tap: 101,
+    done: 102,
+    pass: 103,
+    toggleOn: 104,
+    toggleOff: 105,
+    select: 106,
+    back: 107,
+    locked: 108,
+    deal: 109,
+    stepUp: 110,
+    handover: 111,
+    sheetOpen: 112,
+    roundComplete: 113,
+    timerEnd: 114,
+  },
+}));
 
 jest.mock('expo-haptics', () => ({
   impactAsync: jest.fn(),
   notificationAsync: jest.fn(),
   performAndroidHapticsAsync: jest.fn(),
-  ImpactFeedbackStyle: { Light: 'light', Rigid: 'rigid', Heavy: 'heavy' },
+  ImpactFeedbackStyle: { Light: 'light', Medium: 'medium', Rigid: 'rigid', Heavy: 'heavy' },
   NotificationFeedbackType: { Success: 'success', Warning: 'warning' },
   AndroidHaptics: {
     Virtual_Key: 'virtual-key',
+    Virtual_Key_Release: 'virtual-key-release',
     Confirm: 'confirm',
     Reject: 'reject',
     Long_Press: 'long-press',
+    Toggle_On: 'toggle-on',
+    Toggle_Off: 'toggle-off',
+    Segment_Tick: 'segment-tick',
+    Keyboard_Tap: 'keyboard-tap',
+    Clock_Tick: 'clock-tick',
+    Context_Click: 'context-click',
+    Gesture_Start: 'gesture-start',
   },
 }));
 
@@ -43,7 +65,24 @@ function createFakePlayer() {
 
 type FakePlayer = ReturnType<typeof createFakePlayer>;
 
-let players: { tap: FakePlayer; done: FakePlayer; pass: FakePlayer };
+let players: Record<FeedbackMoment, FakePlayer>;
+
+const allMoments = [
+  'tap',
+  'done',
+  'pass',
+  'toggleOn',
+  'toggleOff',
+  'select',
+  'back',
+  'locked',
+  'deal',
+  'stepUp',
+  'handover',
+  'sheetOpen',
+  'roundComplete',
+  'timerEnd',
+] as const satisfies readonly FeedbackMoment[];
 
 function setPlatform(os: typeof Platform.OS) {
   Object.defineProperty(Platform, 'OS', { value: os, configurable: true });
@@ -54,12 +93,28 @@ describe('createNativeFeedbackDevice', () => {
 
   beforeEach(() => {
     jest.useFakeTimers();
-    players = { tap: createFakePlayer(), done: createFakePlayer(), pass: createFakePlayer() };
-    const playerBySource = new Map([
-      [tapSound, players.tap],
-      [doneSound, players.done],
-      [passSound, players.pass],
-    ]);
+    const playerBySource = new Map<number, FakePlayer>();
+    const fakePlayerFor = (source: number) => {
+      const player = createFakePlayer();
+      playerBySource.set(source, player);
+      return player;
+    };
+    players = {
+      tap: fakePlayerFor(soundAssets.tap),
+      done: fakePlayerFor(soundAssets.done),
+      pass: fakePlayerFor(soundAssets.pass),
+      toggleOn: fakePlayerFor(soundAssets.toggleOn),
+      toggleOff: fakePlayerFor(soundAssets.toggleOff),
+      select: fakePlayerFor(soundAssets.select),
+      back: fakePlayerFor(soundAssets.back),
+      locked: fakePlayerFor(soundAssets.locked),
+      deal: fakePlayerFor(soundAssets.deal),
+      stepUp: fakePlayerFor(soundAssets.stepUp),
+      handover: fakePlayerFor(soundAssets.handover),
+      sheetOpen: fakePlayerFor(soundAssets.sheetOpen),
+      roundComplete: fakePlayerFor(soundAssets.roundComplete),
+      timerEnd: fakePlayerFor(soundAssets.timerEnd),
+    };
     mockCreateAudioPlayer.mockImplementation((source) => {
       // The real player has many more members. The device uses only these two.
       return playerBySource.get(Number(source)) as unknown as ReturnType<typeof createAudioPlayer>;
@@ -114,7 +169,7 @@ describe('createNativeFeedbackDevice', () => {
     it('should load one player for each sound when created, before any press', () => {
       createNativeFeedbackDevice();
 
-      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(3);
+      expect(mockCreateAudioPlayer).toHaveBeenCalledTimes(Object.keys(soundAssets).length);
     });
 
     it('should play only the player of the sound asked for, from the start', () => {
@@ -126,6 +181,16 @@ describe('createNativeFeedbackDevice', () => {
       expect(players.done.play).toHaveBeenCalledTimes(1);
       expect(players.tap.play).not.toHaveBeenCalled();
       expect(players.pass.play).not.toHaveBeenCalled();
+    });
+
+    it.each(allMoments)('should play the player of its own for %s', (moment) => {
+      const device = createNativeFeedbackDevice();
+
+      device.playSound(moment);
+
+      expect(players[moment].play).toHaveBeenCalledTimes(1);
+      const othersPlayed = allMoments.filter((other) => players[other].play.mock.calls.length > 0);
+      expect(othersPlayed).toEqual([moment]);
     });
 
     it('should replay a sound that has already played', () => {
@@ -190,6 +255,39 @@ describe('createNativeFeedbackDevice', () => {
       expect(mockNotification).not.toHaveBeenCalled();
     });
 
+    it.each([
+      ['toggleOn', 'medium'],
+      ['toggleOff', 'light'],
+      ['select', 'light'],
+      ['back', 'light'],
+      ['deal', 'light'],
+      ['handover', 'medium'],
+      ['sheetOpen', 'light'],
+    ] as const)('should give %s a %s impact', (moment, style) => {
+      createNativeFeedbackDevice().triggerHaptic(moment);
+
+      expect(mockImpact).toHaveBeenCalledTimes(1);
+      expect(mockImpact).toHaveBeenCalledWith(style);
+      expect(mockNotification).not.toHaveBeenCalled();
+    });
+
+    it('should give a locked press two light ticks, so it feels like a refusal', async () => {
+      createNativeFeedbackDevice().triggerHaptic('locked');
+      expect(mockImpact).toHaveBeenCalledTimes(1);
+
+      await jest.advanceTimersByTimeAsync(200);
+
+      expect(mockImpact.mock.calls).toEqual([['light'], ['light']]);
+    });
+
+    it('should give the step up two medium impacts', async () => {
+      createNativeFeedbackDevice().triggerHaptic('stepUp');
+
+      await jest.advanceTimersByTimeAsync(300);
+
+      expect(mockImpact.mock.calls).toEqual([['medium'], ['medium']]);
+    });
+
     it('should start the round complete pattern at once and play several more pulses over time', async () => {
       createNativeFeedbackDevice().triggerHaptic('roundComplete');
       expect(mockNotification).toHaveBeenCalledWith('success');
@@ -237,6 +335,30 @@ describe('createNativeFeedbackDevice', () => {
       expect(mockAndroidHaptics).toHaveBeenCalledWith('long-press');
     });
 
+    it.each([
+      ['toggleOn', 'toggle-on'],
+      ['toggleOff', 'toggle-off'],
+      ['select', 'segment-tick'],
+      ['back', 'virtual-key-release'],
+      ['deal', 'clock-tick'],
+      ['stepUp', 'confirm'],
+      ['handover', 'context-click'],
+      ['sheetOpen', 'gesture-start'],
+    ] as const)('should give %s the %s effect', (moment, effect) => {
+      createNativeFeedbackDevice().triggerHaptic(moment);
+
+      expect(mockAndroidHaptics).toHaveBeenCalledTimes(1);
+      expect(mockAndroidHaptics).toHaveBeenCalledWith(effect);
+    });
+
+    it('should give a locked press two light keyboard taps', async () => {
+      createNativeFeedbackDevice().triggerHaptic('locked');
+
+      await jest.advanceTimersByTimeAsync(200);
+
+      expect(mockAndroidHaptics.mock.calls).toEqual([['keyboard-tap'], ['keyboard-tap']]);
+    });
+
     it('should play several pulses over time for round complete', async () => {
       createNativeFeedbackDevice().triggerHaptic('roundComplete');
       expect(mockAndroidHaptics).toHaveBeenCalledTimes(1);
@@ -249,9 +371,7 @@ describe('createNativeFeedbackDevice', () => {
     it('should use the effects that follow the phone touch feedback setting, not the vibrator', () => {
       const device = createNativeFeedbackDevice();
 
-      (['tap', 'done', 'pass', 'roundComplete', 'timerEnd'] as const).forEach((moment) =>
-        device.triggerHaptic(moment),
-      );
+      allMoments.forEach((moment) => device.triggerHaptic(moment));
 
       expect(mockImpact).not.toHaveBeenCalled();
       expect(mockNotification).not.toHaveBeenCalled();

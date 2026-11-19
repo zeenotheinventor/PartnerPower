@@ -1,6 +1,8 @@
 import { readFileSync } from 'node:fs';
 import path from 'node:path';
 
+import { soundMilliseconds } from './soundMilliseconds';
+
 const soundsDirectory = path.resolve(__dirname, '../assets/sounds');
 
 // The length limits come from the sounds this app asks for: a click, a chime and a blip.
@@ -48,6 +50,34 @@ describe.each(variantFolders)('the sound files in "%s"', (folder) => {
       expect(wav.peak).toBeLessThanOrEqual(0.5);
     },
   );
+});
+
+const everySound = Object.entries(soundMilliseconds);
+
+describe('the sound files for every moment', () => {
+  it.each(everySound)(
+    'should hold a quiet, mono, 16-bit %s sound as long as its table says',
+    (name, milliseconds) => {
+      const wav = readWav(`${name}.wav`);
+
+      expect([wav.riff, wav.wave]).toEqual(['RIFF', 'WAVE']);
+      expect(wav.channels).toBe(1);
+      expect(wav.bitsPerSample).toBe(16);
+      expect(wav.dataBytes).toBe(wav.byteLength - 44);
+      expect(Math.abs(wav.seconds * 1000 - milliseconds)).toBeLessThanOrEqual(1);
+      expect(wav.peak).toBeGreaterThan(0.1);
+      expect(wav.peak).toBeLessThanOrEqual(0.5);
+    },
+  );
+
+  it('should name every sound in the README with its length', () => {
+    const readme = readFileSync(path.join(soundsDirectory, 'README.md'), 'utf8');
+
+    everySound.forEach(([name, milliseconds]) => {
+      expect(readme).toContain(`\`${name}.wav\``);
+      expect(readme).toContain(`${milliseconds} ms`);
+    });
+  });
 });
 
 describe('the sounds README', () => {

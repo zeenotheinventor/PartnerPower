@@ -1,6 +1,7 @@
 import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { processColor, StyleSheet } from 'react-native';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { Chip } from './Chip';
@@ -127,5 +128,17 @@ describe('Chip', () => {
       });
       expect(screen.getByText('Level 1')).toHaveStyle({ color: theme.muted.toLowerCase() });
     });
+  });
+});
+
+describe('Chip press feedback', () => {
+  it('should give the select feedback when pressed', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(<Chip label="Level 1" onPress={onPress} />);
+
+    fireEvent.press(screen.getByRole('button', { name: 'Level 1' }));
+
+    expect(feedback.select).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledTimes(1);
   });
 });
