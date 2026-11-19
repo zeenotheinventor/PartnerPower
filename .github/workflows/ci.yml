@@ -86,17 +86,38 @@ jobs:
       - run: pnpm --filter @getfreak/tokens typecheck
       - run: pnpm --filter @getfreak/tokens test
 
-  mobile:
-    name: mobile
+  # The typecheck takes seconds, so it gets its own job instead of lengthening a test shard. It
+  # runs once here and not in each shard.
+  mobile-typecheck:
+    name: mobile typecheck
     needs: scope
     if: needs.scope.outputs.mobile == 'true'
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: ./.github/actions/setup
       - run: pnpm --filter @getfreak/mobile typecheck
-      - run: pnpm --filter @getfreak/mobile test
+
+  # The mobile suites take about 8 minutes on one runner, so Jest splits them across five. Each
+  # shard runs a fifth of the test files. Five, not four, because the slowest of four shards was
+  # estimated at about 3.5 minutes and the slowest of five at under 3. Six gained almost nothing.
+  # `fail-fast` is off so that one failing shard does not cancel the others, and every failure
+  # shows in a single run.
+  mobile:
+    name: mobile (${{ matrix.shard }}/5)
+    needs: scope
+    if: needs.scope.outputs.mobile == 'true'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2, 3, 4, 5]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - run: pnpm --filter @getfreak/mobile run test --shard=${{ matrix.shard }}/5
 
   # Runs only on a full run started by hand, so it adds no cost per push. It bundles the Android
   # release the way Gradle does: the Expo CLI under plain node, without pnpm's shim, which would
@@ -125,7 +146,7 @@ jobs:
   # every job succeeded or was skipped.
   checks:
     name: checks
-    needs: [scope, lint, core, content, tokens, mobile, release-bundle]
+    needs: [scope, lint, core, content, tokens, mobile-typecheck, mobile, release-bundle]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
