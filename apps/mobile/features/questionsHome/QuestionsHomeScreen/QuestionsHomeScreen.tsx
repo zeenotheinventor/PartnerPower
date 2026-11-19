@@ -1,12 +1,14 @@
-import { copy } from '@getfreak/content';
+import { copy, fillCopy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
 import { Card, Character, Chip, Header, Screen } from '../../../components/ui';
+import { useOwnQuestions } from '../../ownQuestions/OwnQuestionsProvider';
 import { homeEntries } from '../homeEntries';
 
 export function QuestionsHomeScreen() {
   const router = useRouter();
+  const { isLoading, questions } = useOwnQuestions();
 
   // A deep link can open this screen with nothing behind it, so it falls back to the hub.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -27,12 +29,25 @@ export function QuestionsHomeScreen() {
         </View>
       </View>
 
-      {homeEntries.map(({ title, body, route }) => {
+      {homeEntries.map(({ title, body, route, countOf }) => {
         const isComingSoon = route === null;
+        // The count shows once it has been read, so it does not flash as none.
+        const count =
+          countOf === 'ownQuestions' && !isLoading
+            ? questions.length === 0
+              ? copy.questionsHome.ownNone
+              : fillCopy(copy.questionsHome.ownCount, { count: questions.length })
+            : undefined;
         return (
           <Card
             key={title}
-            label={isComingSoon ? `${title}, ${copy.hub.comingSoon}` : title}
+            label={
+              isComingSoon
+                ? `${title}, ${copy.hub.comingSoon}`
+                : count
+                  ? fillCopy(copy.questionsHome.entryLabel, { title, count })
+                  : title
+            }
             disabled={isComingSoon}
             onPress={() => {
               if (route !== null) router.push(route);
@@ -44,6 +59,7 @@ export function QuestionsHomeScreen() {
                 <Text className="type-body text-muted">{body}</Text>
               </View>
               {isComingSoon ? <Chip label={copy.hub.comingSoon} /> : null}
+              {count ? <Chip label={count} /> : null}
             </View>
           </Card>
         );
