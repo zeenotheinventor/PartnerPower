@@ -1,11 +1,12 @@
 import { copy, fillCopy } from '@getfreak/content';
 import type { Deck, RoundAction, RoundSetup } from '@getfreak/core';
-import { fireEvent, screen } from 'nativewind/test';
+import { fireEvent, screen, within } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
 import { createMockFeedback } from '../../../feedback/createMockFeedback';
 import { FeedbackContext } from '../../../feedback/FeedbackProvider';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { RoundProvider, useRound, type RoundContextValue } from '../../round/RoundProvider';
 import { RoundSummaryScreen } from './RoundSummaryScreen';
 
@@ -182,6 +183,38 @@ describe('RoundSummaryScreen', () => {
     expect(
       screen.getByText(fillCopy(copy.roundSummary.boldestLine, { name: 'Player A' })),
     ).toBeOnTheScreen();
+  });
+
+  it('should have a celebrating Tyler say the boldest line, hidden from screen readers', async () => {
+    await renderSummary();
+
+    expect(drawnCharacters()).toEqual([
+      {
+        props: { character: 'hype', mood: 'celebrate', size: 'hero' },
+        isHiddenFromScreenReaders: true,
+      },
+    ]);
+  });
+
+  it('should have a shocked Tyler call a tie', async () => {
+    await renderSummary(tied);
+
+    expect(drawnCharacters()).toEqual([
+      {
+        props: { character: 'hype', mood: 'shocked', size: 'hero' },
+        isHiddenFromScreenReaders: true,
+      },
+    ]);
+  });
+
+  it.each([
+    ['boldest line', aBoldest, fillCopy(copy.roundSummary.boldestLine, { name: 'Player A' })],
+    ['tie line', tied, copy.roundSummary.tieLine],
+  ])('should announce the %s in a polite live region', async (_name, actions, line) => {
+    await renderSummary(actions);
+
+    const liveRegion = screen.UNSAFE_getByProps({ accessibilityLiveRegion: 'polite' });
+    expect(within(liveRegion).getByText(line)).toBeOnTheScreen();
   });
 
   it('should call a tie a tie, with no badge', async () => {

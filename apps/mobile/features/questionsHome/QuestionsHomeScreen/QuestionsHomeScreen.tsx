@@ -2,7 +2,7 @@ import { copy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
-import { Card, Chip, Header, Screen } from '../../../components/ui';
+import { Card, Character, Chip, Header, Screen } from '../../../components/ui';
 import { homeEntries } from '../homeEntries';
 
 export function QuestionsHomeScreen() {
@@ -20,8 +20,8 @@ export function QuestionsHomeScreen() {
         onBack={goBack}
       />
 
-      {/* The character's art goes at the start of this row when it lands (FRK-18). */}
       <View className="flex-row items-center gap-12">
+        <Character character="shy" mood="idle" size="tile" crop="head" />
         <View className="flex-1 rounded-lg border-2 border-border bg-surface p-12">
           <Text className="type-body-bold text-foreground">{copy.questionsHome.theoLine}</Text>
         </View>

@@ -46,7 +46,7 @@ export const copy = {
     surprisesCaption: 'One twist in every five cards.',
     start: 'Start',
   },
-  // The Drink If home. Theo's line is shown as text until his art lands.
+  // The Drink If home. Theo's line is shown as text in a box, with his head beside it.
   questionsHome: {
     title: 'Drink If',
     subtitle: 'Learn what they are into.',

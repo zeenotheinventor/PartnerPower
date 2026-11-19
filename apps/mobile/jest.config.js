@@ -26,6 +26,9 @@ const testTimeoutMilliseconds = 30_000;
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  // Reanimated needs its native worklets module, which does not exist under Jest. This resolver
+  // picks the plain JavaScript implementation for it, so the library can load.
+  resolver: '<rootDir>/jest.resolver.js',
   setupFiles: ['<rootDir>/jest.setup.js'],
   testTimeout: testTimeoutMilliseconds,
   transformIgnorePatterns: [withNativewind, ...otherPatterns],

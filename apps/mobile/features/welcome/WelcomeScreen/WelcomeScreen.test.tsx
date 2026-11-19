@@ -5,6 +5,7 @@ import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
 import { createStorage } from '../../../storage/createStorage';
 import { SettingsProvider } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { WelcomeScreen } from './WelcomeScreen';
 
 async function renderWelcome() {
@@ -27,6 +28,17 @@ describe('WelcomeScreen', () => {
       expect(screen.getByText(copy.welcome.greeting)).toBeOnTheScreen();
       expect(screen.getByRole('header', { name: copy.welcome.question })).toBeOnTheScreen();
       expect(screen.getByText(copy.welcome.note)).toBeOnTheScreen();
+    });
+
+    it('should have Nyx say the greeting with her arms crossed, hidden from screen readers', async () => {
+      await renderWelcome();
+
+      expect(drawnCharacters()).toEqual([
+        {
+          props: { character: 'gatekeeper', mood: 'armsCrossed', size: 'hero' },
+          isHiddenFromScreenReaders: true,
+        },
+      ]);
     });
 
     it('should leave the heading to be read on its own, not merged into a group', async () => {
@@ -66,6 +78,17 @@ describe('WelcomeScreen', () => {
       expect(screen.getByText(copy.welcomeDeclined.greeting)).toBeOnTheScreen();
       expect(screen.getByRole('header', { name: copy.welcomeDeclined.title })).toBeOnTheScreen();
       expect(screen.getByText(copy.welcomeDeclined.body)).toBeOnTheScreen();
+    });
+
+    it('should have Nyx turn the player away, hidden from screen readers', async () => {
+      await renderDeclined();
+
+      expect(drawnCharacters()).toEqual([
+        {
+          props: { character: 'gatekeeper', mood: 'idle', size: 'hero' },
+          isHiddenFromScreenReaders: true,
+        },
+      ]);
     });
 
     it('should offer only a way back, with no way in', async () => {

@@ -1,6 +1,7 @@
 import { copy } from '@getfreak/content';
 import { fireEvent, screen } from 'nativewind/test';
 
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { QuestionsHomeScreen } from './QuestionsHomeScreen';
 
@@ -42,6 +43,17 @@ describe('QuestionsHomeScreen', () => {
     await renderThemed(<QuestionsHomeScreen />);
 
     expect(screen.getByText(copy.questionsHome.theoLine)).toBeOnTheScreen();
+  });
+
+  it('should show Theo resting beside his line, as a head the screen readers skip', async () => {
+    await renderThemed(<QuestionsHomeScreen />);
+
+    expect(drawnCharacters()).toEqual([
+      {
+        props: { character: 'shy', mood: 'idle', size: 'tile', crop: 'head' },
+        isHiddenFromScreenReaders: true,
+      },
+    ]);
   });
 
   it('should show four entries, each with its title and what it is for', async () => {
