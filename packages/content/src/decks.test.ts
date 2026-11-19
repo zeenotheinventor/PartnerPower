@@ -1,10 +1,15 @@
-import { categoryIds, findDuplicateCardIds, parseDeck, type Card } from '@getfreak/core';
+import {
+  categoryIds,
+  checkCardText,
+  findDuplicateCardIds,
+  parseDeck,
+  type Card,
+} from '@getfreak/core';
 
 import { decks } from './decks';
 
 const minimumCardsPerCategory = 30;
 const minimumTogetherCardsPerCategory = 8;
-const maximumTextLength = 140;
 const barredWords = [
   'he',
   'she',
@@ -67,16 +72,15 @@ describe('shipped decks', () => {
     expect(togetherCards.length).toBeGreaterThanOrEqual(minimumTogetherCardsPerCategory);
   });
 
-  it('should keep every card text short enough for the screen', () => {
-    const tooLong = shippedCards.filter((card) => card.text.length > maximumTextLength);
+  it('should give every card text that passes the rules every card shares', () => {
+    const problems = shippedCards.flatMap((card, index) => {
+      const otherTexts = shippedCards
+        .filter((_, other) => other !== index)
+        .map((other) => other.text);
+      return checkCardText(card.text, otherTexts).map((problem) => `${card.id}: ${problem}`);
+    });
 
-    expect(tooLong.map((card) => card.id)).toEqual([]);
-  });
-
-  it('should never repeat a card text', () => {
-    const texts = shippedCards.map((card) => card.text.toLowerCase());
-
-    expect(new Set(texts).size).toBe(texts.length);
+    expect(problems).toEqual([]);
   });
 
   it('should keep dashes and semicolons out of every card text', () => {

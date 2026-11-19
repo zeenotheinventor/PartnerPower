@@ -43,12 +43,14 @@ function makeCards(category: CategoryId): Card[] {
     category,
     kind: 'solo',
     text: `Card ${category} solo ${number}`,
+    source: 'shipped',
   }));
   const together: Card = {
     id: `${category}-together`,
     category,
     kind: 'together',
     text: `Card ${category} together`,
+    source: 'shipped',
   };
   return [...solos, together];
 }
@@ -76,7 +78,7 @@ const deckWithThinMiddle: Deck = {
 const deckWithOneCard: Deck = {
   id: 'one-card-deck',
   version: 1,
-  cards: [{ id: 'only-card', category: 'c1', kind: 'solo', text: 'Only card' }],
+  cards: [{ id: 'only-card', category: 'c1', kind: 'solo', text: 'Only card', source: 'shipped' }],
 };
 
 // Ten cards over c1 and c2 gives five of each. Card 5 and card 10 are together cards.
@@ -856,7 +858,15 @@ describe('RoundPlayScreen', () => {
           { ...twoCategories, enabledCategories: ['c1', 'c2'] },
           {
             ...deckWithOneCard,
-            cards: [{ id: 'only-card', category: 'c1', kind: 'solo', text: 'Only card' }],
+            cards: [
+              {
+                id: 'only-card',
+                category: 'c1',
+                kind: 'solo',
+                text: 'Only card',
+                source: 'shipped',
+              },
+            ],
           },
         );
         takeThePhone();

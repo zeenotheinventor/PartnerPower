@@ -8,6 +8,9 @@ export const togetherCardInterval = 5;
 /** An endless round steps up to the next enabled category every 5 cards. */
 export const endlessStepInterval = 5;
 
+/** How often a draw takes a player card when it could take either a player card or a shipped one. */
+const playerCardProbability = 0.5;
+
 export type RoundLength = 10 | 20 | 'endless';
 export type PlayerIndex = 0 | 1;
 
@@ -188,7 +191,9 @@ function dealNext(state: RoundState): RoundState {
   const target = resolveEnabled(pacedCategory(state, position), state.enabled);
   const wantsTogether =
     position % togetherCardInterval === 0 &&
-    state.unused.some((card) => card.category === target && card.kind === 'together');
+    state.unused.some(
+      (card) => isDealable(card) && card.category === target && card.kind === 'together',
+    );
   return dealCard(state, target, wantsTogether ? 'together' : 'solo');
 }
 
@@ -216,6 +221,35 @@ function dealCard(state: RoundState, target: CategoryId, preferredKind: CardKind
   };
 }
 
+/** Timer cards are written to last their timer, so only the timer surprise deals them. */
+function isDealable(card: Card): boolean {
+  return card.effect?.type !== 'timer';
+}
+
+/**
+ * Picks one of the candidates. A player card is taken with a probability of one half when the
+ * candidates hold both sources. The generator is only used for that when both are present, so a deck
+ * with no player cards deals as it did before player cards existed.
+ */
+function pickCard(
+  candidates: readonly Card[],
+  randomState: number,
+): { card: Card; randomState: number } | null {
+  const playerCards = candidates.filter((card) => card.source === 'player');
+  const shippedCards = candidates.filter((card) => card.source !== 'player');
+  let pool = candidates;
+  let state = randomState;
+  if (playerCards.length > 0 && shippedCards.length > 0) {
+    const coin = nextRandom(state);
+    pool = coin.value < playerCardProbability ? playerCards : shippedCards;
+    state = coin.state;
+  }
+  if (pool.length === 0) return null;
+  const { value, state: nextState } = nextRandom(state);
+  const card = pool[Math.floor(value * pool.length)];
+  return card === undefined ? null : { card, randomState: nextState };
+}
+
 /**
  * Looks in the target category first, then each higher enabled category, nearest first, then each
  * lower one, nearest first. The preferred kind is tried everywhere before the other kind, so a
@@ -234,12 +268,10 @@ function drawCard(
   for (const kind of [preferredKind, otherKind]) {
     for (const category of searchOrder) {
       const candidates = state.unused.filter(
-        (card) => card.category === category && card.kind === kind,
+        (card) => isDealable(card) && card.category === category && card.kind === kind,
       );
-      if (candidates.length === 0) continue;
-      const { value, state: randomState } = nextRandom(state.randomState);
-      const card = candidates[Math.floor(value * candidates.length)];
-      if (card !== undefined) return { card, randomState };
+      const drawn = pickCard(candidates, state.randomState);
+      if (drawn !== null) return drawn;
     }
   }
   return null;

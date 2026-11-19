@@ -12,6 +12,7 @@ function makeCards(category: CategoryId, kind: CardKind, count: number): Card[] 
     category,
     kind,
     text: `Card text ${category} ${kind} ${index + 1}`,
+    source: 'shipped',
   }));
 }
 

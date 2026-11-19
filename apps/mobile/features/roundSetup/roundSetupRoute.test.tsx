@@ -16,7 +16,7 @@ jest.mock('@getfreak/content', () => {
 const testDeck: Deck = {
   id: 'test-deck',
   version: 1,
-  cards: [{ id: 'card-1', category: 'c1', kind: 'solo', text: 'Card 1' }],
+  cards: [{ id: 'card-1', category: 'c1', kind: 'solo', text: 'Card 1', source: 'shipped' }],
 };
 
 const setupRoute = '/games/dares/setup';
