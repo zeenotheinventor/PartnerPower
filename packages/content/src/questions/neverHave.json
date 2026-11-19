@@ -6,12 +6,140 @@
       "id": "neverHave-c1-01",
       "format": "neverHave",
       "category": "c1",
+      "topic": "t1",
+      "text": "fallen asleep on someone's shoulder and not wanted to move",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-02",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t1",
+      "text": "kept a ticket or a note from a date just because I loved it",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-03",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t1",
+      "text": "reread an old message from someone to make myself smile",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-04",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t1",
+      "text": "played a song on repeat because of one person",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-05",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t2",
+      "text": "been won over by a terrible joke told with total confidence",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-06",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t2",
+      "text": "gone off someone because of one rude moment on a date",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-07",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t2",
+      "text": "blushed so hard that someone pointed it out",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-08",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t2",
+      "text": "been charmed by someone who was terrible at flirting",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-09",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t3",
+      "text": "daydreamed about a long hug that turned into something more",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-10",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t3",
+      "text": "imagined a first kiss in detail before it happened",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-11",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t3",
+      "text": "rehearsed what I would say to a crush in the mirror",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-12",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t3",
+      "text": "dreamed about a crush and found it hard to look at them the next day",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-13",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t4",
+      "text": "worn something specific to catch one person's eye",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-14",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t4",
+      "text": "played hard to get on purpose",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-15",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t4",
+      "text": "enjoyed being teased by someone who knew exactly what they were doing",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-16",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t4",
+      "text": "kept a flirtation going for weeks without anything happening",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-17",
+      "format": "neverHave",
+      "category": "c1",
       "topic": "t5",
       "text": "kissed someone in a lift",
       "source": "shipped"
     },
     {
-      "id": "neverHave-c1-02",
+      "id": "neverHave-c1-18",
       "format": "neverHave",
       "category": "c1",
       "topic": "t5",
@@ -19,7 +147,7 @@
       "source": "shipped"
     },
     {
-      "id": "neverHave-c1-03",
+      "id": "neverHave-c1-19",
       "format": "neverHave",
       "category": "c1",
       "topic": "t5",
@@ -27,75 +155,619 @@
       "source": "shipped"
     },
     {
+      "id": "neverHave-c1-20",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t5",
+      "text": "sent a message to the wrong person by mistake",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-21",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t6",
+      "text": "asked someone to hold my hand in public",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-22",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t6",
+      "text": "wished a night out would never end because of one person",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-23",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t6",
+      "text": "wished someone would cook me dinner by candlelight",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-24",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t6",
+      "text": "hoped for a kiss in the rain and got one",
+      "source": "shipped"
+    },
+    {
       "id": "neverHave-c2-01",
       "format": "neverHave",
       "category": "c2",
-      "topic": "t5",
-      "text": "sent a message to the wrong person by mistake",
+      "topic": "t1",
+      "text": "been kissed so well that my knees went weak",
       "source": "shipped"
     },
     {
       "id": "neverHave-c2-02",
       "format": "neverHave",
       "category": "c2",
-      "topic": "t5",
-      "text": "been caught staring at someone across a room",
+      "topic": "t1",
+      "text": "worn someone's top to bed just to feel close to them",
       "source": "shipped"
     },
     {
       "id": "neverHave-c2-03",
       "format": "neverHave",
       "category": "c2",
+      "topic": "t1",
+      "text": "kept an item of clothing because of the night I wore it",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-04",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t1",
+      "text": "kept my eyes closed through a kiss because it felt so good",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-05",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t2",
+      "text": "been turned on by someone's voice alone",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-06",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t2",
+      "text": "been turned on by a scent on someone's skin",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-07",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t2",
+      "text": "been turned on by a kiss that came out of nowhere",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-08",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t2",
+      "text": "been turned on by someone's hands",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-09",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t3",
+      "text": "fantasised about a bath for two that did not stay innocent",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-10",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t3",
+      "text": "imagined someone kissing their way down my back",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-11",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t3",
+      "text": "fantasised about a long evening that ended with nobody wearing much",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-12",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t3",
+      "text": "imagined being kissed along my collarbone until I shivered",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-13",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t4",
+      "text": "traced a feather over someone's skin until they shivered",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-14",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t4",
+      "text": "been held by the wrists while kissing",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-15",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t4",
+      "text": "run an ice cube over someone's skin",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-16",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t4",
+      "text": "dressed up for a partner and loved their reaction",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-17",
+      "format": "neverHave",
+      "category": "c2",
       "topic": "t5",
-      "text": "kissed someone in the rain",
+      "text": "made out in a car",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-18",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "got undressed in a hurry and ended up laughing",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-19",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "kissed someone on a doorstep for far too long",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-20",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "sneaked a partner into the house while other people were home",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-21",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t6",
+      "text": "asked for the lights to stay on",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-22",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t6",
+      "text": "asked a partner to touch me more slowly",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-23",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t6",
+      "text": "asked someone not to stop kissing me",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-24",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t6",
+      "text": "asked for a back rub that went lower on purpose",
       "source": "shipped"
     },
     {
       "id": "neverHave-c3-01",
       "format": "neverHave",
       "category": "c3",
-      "topic": "t5",
-      "text": "been so distracted by someone that I forgot where I was going",
+      "topic": "t1",
+      "text": "had my mouth on someone's clit or cock and never wanted to stop",
       "source": "shipped"
     },
     {
       "id": "neverHave-c3-02",
       "format": "neverHave",
       "category": "c3",
-      "topic": "t3",
-      "text": "imagined a stranger on a train in a very different setting",
+      "topic": "t1",
+      "text": "been asked for more straight after finishing oral",
       "source": "shipped"
     },
     {
       "id": "neverHave-c3-03",
       "format": "neverHave",
       "category": "c3",
+      "topic": "t1",
+      "text": "kept going for longer than I needed to because the reaction was so good",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-04",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t1",
+      "text": "loved the taste of someone's skin during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-05",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t2",
+      "text": "been turned on by a partner's hand in my hair during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-06",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t2",
+      "text": "been turned on by someone's hands on my thighs during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-07",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t2",
+      "text": "been turned on by someone guiding my head during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-08",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t2",
+      "text": "been turned on by a tongue moving in slow circles",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-09",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t3",
+      "text": "fantasised about oral on a kitchen counter",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-10",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t3",
+      "text": "imagined sitting on a partner's face",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-11",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t3",
+      "text": "imagined a partner kissing their way down to my thighs and staying there",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-12",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t3",
+      "text": "fantasised about a whole evening spent between a partner's legs",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-13",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t4",
+      "text": "been teased with a tongue until I begged",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-14",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t4",
+      "text": "had my hands held above my head during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-15",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t4",
+      "text": "been told to stay silent during oral and failed",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-16",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t4",
+      "text": "been made to wait right before oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-17",
+      "format": "neverHave",
+      "category": "c3",
       "topic": "t5",
-      "text": "blushed so hard that someone pointed it out",
+      "text": "gone down on someone with a blocked nose and had to come up for air",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-18",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t5",
+      "text": "given oral until my jaw ached",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-19",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t5",
+      "text": "been so nervous the first time I went down on someone that I asked for directions",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-20",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t5",
+      "text": "had oral in the shower",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-21",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t6",
+      "text": "asked a partner to use their fingers while going down on me",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-22",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t6",
+      "text": "wished a partner would keep their mouth on my clit or cock for longer",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-23",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t6",
+      "text": "asked to swap positions halfway through oral",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-24",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t6",
+      "text": "researched how to get better at oral",
       "source": "shipped"
     },
     {
       "id": "neverHave-c4-01",
       "format": "neverHave",
       "category": "c4",
-      "topic": "t5",
-      "text": "lost track of an entire afternoon with someone I liked",
+      "topic": "t1",
+      "text": "come so hard that I laughed afterwards",
       "source": "shipped"
     },
     {
       "id": "neverHave-c4-02",
       "format": "neverHave",
       "category": "c4",
-      "topic": "t3",
-      "text": "planned a romantic evening and had it go off the rails in the best way",
+      "topic": "t1",
+      "text": "had sex so good I lost track of the day",
       "source": "shipped"
     },
     {
       "id": "neverHave-c4-03",
       "format": "neverHave",
       "category": "c4",
+      "topic": "t1",
+      "text": "had sex on the sofa with my legs over the arm",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-04",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t1",
+      "text": "fallen asleep straight after sex",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-05",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t2",
+      "text": "been turned on by hearing someone say my name while their fingers were inside me",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-06",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t2",
+      "text": "been turned on by someone pulling me close without a word",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-07",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t2",
+      "text": "been turned on by being told what someone planned to do to me later",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-08",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t2",
+      "text": "been turned on by a partner's hand on my clit or cock while we kissed",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-09",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t3",
+      "text": "fantasised about sex with the lights on and nothing hidden",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-10",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t3",
+      "text": "fantasised about sex in a shower with the water running",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-11",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t3",
+      "text": "fantasised about sex on a rug in front of a fire",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-12",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t3",
+      "text": "fantasised about sex that went on until sunrise",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-13",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t4",
+      "text": "bought a toy together with a partner",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-14",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t4",
+      "text": "used a toy and my hands at the same time on a partner",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-15",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t4",
+      "text": "been teased for an hour before being allowed to come",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-16",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t4",
+      "text": "handed over all the control for a night",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-17",
+      "format": "neverHave",
+      "category": "c4",
       "topic": "t5",
-      "text": "tiptoed through a house trying not to be heard",
+      "text": "had sex on a hot day with every window open",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-18",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t5",
+      "text": "got the giggles in the middle of sex and had to stop",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-19",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t5",
+      "text": "had sex in a tent or a campervan",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-20",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t5",
+      "text": "had sex more than once in a single day",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-21",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t6",
+      "text": "asked for sex first thing in the morning",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-22",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t6",
+      "text": "asked a partner to go slower",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-23",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t6",
+      "text": "asked a partner to tell me exactly where to touch them",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-24",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t6",
+      "text": "left a party early because I wanted sex more",
       "source": "shipped"
     }
   ]
