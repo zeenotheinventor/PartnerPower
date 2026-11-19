@@ -1,0 +1,8 @@
+# Builds and store submission
+
+- **iPhone only at launch** (FRK-58): `ios.supportsTablet` is `false`. An iPad build would need its own screenshots and layouts that were never designed or tested.
+- **No Android app backup** (FRK-58): `android.allowBackup` is `false`, so names, settings and the lock state never go to a cloud backup.
+- **Home screen name** (FRK-58): It stays "Get Freak" (owner, 2026-11-18), with no alternative names or icons at launch. The discreet part is the icon, the lock, the app switcher cover and the reminder wording. An alternative discreet icon is a candidate after launch.
+- **Privacy manifest contents** (FRK-58): `ios.privacyManifests` declares the union of what the libraries' own manifests declare, plus the file timestamp reason that SQLCipher's file calls need and the user defaults reason that `expo-updates` needs (it has no manifest of its own). The reasons 0A2A.1, 3B52.1, E174.1 and 85F4.1 are there only because `expo-file-system` is autolinked, so revisit them if it leaves the build. Declaring a reason does not mean data is collected.
+- **Android permissions** (FRK-58): `blockedPermissions` removes `READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE` and `SYSTEM_ALERT_WINDOW`. `INTERNET`, `ACCESS_NETWORK_STATE`, `MODIFY_AUDIO_SETTINGS` and `VIBRATE` stay, with the notification, biometric and boot permissions that later tickets add.
+- **Store key file locations** (FRK-58): `submit.production` names `./secrets/apple-api-key.p8` and `./secrets/google-service-account.json` in `apps/mobile`. Git ignores `secrets/` and `*.p8`. The key id, issuer id and app id are not in the file, and EAS asks for them at submit time.

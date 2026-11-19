@@ -4,7 +4,8 @@ import type { SqlDatabase } from './types';
  * The steps that build `personal.db`, in order. Step N takes the database from version N to
  * version N + 1. They only go forward, and a step that has shipped is never edited: a change is a
  * new step at the end. The id lists in step 1 are the core category and card kind ids, written out
- * because a shipped step must not change when core does. A test checks they agree.
+ * because a shipped step must not change when core does. Step 2 does the same for the question
+ * formats, topics and discovery kinds. A test checks they agree.
  */
 export const personalMigrations: readonly string[] = [
   `
@@ -31,6 +32,34 @@ export const personalMigrations: readonly string[] = [
     card_id TEXT NOT NULL,
     position INTEGER NOT NULL,
     PRIMARY KEY (deck_id, card_id)
+  );
+  `,
+  `
+  CREATE TABLE player_question (
+    id TEXT PRIMARY KEY NOT NULL,
+    format TEXT NOT NULL CHECK (format IN ('ifYou', 'neverHave', 'guess', 'eitherOr')),
+    category TEXT NOT NULL CHECK (category IN ('c1', 'c2', 'c3', 'c4')),
+    topic TEXT NOT NULL CHECK (topic IN ('t1', 't2', 't3', 't4', 't5', 't6')),
+    text TEXT CHECK (text IS NULL OR length(text) BETWEEN 1 AND 140),
+    options TEXT,
+    created_at INTEGER NOT NULL,
+    updated_at INTEGER NOT NULL,
+    CHECK (text IS NOT NULL OR format = 'eitherOr'),
+    CHECK ((format IN ('ifYou', 'neverHave')) = (options IS NULL))
+  );
+  CREATE TABLE discovery (
+    kind TEXT NOT NULL CHECK (kind IN ('match', 'agree', 'answer')),
+    question_id TEXT NOT NULL,
+    player TEXT NOT NULL,
+    option_id TEXT,
+    strength TEXT CHECK (strength IN ('yes', 'maybe')),
+    created_at INTEGER NOT NULL,
+    PRIMARY KEY (kind, question_id, player),
+    CHECK (
+      (kind = 'match' AND player = '' AND option_id IS NULL AND strength IS NOT NULL)
+      OR (kind = 'agree' AND player = '' AND option_id IS NOT NULL AND strength IS NULL)
+      OR (kind = 'answer' AND player <> '' AND option_id IS NOT NULL AND strength IS NULL)
+    )
   );
   `,
 ];

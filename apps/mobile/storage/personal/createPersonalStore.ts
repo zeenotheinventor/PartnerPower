@@ -16,7 +16,10 @@ export type PersonalStore = {
 
 // Nothing here logs. The key and the data are personal.
 export function createPersonalStore(
-  options: Pick<PersonalRepositoryOptions, 'getShippedCards' | 'randomUUID' | 'now'> & {
+  options: Pick<
+    PersonalRepositoryOptions,
+    'getShippedCards' | 'getShippedQuestions' | 'randomUUID' | 'now'
+  > & {
     factory: DatabaseFactory;
     keyStore: KeyStore;
     generateKey: () => string;
