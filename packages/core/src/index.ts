@@ -129,3 +129,12 @@ export type {
   SecretMatchStrength,
   SecretMatchView,
 } from './secretMatch';
+export {
+  buildMatchesDeck,
+  canOfferMatchesDeck,
+  defaultSuggestionLimit,
+  maximumMatchesDeckCards,
+  minimumMatchesDeckCards,
+  suggestDares,
+} from './suggestions';
+export type { MatchedItem, MatchStrength, SuggestOptions } from './suggestions';

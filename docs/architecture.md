@@ -124,6 +124,7 @@ interface Card {
   kind: CardKind;
   text: string;
   effect?: CardEffect;
+  tags?: string[]; // 1 to 3 interest tags, shipped dares only
   source: 'shipped' | 'player';
 }
 
@@ -152,7 +153,8 @@ schema and checks that card ids are unique across all decks.
 A card's `effect` is a typed union. A value that does not match fails `parseDeck` with a message
 that names the card, for example `cards[2] (id "card-3"): timer seconds must be a whole number from
 5 to 120`. `source` is required: every shipped card carries `shipped`, and a card a player wrote
-carries `player`.
+carries `player`. `tags` is optional, so player cards and stored data stay valid, and it holds 1 to 3
+plain strings, because `core` cannot import the vocabulary from `content`.
 
 ### Player-written cards
 
@@ -252,6 +254,36 @@ Names are content, typed by id so a missing one fails typecheck. `topicNames` an
 you rather") are in `copy` as `questionLeads`, so question text holds only the clause after the
 lead. The topics are t1 favourites, t2 turn-ons and turn-offs, t3 fantasies, t4 kinks and fetishes,
 t5 history and t6 wishlist.
+
+## Dare suggestions
+
+A couple's secret match results suggest dares, all on the device. A shared vocabulary of interest
+tags links the two sides. `content` holds it as `interestTags` in `src/interestTags.ts`, 29 short
+lowercase words and hyphenated phrases covering activities, kit, places, roles and pace. Every
+shipped dare carries 1 to 3 of these tags, every `secretMatch` item carries 1 to 3, and every tag
+sits on at least 2 dares. `decks.ts` and `questions.ts` check each tag against the vocabulary at
+import time through `findUnknownTags`, so an unknown tag fails loudly, and tests repeat the checks.
+Player-written dares have no tags and are never suggested.
+
+`core` takes tags as plain strings and does the ranking in `suggestions.ts`:
+
+```ts
+type MatchedItem = { strength: 'yes' | 'maybe'; tags: readonly string[] };
+
+suggestDares(matches: MatchedItem[], cards: Card[], options?: { limit?: number; categories?: CategoryId[] }): Card[];
+buildMatchesDeck(cards: Card[]): Deck; // id 'matches', version 1, at most 20 cards
+canOfferMatchesDeck(suggestions: Card[]): boolean; // 5 or more
+```
+
+- Each tag takes the strength of the strongest match that carries it: 2 for `yes`, 1 for `maybe`.
+- A dare scores the sum over its distinct tags. A dare that scores 0, or has no tags, is left out.
+- Ranking is score high to low, then category c1 to c4, then id.
+- `limit` defaults to 10. `categories`, when given, is applied before the limit.
+- The function takes match tags, not discoveries. The caller looks up each match's item in the
+  current content and passes its tags, so retagging content changes suggestions without touching
+  stored data.
+- The matches deck is built when needed and never stored. It holds the first 20 suggestions in
+  rank order, and the screen offers it when there are at least 5 suggestions.
 
 ## Round engine
 
@@ -1113,3 +1145,9 @@ and pnpm 9.11.0, and the README has the steps.
 | Stop at the reveal does nothing                      | `stop` applies in a pass and at the handoff. Once the session is revealed it returns the same state, because the reveal is the end of the session and the screens leave it by navigating.                                                                                                                                                         | FRK-37 |
 | Short categories in a session                        | When a category has too few items for its share, the others make it up, mild to bold, fresh items first, then avoided ones. The session only gets shorter when the whole pool is short.                                                                                                                                                           | FRK-37 |
 | Player names in the view                             | The view gives the current player's name, and the handoff view names both players, so screens hold no state to look names up.                                                                                                                                                                                                                     | FRK-37 |
+| Tags are plain strings in `core`                     | `core` cannot import `content`, so a card holds 1 to 3 strings and `content` checks them against `interestTags` when it loads its data.                                                                                                                                                                                                           | FRK-40 |
+| One shared tag schema                                | Cards and secret match items share one `tagsSchema` (1 to 3 non-empty tags). It is optional on a card and required on a secret match item.                                                                                                                                                                                                        | FRK-40 |
+| Suggestions return dares, not scores                 | `suggestDares` returns the ranked cards. The score is an implementation detail of the ranking, so the screen does not depend on it.                                                                                                                                                                                                               | FRK-40 |
+| Timer cards are suggested like any dare              | A shipped timer card carries tags and is ranked with the rest. The caller filters with `options.categories` or beforehand if a game needs fewer.                                                                                                                                                                                                  | FRK-40 |
+| Matches deck limits                                  | Up to 20 cards, offered at 5 or more suggestions, as constants in `core`. A smaller deck is still valid, so `buildMatchesDeck` does not refuse.                                                                                                                                                                                                   | FRK-40 |
+| Placeholder secret match tags                        | The 12 existing items took the nearest tags in the vocabulary. The secret match content ticket rewrites them.                                                                                                                                                                                                                                     | FRK-40 |

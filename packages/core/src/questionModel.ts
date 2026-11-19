@@ -5,6 +5,7 @@ import {
   objectError,
   oneOf,
   showValue,
+  tagsSchema,
   text,
   type ErrorContext,
 } from './contentModel';
@@ -45,11 +46,6 @@ function optionsSchema(size: 'twoToFour' | 'two') {
     }
   });
 }
-
-const tagsSchema = z
-  .array(text('tag'), list('tags'))
-  .min(1, 'tags must have 1 to 3 entries')
-  .max(3, 'tags must have 1 to 3 entries');
 
 const sharedShape = {
   id: text('id'),

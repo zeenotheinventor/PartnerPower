@@ -2,6 +2,8 @@ export { copy } from './copy';
 export { fillCopy } from './fillCopy';
 export { decks } from './decks';
 export { questionDecks } from './questions';
+export { findUnknownTags, interestTags, isInterestTag } from './interestTags';
+export type { InterestTag } from './interestTags';
 export {
   categoryNames,
   displayNames,

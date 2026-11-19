@@ -7,6 +7,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Pay your partner three compliments, each about something different. Make them count.",
+      "tags": ["compliments"],
       "source": "shipped"
     },
     {
@@ -14,6 +15,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Hold your partner's gaze for ten seconds without laughing.",
+      "tags": ["eye-contact", "teasing"],
       "source": "shipped"
     },
     {
@@ -21,6 +23,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Look into each other's eyes for one full minute. No talking, no giggling.",
+      "tags": ["eye-contact"],
       "source": "shipped"
     },
     {
@@ -28,6 +31,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner's hand, then the inside of their wrist. Take your time.",
+      "tags": ["kissing", "touch"],
       "source": "shipped"
     },
     {
@@ -35,6 +39,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Tell your partner the moment you first realised you fancied them.",
+      "tags": ["memories"],
       "source": "shipped"
     },
     {
@@ -42,6 +47,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Whisper something sweet in your partner's ear. A smile from them earns you a point.",
+      "tags": ["talking"],
       "source": "shipped"
     },
     {
@@ -49,6 +55,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Take turns giving each other compliments, five rounds each. No repeats.",
+      "tags": ["compliments"],
       "source": "shipped"
     },
     {
@@ -56,6 +63,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Give your partner a slow, lingering kiss on the cheek, then another on the forehead.",
+      "tags": ["kissing", "slow"],
       "source": "shipped"
     },
     {
@@ -63,6 +71,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Trace a word on your partner's back with one fingertip. They get three guesses.",
+      "tags": ["touch", "teasing"],
       "source": "shipped"
     },
     {
@@ -70,6 +79,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Tell your partner what you noticed first about them, and what you notice most now.",
+      "tags": ["compliments", "memories"],
       "source": "shipped"
     },
     {
@@ -77,6 +87,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Sway together for one minute, as close as you can get, with no music needed.",
+      "tags": ["cuddling", "slow"],
       "source": "shipped"
     },
     {
@@ -84,6 +95,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Rub your partner's shoulders for thirty seconds, then ask for a review of your technique.",
+      "tags": ["massage", "teasing"],
       "source": "shipped"
     },
     {
@@ -91,6 +103,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Tell your partner your favourite thing about their laugh, then try to set it off.",
+      "tags": ["compliments", "teasing"],
       "source": "shipped"
     },
     {
@@ -98,6 +111,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Run your fingers through your partner's hair for a full minute.",
+      "tags": ["massage", "touch"],
       "source": "shipped"
     },
     {
@@ -105,6 +119,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Confess the cheekiest thought you had about your partner this week.",
+      "tags": ["talking", "teasing"],
       "source": "shipped"
     },
     {
@@ -112,6 +127,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Hold hands and each share a favourite memory of the other. One minute each.",
+      "tags": ["memories", "cuddling"],
       "source": "shipped"
     },
     {
@@ -119,6 +135,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner once, just below the ear. Then act completely innocent.",
+      "tags": ["kissing", "neck", "teasing"],
       "source": "shipped"
     },
     {
@@ -126,6 +143,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Stroke your partner's cheek and tell them what you love about their smile.",
+      "tags": ["touch", "compliments"],
       "source": "shipped"
     },
     {
@@ -133,6 +151,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Wink at your partner, then hold your best smouldering look for five seconds.",
+      "tags": ["eye-contact", "teasing"],
       "source": "shipped"
     },
     {
@@ -140,6 +159,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Whisper one thing you secretly love about each other, both at once, on the count of three.",
+      "tags": ["talking", "compliments"],
       "source": "shipped"
     },
     {
@@ -147,6 +167,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner softly on each eyelid. Slowly.",
+      "tags": ["kissing", "slow"],
       "source": "shipped"
     },
     {
@@ -154,6 +175,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner's nose, chin and forehead, in any order, with a grin.",
+      "tags": ["kissing"],
       "source": "shipped"
     },
     {
@@ -161,6 +183,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Invent a pet name for your partner. They vote on whether it stays.",
+      "tags": ["talking"],
       "source": "shipped"
     },
     {
@@ -168,6 +191,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Share one slow kiss, then each rate it out of ten. Be honest, and kind.",
+      "tags": ["kissing", "slow"],
       "source": "shipped"
     },
     {
@@ -175,6 +199,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Give your partner a long, warm hug and say what you're most grateful for. Don't let go first.",
+      "tags": ["cuddling", "compliments"],
       "source": "shipped"
     },
     {
@@ -182,6 +207,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Chat up your partner for thirty seconds using the cheesiest lines you know.",
+      "tags": ["talking", "teasing"],
       "source": "shipped"
     },
     {
@@ -189,6 +215,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Sit back to back, take three slow breaths together, then turn round and smile.",
+      "tags": ["cuddling", "slow"],
       "source": "shipped"
     },
     {
@@ -196,6 +223,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Tell your partner your favourite memory of the two of you, holding their hand throughout.",
+      "tags": ["memories", "touch"],
       "source": "shipped"
     },
     {
@@ -203,6 +231,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Tickle your partner's palm with one fingertip for twenty seconds, then kiss it better.",
+      "tags": ["touch", "teasing", "kissing"],
       "source": "shipped"
     },
     {
@@ -210,6 +239,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Blow your partner a kiss across the room, then walk over and deliver the real thing.",
+      "tags": ["kissing", "teasing"],
       "source": "shipped"
     },
     {
@@ -217,6 +247,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Tell each other your first impression of the other. Be honest, be sweet.",
+      "tags": ["talking", "compliments"],
       "source": "shipped"
     },
     {
@@ -224,6 +255,7 @@
       "category": "c1",
       "kind": "together",
       "text": "Cuddle up for two minutes and take turns whispering one thing you want to do together soon.",
+      "tags": ["cuddling", "talking", "slow"],
       "source": "shipped"
     },
     {
@@ -231,6 +263,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Slide your hand inside your partner's underwear and touch them slowly for one minute. Ask what feels best.",
+      "tags": ["fingers", "touch"],
       "source": "shipped"
     },
     {
@@ -238,6 +271,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Undress your partner completely, one piece at a time, kissing each place you uncover.",
+      "tags": ["undressing", "kissing", "slow"],
       "source": "shipped"
     },
     {
@@ -245,6 +279,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Take turns stripping each other down to your underwear, one piece at a time, kissing each place you uncover.",
+      "tags": ["undressing", "kissing"],
       "source": "shipped"
     },
     {
@@ -252,6 +287,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Kiss and suck your partner's nipples for one minute, then ask whether they want it softer or firmer.",
+      "tags": ["kissing", "guiding"],
       "source": "shipped"
     },
     {
@@ -259,6 +295,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Guide your partner's hand inside your underwear and show them how you like to be touched. One minute.",
+      "tags": ["guiding", "fingers"],
       "source": "shipped"
     },
     {
@@ -266,6 +303,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Take your partner's top off and kiss their chest, stomach and sides slowly for one minute.",
+      "tags": ["undressing", "kissing", "slow"],
       "source": "shipped"
     },
     {
@@ -273,6 +311,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Both in your underwear, lie skin to skin and kiss for two minutes, hands roaming everywhere, bum and chest included.",
+      "tags": ["kissing", "touch"],
       "source": "shipped"
     },
     {
@@ -280,6 +319,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Kiss a slow trail from your partner's chest down to their hips, along the top of their underwear, and back up.",
+      "tags": ["kissing", "teasing", "slow"],
       "source": "shipped"
     },
     {
@@ -287,6 +327,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Take your partner's underwear off. Stroke their clit or cock with your fingers, slowly, for ninety seconds. Watch their face.",
+      "tags": ["fingers", "slow"],
       "source": "shipped"
     },
     {
@@ -294,6 +335,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Pull your partner onto your lap, facing you, and grind together slowly for one minute, clothes on. Kiss throughout.",
+      "tags": ["grinding", "kissing", "clothes-on"],
       "source": "shipped"
     },
     {
@@ -301,6 +343,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Lie on top of each other, clothes on, and grind slowly for two minutes. Swap who is on top after one.",
+      "tags": ["grinding", "on-top", "clothes-on"],
       "source": "shipped"
     },
     {
@@ -308,6 +351,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Slide both hands under your partner's top and over their bare chest and stomach, then pull them in for a deep kiss.",
+      "tags": ["touch", "kissing"],
       "source": "shipped"
     },
     {
@@ -315,6 +359,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Ask your partner where they most like to be touched below the waist. Touch them there, over their underwear, for one minute.",
+      "tags": ["guiding", "touch", "teasing"],
       "source": "shipped"
     },
     {
@@ -322,6 +367,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Kiss your partner deeply while one hand slides inside the back of their underwear and squeezes their bum. One minute.",
+      "tags": ["kissing", "fingers"],
       "source": "shipped"
     },
     {
@@ -329,6 +375,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Whisper in your partner's ear what you want to do to them tonight, while rubbing them over their underwear for one minute.",
+      "tags": ["talking", "teasing"],
       "source": "shipped"
     },
     {
@@ -336,6 +383,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Take turns saying exactly where you want to be touched, then touch each other there with your hands. Two minutes each.",
+      "tags": ["talking", "guiding", "fingers"],
       "source": "shipped"
     },
     {
@@ -343,6 +391,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Pull your partner's underwear down to their knees. Stroke their bum, hips and thighs with both hands for one minute, then pull it back up.",
+      "tags": ["undressing", "touch", "teasing"],
       "source": "shipped"
     },
     {
@@ -350,6 +399,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Stroke your partner over their underwear until they say they're close. Pause ten seconds, then repeat once. They can say stop.",
+      "tags": ["edging", "teasing", "fingers"],
       "source": "shipped"
     },
     {
@@ -357,6 +407,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Pull your partner's underwear down just enough to kiss their hips and lower stomach for thirty seconds, then stop.",
+      "tags": ["kissing", "teasing"],
       "source": "shipped"
     },
     {
@@ -364,6 +415,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Kiss deeply for two minutes while each of you keeps a hand inside the other's underwear. Go slowly.",
+      "tags": ["kissing", "fingers", "slow"],
       "source": "shipped"
     },
     {
@@ -371,6 +423,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Stroke the insides of your partner's thighs, on bare skin if you can, moving up slowly and stopping just short. Five times.",
+      "tags": ["touch", "teasing", "slow"],
       "source": "shipped"
     },
     {
@@ -378,6 +431,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Have your partner lie back in their underwear. Drag your fingertips from their chest down to the waistband and back. One minute.",
+      "tags": ["touch", "teasing", "slow"],
       "source": "shipped"
     },
     {
@@ -385,6 +439,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Press your partner against the wall, clothes on, and grind slowly, hands on their bum, kissing their neck. One minute.",
+      "tags": ["grinding", "standing", "clothes-on"],
       "source": "shipped"
     },
     {
@@ -392,6 +447,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Take turns teasing: one minute each touching the other over their underwear, hands only. The one touched keeps still and can say stop.",
+      "tags": ["teasing", "touch"],
       "source": "shipped"
     },
     {
@@ -399,6 +455,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Whisper in your partner's ear where your hand is going next. Then slide it there, under their underwear, for one minute.",
+      "tags": ["talking", "teasing", "fingers"],
       "source": "shipped"
     },
     {
@@ -406,6 +463,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Slide your hands under your partner's clothes and stroke their back, sides and hips, then pull them against you and kiss them hard.",
+      "tags": ["touch", "kissing", "intense"],
       "source": "shipped"
     },
     {
@@ -413,6 +471,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Take turns taking off each other's clothes, one piece each, until you are both naked. Then hold each other, skin to skin, for one minute.",
+      "tags": ["undressing", "touch"],
       "source": "shipped"
     },
     {
@@ -420,6 +479,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Blindfold your partner, or have them close their eyes. Stroke their bare skin, then slide a hand into their underwear. They can say stop.",
+      "tags": ["blindfold", "teasing", "fingers"],
       "source": "shipped"
     },
     {
@@ -427,6 +487,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Tell your partner to stand still, hands by their sides. Undress them slowly, touching every part you uncover. They can say stop.",
+      "tags": ["undressing", "leading", "slow"],
       "source": "shipped"
     },
     {
@@ -434,6 +495,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Sit behind your partner, arms around them. Kiss their neck while one hand strokes their stomach, then slips into their underwear.",
+      "tags": ["neck", "kissing", "fingers"],
       "source": "shipped"
     },
     {
@@ -441,6 +503,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Take turns touching each other with your fingers, inside the underwear, for two minutes each. Say what feels good.",
+      "tags": ["fingers", "talking"],
       "source": "shipped"
     },
     {
@@ -448,6 +511,7 @@
       "category": "c2",
       "kind": "together",
       "text": "Grind against each other, both in just your underwear, kissing hard for two minutes. Then stop and take three slow breaths.",
+      "tags": ["grinding", "kissing", "intense"],
       "source": "shipped"
     },
     {
@@ -455,6 +519,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner for two minutes. They set the pace and you follow it.",
+      "tags": ["oral", "guiding"],
       "source": "shipped"
     },
     {
@@ -462,6 +527,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Kiss your way down your partner's body and don't stop until your mouth is between their legs.",
+      "tags": ["oral", "kissing"],
       "source": "shipped"
     },
     {
@@ -469,6 +535,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Sixty-nine for three minutes. Whoever loses focus first owes the other a favour.",
+      "tags": ["sixty-nine"],
       "source": "shipped"
     },
     {
@@ -476,6 +543,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lick your partner's clit or cock slowly from bottom to top, three times, then close your lips around it and suck.",
+      "tags": ["oral", "slow"],
       "source": "shipped"
     },
     {
@@ -483,6 +551,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Use only your tongue between your partner's legs for one minute. No hands, no rushing.",
+      "tags": ["oral", "slow"],
       "source": "shipped"
     },
     {
@@ -490,6 +559,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Tell your partner exactly how you like to be licked or sucked. Then lie back while they do it for two minutes.",
+      "tags": ["talking", "oral", "guiding"],
       "source": "shipped"
     },
     {
@@ -497,6 +567,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Take turns going down on each other, one minute each, for three rounds.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -504,6 +575,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Tease your partner with your mouth through their underwear for one minute, then pull it aside.",
+      "tags": ["oral", "teasing"],
       "source": "shipped"
     },
     {
@@ -511,6 +583,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lick and suck your partner's nipples for thirty seconds, then move your mouth down between their legs for a minute.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -518,6 +591,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner and bring them right to the edge. Stop, count to ten, then start again.",
+      "tags": ["oral", "edging"],
       "source": "shipped"
     },
     {
@@ -525,6 +599,7 @@
       "category": "c3",
       "kind": "together",
       "text": "One of you lies back while the other goes down on them. Swap after two minutes, then compare notes.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -532,6 +607,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Kneel in front of your partner while they stand, and go down on them for two minutes.",
+      "tags": ["oral", "standing"],
       "source": "shipped"
     },
     {
@@ -539,6 +615,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Sit your partner on the edge of the bed. Kneel between their legs and lick and suck them for two minutes.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -546,6 +623,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Ask your partner: faster or slower, softer or harder? Go down on them for two minutes doing exactly that.",
+      "tags": ["oral", "guiding"],
       "source": "shipped"
     },
     {
@@ -553,6 +631,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lie back and guide your partner's head between your legs. Tell them when they get it just right.",
+      "tags": ["oral", "guiding", "talking"],
       "source": "shipped"
     },
     {
@@ -560,6 +639,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Each say how you like to be licked or sucked. Then take turns going down on each other, one minute each.",
+      "tags": ["oral", "talking"],
       "source": "shipped"
     },
     {
@@ -567,6 +647,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner as slowly as you can bear for ninety seconds. Keep eye contact throughout.",
+      "tags": ["oral", "slow", "eye-contact"],
       "source": "shipped"
     },
     {
@@ -574,6 +655,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner using your mouth and one hand together for two minutes. Find the rhythm they like.",
+      "tags": ["oral", "fingers"],
       "source": "shipped"
     },
     {
@@ -581,6 +663,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Kiss and lick your partner's inner thighs for a full minute before your tongue moves to their clit or cock.",
+      "tags": ["oral", "kissing", "teasing"],
       "source": "shipped"
     },
     {
@@ -588,6 +671,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Sixty-nine on your sides, slow and lazy, for two minutes. Nobody finishes yet.",
+      "tags": ["sixty-nine", "slow"],
       "source": "shipped"
     },
     {
@@ -595,6 +679,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner for two minutes. Every thirty seconds they say one word: faster, slower, softer or harder.",
+      "tags": ["oral", "guiding"],
       "source": "shipped"
     },
     {
@@ -602,6 +687,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Your partner guides your head while you go down on them for one minute. Tap their thigh if you need a pause.",
+      "tags": ["oral", "guiding"],
       "source": "shipped"
     },
     {
@@ -609,6 +695,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner and hum softly against them for one minute. Watch what it does.",
+      "tags": ["oral", "teasing"],
       "source": "shipped"
     },
     {
@@ -616,6 +703,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Thirty seconds of oral each, back and forth, until one of you can't take any more teasing.",
+      "tags": ["oral", "teasing"],
       "source": "shipped"
     },
     {
@@ -623,6 +711,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Hold a sip of cold water in your mouth for a few seconds, then go down on your partner for one minute.",
+      "tags": ["oral", "teasing"],
       "source": "shipped"
     },
     {
@@ -630,6 +719,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Blindfold your partner, or have them close their eyes. Go down on them for two minutes. They say stop if they want out.",
+      "tags": ["oral", "blindfold"],
       "source": "shipped"
     },
     {
@@ -637,6 +727,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Strip each other from the waist down, then take turns using your mouths. Two minutes each.",
+      "tags": ["oral", "undressing"],
       "source": "shipped"
     },
     {
@@ -644,6 +735,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lick your partner's clit or cock in slow circles for one minute. Then speed up for one more.",
+      "tags": ["oral", "slow"],
       "source": "shipped"
     },
     {
@@ -651,6 +743,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Straddle your partner's face and let them lick you for two minutes. Lift off the moment they tap your thigh.",
+      "tags": ["oral", "on-top"],
       "source": "shipped"
     },
     {
@@ -658,6 +751,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner and don't come up until they've come, or until they tap out.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -665,6 +759,7 @@
       "category": "c3",
       "kind": "together",
       "text": "One of you picks a number from one to three. The other goes down on them for that many minutes. Then swap.",
+      "tags": ["oral"],
       "source": "shipped"
     },
     {
@@ -672,6 +767,7 @@
       "category": "c3",
       "kind": "together",
       "text": "Sixty-nine until one of you comes. The other gets finished off however they choose.",
+      "tags": ["sixty-nine"],
       "source": "shipped"
     },
     {
@@ -679,6 +775,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Pick a position you haven't used this month and have sex in it until one of you asks to switch.",
+      "tags": ["positions"],
       "source": "shipped"
     },
     {
@@ -686,6 +783,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Get on top of your partner, or pull them on top of you, for two minutes of sex. Whoever is on top sets the pace.",
+      "tags": ["on-top", "leading"],
       "source": "shipped"
     },
     {
@@ -693,6 +791,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Have sex in three positions, one minute each. Take turns choosing. No repeats.",
+      "tags": ["positions"],
       "source": "shipped"
     },
     {
@@ -700,6 +799,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Bend over the edge of the bed, or bend your partner over it. Sex from behind for two minutes, slow first, then harder.",
+      "tags": ["from-behind", "intense"],
       "source": "shipped"
     },
     {
@@ -707,6 +807,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex as slowly as you can for two minutes. Every stroke should last a full breath.",
+      "tags": ["slow"],
       "source": "shipped"
     },
     {
@@ -714,6 +815,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Tell your partner your favourite position and why. Then get into it and show them.",
+      "tags": ["positions", "talking"],
       "source": "shipped"
     },
     {
@@ -721,6 +823,7 @@
       "category": "c4",
       "kind": "together",
       "text": "One of you names a position, the other names a pace. Do it for two minutes, then swap who picks what.",
+      "tags": ["positions", "slow"],
       "source": "shipped"
     },
     {
@@ -728,6 +831,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Pin your partner's wrists above their head and have sex slowly for two minutes. Let go the moment they say so.",
+      "tags": ["leading", "slow"],
       "source": "shipped"
     },
     {
@@ -735,6 +839,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Lie back and tell your partner exactly how you want it during sex: speed, depth, angle. They follow every word.",
+      "tags": ["talking", "guiding"],
       "source": "shipped"
     },
     {
@@ -742,6 +847,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex standing up against the wall for as long as your legs hold out.",
+      "tags": ["standing", "intense"],
       "source": "shipped"
     },
     {
@@ -749,6 +855,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Sex with eyes locked for two full minutes. Whoever looks away first gets told what to do next.",
+      "tags": ["eye-contact"],
       "source": "shipped"
     },
     {
@@ -756,6 +863,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Spoon with your partner, whichever of you fits behind, for three minutes of slow sex. The one behind uses a free hand in front.",
+      "tags": ["positions", "fingers", "slow"],
       "source": "shipped"
     },
     {
@@ -763,6 +871,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Choose who goes on all fours, you or your partner. Have sex from behind while the one in front sets the pace.",
+      "tags": ["from-behind", "leading"],
       "source": "shipped"
     },
     {
@@ -770,6 +879,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Sit in a chair, or sit your partner in one, and straddle whoever is seated. Sex face to face for two minutes.",
+      "tags": ["positions"],
       "source": "shipped"
     },
     {
@@ -777,6 +887,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Bring your partner to the edge during sex, then stop dead for ten seconds. Do it three times.",
+      "tags": ["edging"],
       "source": "shipped"
     },
     {
@@ -784,6 +895,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Each name one thing you've wanted to try during sex. Pick one you both fancy and do it now.",
+      "tags": ["talking"],
       "source": "shipped"
     },
     {
@@ -791,6 +903,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex in front of a mirror for two minutes. Both of you watch.",
+      "tags": ["watching"],
       "source": "shipped"
     },
     {
@@ -798,6 +911,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "During sex, reach down and touch yourself where your partner can see. Keep going for two minutes.",
+      "tags": ["watching"],
       "source": "shipped"
     },
     {
@@ -805,6 +919,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Choose a room you've never had sex in. Take your partner there and fix that now.",
+      "tags": ["new-places"],
       "source": "shipped"
     },
     {
@@ -812,6 +927,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Have sex starting slow and speeding up every thirty seconds for two minutes. Then hold still and breathe together.",
+      "tags": ["slow", "intense"],
       "source": "shipped"
     },
     {
@@ -819,6 +935,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Lie back with your legs on your partner's shoulders, or put theirs on yours. Deep and slow for two minutes.",
+      "tags": ["positions", "slow"],
       "source": "shipped"
     },
     {
@@ -826,6 +943,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Fetch your favourite toy, or use your fingers, and work it on your partner while you have sex. Two minutes.",
+      "tags": ["toys", "fingers"],
       "source": "shipped"
     },
     {
@@ -833,6 +951,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Talk dirty during two minutes of sex. Tell your partner what you're doing to them as you do it.",
+      "tags": ["talking"],
       "source": "shipped"
     },
     {
@@ -840,6 +959,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Take turns on top, one minute each, for four rounds. Whoever is on top is in charge. Either of you can say stop.",
+      "tags": ["on-top", "leading"],
       "source": "shipped"
     },
     {
@@ -847,6 +967,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Hand your partner full control for three minutes: position, pace, everything. Say stop if you need to.",
+      "tags": ["leading", "guiding"],
       "source": "shipped"
     },
     {
@@ -854,6 +975,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Blindfold your partner, or have them shut their eyes, and have slow sex for two minutes. They say stop at any time.",
+      "tags": ["blindfold", "slow"],
       "source": "shipped"
     },
     {
@@ -861,6 +983,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Sex without a sound for two minutes. Whoever moans first has to ask nicely for the next position.",
+      "tags": ["teasing"],
       "source": "shipped"
     },
     {
@@ -868,6 +991,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Ride your partner facing away, or have them ride you that way, for two minutes. Whoever is behind enjoys the view.",
+      "tags": ["positions", "watching", "on-top"],
       "source": "shipped"
     },
     {
@@ -875,6 +999,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex with most of your clothes still on. Push aside only what's in the way.",
+      "tags": ["clothes-on"],
       "source": "shipped"
     },
     {
@@ -882,6 +1007,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "During sex, make your partner come before you do. Use your hands, a toy, or whatever else works.",
+      "tags": ["toys", "fingers"],
       "source": "shipped"
     },
     {
@@ -889,6 +1015,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Move somewhere that isn't the bed: sofa, floor, armchair or desk. Have sex there for three minutes.",
+      "tags": ["new-places"],
       "source": "shipped"
     },
     {
@@ -896,6 +1023,7 @@
       "category": "c4",
       "kind": "together",
       "text": "Have sex until you've both come, taking turns deciding how. Either of you can slow down or stop at any time.",
+      "tags": ["leading"],
       "source": "shipped"
     },
     {
@@ -903,6 +1031,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner's neck until the timer runs out. Slow kisses, no rushing.",
+      "tags": ["kissing", "neck", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -914,6 +1043,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Hold your partner close and whisper sweet things in their ear until the timer runs out.",
+      "tags": ["cuddling", "talking", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -925,6 +1055,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Run your fingertips up and down your partner's arm until the timer runs out. They can ask for more.",
+      "tags": ["touch", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -936,6 +1067,7 @@
       "category": "c1",
       "kind": "solo",
       "text": "Kiss your partner softly and slowly, anywhere above the collarbone, until the timer runs out.",
+      "tags": ["kissing", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -947,6 +1079,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Kiss and stroke your partner's chest and stomach, under their top, until the timer runs out. They can say stop.",
+      "tags": ["kissing", "touch"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -958,6 +1091,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Kiss your partner's inner thighs and hips until the timer runs out. They can say stop.",
+      "tags": ["kissing", "teasing"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -969,6 +1103,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Rub your partner over their underwear until the timer runs out. Let them guide your pace.",
+      "tags": ["touch", "guiding"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -980,6 +1115,7 @@
       "category": "c2",
       "kind": "solo",
       "text": "Slide your hand inside your partner's underwear and touch them until the timer runs out. They set the pace.",
+      "tags": ["fingers", "guiding"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -991,6 +1127,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lick and suck your partner's clit or cock, slowly and gently, until the timer runs out. They can tap out.",
+      "tags": ["oral", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1002,6 +1139,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lick your partner slowly between their legs until the timer runs out. No hands, and they can tap out.",
+      "tags": ["oral", "slow"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1013,6 +1151,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Go down on your partner until the timer runs out. They set the pace and can tap out.",
+      "tags": ["oral", "guiding"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1024,6 +1163,7 @@
       "category": "c3",
       "kind": "solo",
       "text": "Lie back and let your partner go down on you until the timer runs out. Tell them what feels good.",
+      "tags": ["oral", "talking"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1035,6 +1175,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex slowly until the timer runs out, with eye contact the whole way. Either of you can say stop.",
+      "tags": ["slow", "eye-contact"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1046,6 +1187,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex until the timer runs out. The one on top sets the pace and either of you can say stop.",
+      "tags": ["on-top", "leading"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1057,6 +1199,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex from behind until the timer runs out. The one in front sets the pace and can say stop.",
+      "tags": ["from-behind", "leading"],
       "source": "shipped",
       "effect": {
         "type": "timer",
@@ -1068,6 +1211,7 @@
       "category": "c4",
       "kind": "solo",
       "text": "Have sex until the timer runs out, and the one underneath says exactly how they want it. Either of you can say stop.",
+      "tags": ["guiding", "talking"],
       "source": "shipped",
       "effect": {
         "type": "timer",
