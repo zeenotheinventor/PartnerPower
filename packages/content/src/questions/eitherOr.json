@@ -9,12 +9,12 @@
       "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "A sunrise walk together"
+          "id": "a",
+          "text": "A slow dance in the kitchen"
         },
         {
-          "id": "o2",
-          "text": "A sunset walk together"
+          "id": "b",
+          "text": "A long walk holding hands"
         }
       ],
       "source": "shipped"
@@ -26,12 +26,12 @@
       "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Breakfast in bed"
+          "id": "a",
+          "text": "A lazy morning in bed with coffee"
         },
         {
-          "id": "o2",
-          "text": "Dinner by candlelight"
+          "id": "b",
+          "text": "A busy day exploring somewhere new"
         }
       ],
       "source": "shipped"
@@ -41,15 +41,303 @@
       "format": "eitherOr",
       "category": "c1",
       "topic": "t1",
-      "text": "Pick a treat for tonight",
       "options": [
         {
-          "id": "o1",
-          "text": "Something sweet"
+          "id": "a",
+          "text": "Kissing in the rain"
         },
         {
-          "id": "o2",
-          "text": "Something salty"
+          "id": "b",
+          "text": "Kissing on a quiet beach at sunset"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-04",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "A home cooked dinner for two"
+        },
+        {
+          "id": "b",
+          "text": "A table for two at a restaurant you love"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-05",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "Someone who makes you laugh until it hurts"
+        },
+        {
+          "id": "b",
+          "text": "Someone who looks at you like you are the only person in the room"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-06",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "A partner who plans everything"
+        },
+        {
+          "id": "b",
+          "text": "A partner who is spontaneous"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-07",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "A compliment whispered in your ear"
+        },
+        {
+          "id": "b",
+          "text": "Being told you look great across a crowded room"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-08",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "A secret weekend away planned by your partner"
+        },
+        {
+          "id": "b",
+          "text": "A surprise evening for two planned at home"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-09",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being swept off your feet by a grand gesture"
+        },
+        {
+          "id": "b",
+          "text": "Being won over by a hundred small kindnesses"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-10",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Meeting for the first time all over again"
+        },
+        {
+          "id": "b",
+          "text": "Going back to your very first date"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-11",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "A cabin in the mountains with a fire"
+        },
+        {
+          "id": "b",
+          "text": "A villa by the sea with nothing to do"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-12",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being flirted with openly all night"
+        },
+        {
+          "id": "b",
+          "text": "A secret flirtation nobody else notices"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-13",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Chasing your partner for a kiss"
+        },
+        {
+          "id": "b",
+          "text": "Being chased for a kiss"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-14",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Choosing your partner's outfit for the night"
+        },
+        {
+          "id": "b",
+          "text": "Having your partner choose yours"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-15",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Rereading old messages together"
+        },
+        {
+          "id": "b",
+          "text": "Looking through old photos together"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-16",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Recreating your first date"
+        },
+        {
+          "id": "b",
+          "text": "Rereading the first messages you ever sent each other"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-17",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Never forgetting an anniversary"
+        },
+        {
+          "id": "b",
+          "text": "Never forgetting a little thing your partner says"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-18",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "A year of weekly date nights"
+        },
+        {
+          "id": "b",
+          "text": "Two big holidays a year"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-19",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being kissed hello every single time"
+        },
+        {
+          "id": "b",
+          "text": "Being kissed goodnight every single time"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-20",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "A love letter every month"
+        },
+        {
+          "id": "b",
+          "text": "A surprise gift every month"
         }
       ],
       "source": "shipped"
@@ -58,15 +346,15 @@
       "id": "eitherOr-c2-01",
       "format": "eitherOr",
       "category": "c2",
-      "topic": "t2",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Be kissed on the neck"
+          "id": "a",
+          "text": "A neck kiss that lasts a full minute"
         },
         {
-          "id": "o2",
-          "text": "Be kissed on the shoulder"
+          "id": "b",
+          "text": "A hand running slowly up your thigh"
         }
       ],
       "source": "shipped"
@@ -75,15 +363,15 @@
       "id": "eitherOr-c2-02",
       "format": "eitherOr",
       "category": "c2",
-      "topic": "t2",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Slow dance in the kitchen"
+          "id": "a",
+          "text": "Skin on skin cuddling all morning"
         },
         {
-          "id": "o2",
-          "text": "Share a bath"
+          "id": "b",
+          "text": "A bath together by candlelight"
         }
       ],
       "source": "shipped"
@@ -92,15 +380,304 @@
       "id": "eitherOr-c2-03",
       "format": "eitherOr",
       "category": "c2",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "A long, deep kiss in a doorway"
+        },
+        {
+          "id": "b",
+          "text": "Making out on the sofa for an hour"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-04",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "Waking up to kisses down your back"
+        },
+        {
+          "id": "b",
+          "text": "Waking up wrapped around your partner"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-05",
+      "format": "eitherOr",
+      "category": "c2",
       "topic": "t2",
       "options": [
         {
-          "id": "o1",
-          "text": "Whispered compliments"
+          "id": "a",
+          "text": "Being told what to take off first"
         },
         {
-          "id": "o2",
-          "text": "Long loving looks"
+          "id": "b",
+          "text": "Telling your partner what to take off first"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-06",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "A whisper of what is planned for later"
+        },
+        {
+          "id": "b",
+          "text": "A text saying exactly what will happen tonight"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-07",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner's hand on your stomach as you kiss"
+        },
+        {
+          "id": "b",
+          "text": "Your partner's mouth on your collarbone as you kiss"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-08",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being kissed hard on the stairs"
+        },
+        {
+          "id": "b",
+          "text": "Being lifted onto the kitchen counter and kissed"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-09",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner waiting for you in just underwear"
+        },
+        {
+          "id": "b",
+          "text": "Your partner waiting for you in nothing but a coat"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-10",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "A hot bath for two with no rush"
+        },
+        {
+          "id": "b",
+          "text": "A hot tub under the stars"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-11",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "A massage that gets more and more intimate"
+        },
+        {
+          "id": "b",
+          "text": "Being stroked slowly for a full hour"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-12",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "A blindfold while you are undressed"
+        },
+        {
+          "id": "b",
+          "text": "Your wrists held gently above your head while you are kissed"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-13",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being teased until you are desperate"
+        },
+        {
+          "id": "b",
+          "text": "Teasing your partner until they are desperate"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-14",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being told to keep your hands off"
+        },
+        {
+          "id": "b",
+          "text": "Being told to keep your eyes closed"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-15",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Making out in the back of a car"
+        },
+        {
+          "id": "b",
+          "text": "Making out on a doorstep"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-16",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "A lingering touch the moment you walk through the door"
+        },
+        {
+          "id": "b",
+          "text": "A flirty message in the middle of a working day"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-17",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Looking back on your first night together"
+        },
+        {
+          "id": "b",
+          "text": "Looking back on your first kiss"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-18",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "A full body massage tonight"
+        },
+        {
+          "id": "b",
+          "text": "An hour of kissing and nothing more"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-19",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner undressing you slowly"
+        },
+        {
+          "id": "b",
+          "text": "Undressing your partner slowly"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-20",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Making out with the lights on"
+        },
+        {
+          "id": "b",
+          "text": "Making out in the dark"
         }
       ],
       "source": "shipped"
@@ -109,15 +686,15 @@
       "id": "eitherOr-c3-01",
       "format": "eitherOr",
       "category": "c3",
-      "topic": "t2",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Be teased all evening"
+          "id": "a",
+          "text": "Being licked slowly for an hour"
         },
         {
-          "id": "o2",
-          "text": "Be surprised at the very end"
+          "id": "b",
+          "text": "Being licked until you come in minutes"
         }
       ],
       "source": "shipped"
@@ -126,15 +703,15 @@
       "id": "eitherOr-c3-02",
       "format": "eitherOr",
       "category": "c3",
-      "topic": "t3",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "A weekend away, just us"
+          "id": "a",
+          "text": "Going down on your partner for as long as they want"
         },
         {
-          "id": "o2",
-          "text": "A night in a fancy hotel nearby"
+          "id": "b",
+          "text": "Being gone down on for as long as you want"
         }
       ],
       "source": "shipped"
@@ -143,15 +720,304 @@
       "id": "eitherOr-c3-03",
       "format": "eitherOr",
       "category": "c3",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "A tongue moving in slow circles"
+        },
+        {
+          "id": "b",
+          "text": "A mouth with lots of suction"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-04",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "Oral at the same time"
+        },
+        {
+          "id": "b",
+          "text": "Oral taking turns, each of you getting all the focus"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-05",
+      "format": "eitherOr",
+      "category": "c3",
       "topic": "t2",
       "options": [
         {
-          "id": "o1",
-          "text": "Take your time"
+          "id": "a",
+          "text": "Eye contact while someone goes down on you"
         },
         {
-          "id": "o2",
-          "text": "Go with the moment"
+          "id": "b",
+          "text": "Closing your eyes and feeling every move"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-06",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "Feeling your partner moan while you go down on them"
+        },
+        {
+          "id": "b",
+          "text": "Hearing your partner say how good you taste"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-07",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "A hand gently guiding your head"
+        },
+        {
+          "id": "b",
+          "text": "A hand firm in your hair"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-08",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Oral first thing in the morning"
+        },
+        {
+          "id": "b",
+          "text": "Oral just before you go to sleep"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-09",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Having your partner's thighs wrapped around your head"
+        },
+        {
+          "id": "b",
+          "text": "Having your thighs wrapped around your partner's head"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-10",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Oral on the sofa with the lights on"
+        },
+        {
+          "id": "b",
+          "text": "Oral on the bedroom floor"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-11",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being licked in front of a mirror"
+        },
+        {
+          "id": "b",
+          "text": "Going down on your partner in front of a mirror"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-12",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Having your wrists held down while you are licked"
+        },
+        {
+          "id": "b",
+          "text": "Holding your partner's wrists down while you lick them"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-13",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being made to wait for oral all day"
+        },
+        {
+          "id": "b",
+          "text": "Being made to wait to come until you are told"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-14",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being blindfolded during oral"
+        },
+        {
+          "id": "b",
+          "text": "Being told to keep quiet during oral"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-15",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Remembering your first time going down on someone"
+        },
+        {
+          "id": "b",
+          "text": "Remembering your first time being gone down on"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-16",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Telling your partner your favourite oral memory"
+        },
+        {
+          "id": "b",
+          "text": "Hearing your partner's favourite oral memory"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-17",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Looking back on oral in the shower"
+        },
+        {
+          "id": "b",
+          "text": "Looking back on oral in a hotel"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-18",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Showing your partner exactly how you like to be licked"
+        },
+        {
+          "id": "b",
+          "text": "Being shown exactly how your partner likes it"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-19",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "A whole evening of nothing but oral"
+        },
+        {
+          "id": "b",
+          "text": "A whole evening where sex is the only plan"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-20",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner using fingers while going down on you"
+        },
+        {
+          "id": "b",
+          "text": "Your partner using a toy while going down on you"
         }
       ],
       "source": "shipped"
@@ -160,15 +1026,15 @@
       "id": "eitherOr-c4-01",
       "format": "eitherOr",
       "category": "c4",
-      "topic": "t3",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Plan every detail"
+          "id": "a",
+          "text": "Slow sex that lasts an hour"
         },
         {
-          "id": "o2",
-          "text": "See where the night goes"
+          "id": "b",
+          "text": "Fast, hungry sex against a wall"
         }
       ],
       "source": "shipped"
@@ -177,15 +1043,15 @@
       "id": "eitherOr-c4-02",
       "format": "eitherOr",
       "category": "c4",
-      "topic": "t6",
+      "topic": "t1",
       "options": [
         {
-          "id": "o1",
-          "text": "Try something new once a month"
+          "id": "a",
+          "text": "Riding your partner hard and setting the pace"
         },
         {
-          "id": "o2",
-          "text": "Keep a favourite and perfect it"
+          "id": "b",
+          "text": "Lying back and letting your partner lead"
         }
       ],
       "source": "shipped"
@@ -194,15 +1060,304 @@
       "id": "eitherOr-c4-03",
       "format": "eitherOr",
       "category": "c4",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "One slow, deep orgasm"
+        },
+        {
+          "id": "b",
+          "text": "Three quick ones"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-04",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "a",
+          "text": "Coming together, then a long bath"
+        },
+        {
+          "id": "b",
+          "text": "Coming together, then falling asleep tangled up"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-05",
+      "format": "eitherOr",
+      "category": "c4",
       "topic": "t2",
       "options": [
         {
-          "id": "o1",
-          "text": "Lights on"
+          "id": "a",
+          "text": "Dirty talk the whole time"
         },
         {
-          "id": "o2",
-          "text": "Lights low"
+          "id": "b",
+          "text": "Not a word and only eye contact"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-06",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "Feeling your partner come"
+        },
+        {
+          "id": "b",
+          "text": "Watching your partner come"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-07",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being told exactly when to come"
+        },
+        {
+          "id": "b",
+          "text": "Begging to be allowed to come"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-08",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Sex in a hotel with the curtains open"
+        },
+        {
+          "id": "b",
+          "text": "Sex on a beach at night"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-09",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Sex in front of a mirror"
+        },
+        {
+          "id": "b",
+          "text": "Sex in the shower with the water running"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-10",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "A weekend of sex with food delivered to the bed"
+        },
+        {
+          "id": "b",
+          "text": "A night of sex somewhere you have never been"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-11",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being teased slowly during sex until you beg"
+        },
+        {
+          "id": "b",
+          "text": "Teasing your partner slowly during sex until they beg"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-12",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Using a toy on yourself while your partner watches"
+        },
+        {
+          "id": "b",
+          "text": "Watching your partner use a toy on themselves"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-13",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Taking total control for a night"
+        },
+        {
+          "id": "b",
+          "text": "Handing over total control for a night"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-14",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t4",
+      "options": [
+        {
+          "id": "a",
+          "text": "Being tied to the bed with silk"
+        },
+        {
+          "id": "b",
+          "text": "Tying your partner to the bed with silk"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-15",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Sex somewhere you nearly got caught"
+        },
+        {
+          "id": "b",
+          "text": "Sex somewhere you could be as loud as you liked"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-16",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "A best ever night that was planned for days"
+        },
+        {
+          "id": "b",
+          "text": "A best ever night that happened without warning"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-17",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t5",
+      "options": [
+        {
+          "id": "a",
+          "text": "Looking back on your first time together"
+        },
+        {
+          "id": "b",
+          "text": "Looking back on the best time so far"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-18",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "A week of quick sex every day"
+        },
+        {
+          "id": "b",
+          "text": "One very long night of slow sex"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-19",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Trying a brand new position this week"
+        },
+        {
+          "id": "b",
+          "text": "Trying a brand new place this week"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-20",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "a",
+          "text": "Your partner telling you exactly how they want to have sex"
+        },
+        {
+          "id": "b",
+          "text": "Telling your partner exactly how you want to have sex"
         }
       ],
       "source": "shipped"

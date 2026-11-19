@@ -5,6 +5,7 @@ export type { GameEntry, GameId, GameStatus } from './games';
 export {
   entryConfirmationSchema,
   hapticsOnSchema,
+  lastShownUpdateIdSchema,
   playerNamesSchema,
   soundOnSchema,
 } from './settings';
@@ -89,3 +90,45 @@ export type {
   QuestionOption,
   TopicId,
 } from './questionModel';
+export {
+  availableQuestionCount,
+  isQuestionRoundOver,
+  playableFormats,
+  questionTurnView,
+  reduceQuestionRound,
+  startQuestionRound,
+  summariseQuestionRound,
+} from './questionRound';
+export type {
+  CurrentQuestion,
+  PlayableFormat,
+  PlayableQuestion,
+  PlayedQuestion,
+  QuestionPlayerSummary,
+  QuestionReveal,
+  QuestionRoundAction,
+  QuestionRoundSetup,
+  QuestionRoundState,
+  QuestionRoundSummary,
+  QuestionStage,
+  QuestionTurnView,
+} from './questionRound';
+export {
+  availableItemCount,
+  minimumItemCount,
+  reduceSecretMatch,
+  secretMatchDiscoveries,
+  secretMatchItemCount,
+  startSecretMatch,
+  viewSecretMatch,
+} from './secretMatch';
+export type {
+  SecretMatch,
+  SecretMatchAction,
+  SecretMatchItem,
+  SecretMatchRating,
+  SecretMatchSetup,
+  SecretMatchState,
+  SecretMatchStrength,
+  SecretMatchView,
+} from './secretMatch';

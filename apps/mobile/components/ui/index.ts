@@ -18,5 +18,7 @@ export { SpeechBubble } from './SpeechBubble';
 export type { SpeechBubbleProps, SpeechBubbleTail } from './SpeechBubble';
 export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
+export { Toast } from './Toast';
+export type { ToastProps } from './Toast';
 export { Toggle } from './Toggle';
 export type { ToggleProps } from './Toggle';

@@ -4,7 +4,7 @@ An 18+ mobile app of games for couples, played together on one phone.
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend. Native modules: `expo-sqlite` for storage, `expo-audio` for button sounds and `expo-haptics` for vibration feedback.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend. Native modules: `expo-sqlite` (SQLCipher build) for storage, `expo-secure-store` and `expo-crypto` for the key to the encrypted store, `expo-audio` for button sounds and `expo-haptics` for vibration feedback.
 
 ## Layout
 
@@ -50,6 +50,33 @@ Installing a newer `.apk` over the old one keeps what the app has stored on the 
 
 Adding or changing a native module, such as `expo-audio` or `expo-haptics`, needs a new build. A
 development client made before the change does not have the module, so make a new one.
+
+## Publishing an update
+
+Once a phone has a build made with `expo-updates`, JavaScript and content changes reach it without a
+new build. The `preview` build listens to the `preview` channel. From `apps/mobile`:
+
+```
+npx eas-cli update --channel preview --message "What changed"
+```
+
+The app checks at launch and downloads the update in the background. It runs from the next time the
+app is opened from closed, never in the middle of a round, and a short toast says it has updated.
+CI never publishes.
+
+An update only reaches builds whose native fingerprint matches. The fingerprint is the runtime
+version, and it is computed automatically from the native parts of the project, so a new native
+module, plugin, permission or native config changes it with no extra step. Anything native needs a
+new build. The first build with updates in it has to be installed by hand, and every update after
+that arrives over the air.
+
+Publish from a checkout with the same lockfile and config as the build. If they differ, the
+fingerprint differs and the update simply does not reach the phone, which fails safe. To print the
+current value, from `apps/mobile`:
+
+```
+env -u NODE_PATH node node_modules/expo-updates/bin/cli.js fingerprint:generate --platform android
+```
 
 iPhone builds need a paid Apple Developer account and are not set up yet.
 

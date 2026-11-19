@@ -13,6 +13,25 @@ jest.mock('expo-sqlite/kv-store', () => {
   return { __esModule: true, default: createInMemoryBackend() };
 });
 
+// The encrypted database, its key and its native modules are not available under Jest. The root
+// layout loads the personal store at launch, so a route test gets an empty in-memory one instead.
+jest.mock('../../../storage/personal/nativePersonalStore', () => {
+  const { createInMemoryPersonalRepository } = jest.requireActual<
+    typeof import('../../../storage/personal/createInMemoryPersonalRepository')
+  >('../../../storage/personal/createInMemoryPersonalRepository');
+  const createEmpty = () =>
+    createInMemoryPersonalRepository({
+      getShippedCards: () => [],
+      randomUUID: () => '00000000-0000-4000-8000-000000000001',
+      now: () => 1,
+    });
+  return {
+    __esModule: true,
+    personalStore: { load: () => Promise.resolve(createEmpty()), clear: () => Promise.resolve() },
+    personalDataSource: { load: () => Promise.resolve(createEmpty()), createEmpty },
+  };
+});
+
 // Jest does not run Expo's config plugins, so the router options the plugin would put in the
 // config are taken from app.json the same way: the plugin's options become `extra.router`.
 jest.mock('expo-constants', () => {

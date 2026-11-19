@@ -1,5 +1,7 @@
 import type { CardKind, CategoryId } from '@getfreak/core';
 
+import type { ButtonBounds, PressEffectKind } from '../pressEffect';
+
 type TurnViewBaseProps = {
   /** Whose turn it is, or that it is both players. */
   turnLabel: string;
@@ -15,6 +17,8 @@ type TurnViewBaseProps = {
   onPass: () => void;
   onEndRound: () => void;
   onNotThisOne: () => void;
+  /** Called with the pressed answer button and where it is in the window, to play its effect. */
+  onPressEffect: (kind: PressEffectKind, bounds: ButtonBounds) => void;
 };
 
 /** A together card also names both players, such as "Sam and Alex". */

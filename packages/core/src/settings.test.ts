@@ -1,6 +1,7 @@
 import {
   entryConfirmationSchema,
   hapticsOnSchema,
+  lastShownUpdateIdSchema,
   playerNamesSchema,
   soundOnSchema,
 } from './settings';
@@ -50,5 +51,15 @@ describe.each([
 
   it.each(['true', 1, null, {}])('should reject %p', (value) => {
     expect(schema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('lastShownUpdateIdSchema', () => {
+  it('should accept an update id', () => {
+    expect(lastShownUpdateIdSchema.parse('update-1')).toBe('update-1');
+  });
+
+  it.each([1, null, true, {}])('should reject %p', (value) => {
+    expect(lastShownUpdateIdSchema.safeParse(value).success).toBe(false);
   });
 });

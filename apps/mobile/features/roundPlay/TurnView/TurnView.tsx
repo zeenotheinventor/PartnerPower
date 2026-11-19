@@ -1,7 +1,9 @@
 import { copy } from '@getfreak/content';
+import { useRef, type RefObject } from 'react';
 import { Pressable, Text, View } from 'react-native';
 
 import { Button, Card, Character, Chip, Screen } from '../../../components/ui';
+import type { PressEffectKind } from '../pressEffect';
 import { ProgressBar } from '../ProgressBar';
 import type { TurnViewProps } from './types';
 
@@ -19,8 +21,25 @@ export function TurnView({
   onPass,
   onEndRound,
   onNotThisOne,
+  onPressEffect,
 }: TurnViewProps) {
   const isTogether = kind === 'together';
+  const doneButtonRef = useRef<View>(null);
+  const passButtonRef = useRef<View>(null);
+
+  // The buttons are replaced as soon as the answer is given, so the spot of the pressed one is
+  // measured first. The answer itself does not wait for the measurement.
+  const answer = (
+    effectKind: PressEffectKind,
+    buttonRef: RefObject<View | null>,
+    act: () => void,
+  ) => {
+    buttonRef.current?.measureInWindow((x, y, width, height) =>
+      onPressEffect(effectKind, { x, y, width, height }),
+    );
+    act();
+  };
+
   return (
     <Screen scroll>
       <View className="flex-row items-center justify-between gap-8">
@@ -66,21 +85,23 @@ export function TurnView({
       </Card>
 
       <View className="flex-row gap-12">
-        <View className="flex-1">
+        {/* Not collapsable, because a view with no style of its own is removed on Android and
+            cannot be measured. */}
+        <View ref={doneButtonRef} collapsable={false} className="flex-1">
           <Button
             label={isTogether ? copy.roundPlay.togetherDone : copy.roundPlay.done}
             feedback="done"
             fullWidth
-            onPress={onDone}
+            onPress={() => answer('done', doneButtonRef, onDone)}
           />
         </View>
-        <View className="flex-1">
+        <View ref={passButtonRef} collapsable={false} className="flex-1">
           <Button
             label={isTogether ? copy.roundPlay.togetherPass : copy.roundPlay.pass}
             variant="secondary"
             feedback="pass"
             fullWidth
-            onPress={onPass}
+            onPress={() => answer('pass', passButtonRef, onPass)}
           />
         </View>
       </View>
