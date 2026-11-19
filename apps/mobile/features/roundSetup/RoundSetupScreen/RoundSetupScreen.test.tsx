@@ -1,9 +1,9 @@
-import { categoryNames, copy, levelNames } from '@getfreak/content';
+import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
 import { startRound, type Deck } from '@getfreak/core';
 import { act, waitFor } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { KeyboardAvoidingView } from 'react-native';
-import type { ReactNode } from 'react';
+import { useEffect, type ReactElement, type ReactNode } from 'react';
 
 import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
 import { createStorage } from '../../../storage/createStorage';
@@ -11,6 +11,8 @@ import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { drawnCharacters } from '../../../testing/drawnCharacters';
+import { useOwnCards, type OwnCards } from '../../ownCards/OwnCardsProvider';
+import { makeOwnCardsFixture } from '../../ownCards/testing/ownCardsFixture';
 import { RoundProvider } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { RoundSetupScreen } from './RoundSetupScreen';
@@ -62,22 +64,44 @@ function AfterSettingsLoad({ children }: { children: ReactNode }) {
   return useSettings().isLoading ? null : children;
 }
 
-async function renderSetup(storage: Storage = createStorage(createInMemoryBackend())) {
+async function renderSetup(
+  storage: Storage = createStorage(createInMemoryBackend()),
+  ownCards = makeOwnCardsFixture(),
+  probe: ReactElement = <></>,
+) {
   await renderThemed(
     <SettingsProvider storage={storage}>
       <AfterSettingsLoad>
-        <RoundProvider>
-          <RoundSetupScreen />
-        </RoundProvider>
+        <ownCards.Providers>
+          <RoundProvider>
+            <RoundSetupScreen />
+          </RoundProvider>
+          {probe}
+        </ownCards.Providers>
       </AfterSettingsLoad>
     </SettingsProvider>,
   );
   await screen.findByRole('header', { name: copy.roundSetup.title });
+  // The dares are read after the screen shows, and the row has no value until then.
+  await screen.findByRole('button', { name: new RegExp(`^${copy.roundSetup.myDaresLabel}, `) });
 }
 
 function enterNames(first: string, second: string) {
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerOneLabel), first);
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerTwoLabel), second);
+}
+
+// Gives a test the own dares hook of the providers around the screen, to change the dares.
+function makeProbe() {
+  const held: { current: OwnCards | undefined } = { current: undefined };
+  function Probe() {
+    const ownCards = useOwnCards();
+    useEffect(() => {
+      held.current = ownCards;
+    });
+    return null;
+  }
+  return { Probe, held };
 }
 
 const startButton = () => screen.getByRole('button', { name: copy.roundSetup.start });
@@ -426,6 +450,205 @@ describe('RoundSetupScreen', () => {
       expect(
         screen.getByRole('radio', { name: copy.roundSetup.lengthTwenty, checked: false }),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe('my dares', () => {
+    const myDaresRow = (value: string) =>
+      screen.getByRole('button', {
+        name: fillCopy(copy.roundSetup.myDaresRowName, {
+          label: copy.roundSetup.myDaresLabel,
+          value,
+        }),
+      });
+    const mixSwitch = () => screen.queryByRole('switch', { name: copy.roundSetup.mixInMyDares });
+
+    async function renderWithDares(count: number) {
+      const fixture = makeOwnCardsFixture();
+      for (let number = 1; number <= count; number += 1) {
+        await fixture.repository.savePlayerCard({
+          category: 'c2',
+          kind: 'solo',
+          text: `Placeholder dare ${number}`,
+        });
+      }
+      await renderSetup(undefined, fixture);
+      if (count > 0) await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+      return fixture;
+    }
+
+    it('should show the My dares row with none written yet', async () => {
+      await renderSetup();
+
+      expect(myDaresRow(copy.roundSetup.myDaresNone)).toBeOnTheScreen();
+    });
+
+    it('should show how many dares are written', async () => {
+      await renderWithDares(3);
+
+      expect(myDaresRow(fillCopy(copy.roundSetup.myDaresCount, { count: 3 }))).toBeOnTheScreen();
+    });
+
+    it('should open the list from the row', async () => {
+      await renderSetup();
+
+      fireEvent.press(myDaresRow(copy.roundSetup.myDaresNone));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/dares/my-dares');
+    });
+
+    it('should show no mix switch when there are no dares', async () => {
+      await renderSetup();
+
+      expect(mixSwitch()).not.toBeOnTheScreen();
+    });
+
+    it('should show the mix switch on by default once there is a dare', async () => {
+      await renderWithDares(1);
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should turn the mix switch off when it is pressed', async () => {
+      await renderWithDares(1);
+
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: false }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should have the mix switch on again each time the screen opens', async () => {
+      const fixture = await renderWithDares(1);
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+      screen.unmount();
+
+      await renderSetup(undefined, fixture);
+
+      expect(
+        await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should start the round from the starter deck and the dares when the switch is on', async () => {
+      await renderWithDares(2);
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+      expect(deck?.cards.map((card) => card.text)).toEqual([
+        'Card 1',
+        'Card 2',
+        'Placeholder dare 1',
+        'Placeholder dare 2',
+      ]);
+      expect(deck?.cards.slice(2).map((card) => card.source)).toEqual(['player', 'player']);
+    });
+
+    it('should start the round from the starter deck alone when the switch is off', async () => {
+      await renderWithDares(2);
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
+    });
+
+    it('should start the round from the starter deck alone when there are no dares', async () => {
+      await renderSetup();
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
+    });
+
+    it('should show no value and hold Start until the dares have been read', async () => {
+      const fixture = makeOwnCardsFixture({ holdLoad: true });
+      await renderThemed(
+        <SettingsProvider storage={createStorage(createInMemoryBackend())}>
+          <AfterSettingsLoad>
+            <fixture.Providers>
+              <RoundProvider>
+                <RoundSetupScreen />
+              </RoundProvider>
+            </fixture.Providers>
+          </AfterSettingsLoad>
+        </SettingsProvider>,
+      );
+      await screen.findByRole('header', { name: copy.roundSetup.title });
+      enterNames('Player A', 'Player B');
+
+      expect(screen.getByRole('button', { name: copy.roundSetup.myDaresLabel })).toBeOnTheScreen();
+      expect(screen.queryByText(copy.roundSetup.myDaresNone)).not.toBeOnTheScreen();
+      expect(startButton()).toBeDisabled();
+
+      await act(async () => {
+        fixture.releaseLoad();
+      });
+
+      expect(myDaresRow(copy.roundSetup.myDaresNone)).toBeOnTheScreen();
+      expect(startButton()).not.toBeDisabled();
+    });
+
+    it('should turn the mix switch back on when dares come back after there were none', async () => {
+      const { Probe, held } = makeProbe();
+      const fixture = makeOwnCardsFixture();
+      const first = await fixture.repository.savePlayerCard({
+        category: 'c2',
+        kind: 'solo',
+        text: 'Placeholder dare 1',
+      });
+      await renderSetup(undefined, fixture, <Probe />);
+      await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+      await act(async () => {
+        if (first.ok) await held.current?.remove(first.saved.id);
+      });
+      expect(mixSwitch()).not.toBeOnTheScreen();
+
+      await act(async () => {
+        await held.current?.save({ category: 'c1', kind: 'solo', text: 'Placeholder dare 2' });
+      });
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should keep the mix switch off while dares are added to some', async () => {
+      const { Probe, held } = makeProbe();
+      const fixture = makeOwnCardsFixture();
+      await fixture.repository.savePlayerCard({
+        category: 'c2',
+        kind: 'solo',
+        text: 'Placeholder dare 1',
+      });
+      await renderSetup(undefined, fixture, <Probe />);
+      await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+
+      await act(async () => {
+        await held.current?.save({ category: 'c1', kind: 'solo', text: 'Placeholder dare 2' });
+      });
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: false }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should leave the starter deck itself as it was', async () => {
+      await renderWithDares(1);
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      expect(testDeck.cards).toHaveLength(2);
     });
   });
 

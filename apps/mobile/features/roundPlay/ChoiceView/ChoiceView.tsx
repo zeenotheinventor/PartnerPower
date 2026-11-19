@@ -28,7 +28,7 @@ export function ChoiceView({
       <View className="gap-16">
         {options.map((text, index) => (
           <Card
-            key={text}
+            key={index}
             category={category}
             label={text}
             onPress={() => onChoose(index === 0 ? 0 : 1)}

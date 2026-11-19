@@ -1,12 +1,13 @@
 // This import comes first so that its mocks are in place before Expo Router loads.
 import { backend, currentPathname, launchApp } from '../welcome/testing/appEnvironment';
 
-import { copy, displayNames } from '@getfreak/content';
-import { act, fireEvent, screen, waitFor } from 'expo-router/testing-library';
+import { copy, displayNames, fillCopy } from '@getfreak/content';
+import { act, fireEvent, screen, waitFor, within } from 'expo-router/testing-library';
 
 const homeRoute = '/games/questions';
 const setupRoute = '/games/questions/setup';
 const playRoute = '/games/questions/play';
+const summaryRoute = '/games/questions/summary';
 const daresSetupRoute = '/games/dares/setup';
 
 function enterNames(first: string, second: string) {
@@ -26,7 +27,7 @@ describe('Drink If in the route tree', () => {
     await backend.setItem('entryConfirmation', 'true');
   });
 
-  it('should go from the hub tile to the home, to setup, to the round stand-in', async () => {
+  it('should go from the hub tile to the home, to setup, to pass the phone for the first question', async () => {
     await launchApp('/');
 
     fireEvent.press(screen.getByRole('button', { name: displayNames.questions.title }));
@@ -41,7 +42,31 @@ describe('Drink If in the route tree', () => {
     await pressStart();
     await waitFor(() => expect(currentPathname()).toBe(playRoute));
 
-    expect(screen.getByRole('header', { name: copy.questionsPlay.title })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('header', {
+        name: fillCopy(copy.roundPlay.handoffTitle, { name: 'Player A' }),
+      }),
+    ).toBeOnTheScreen();
+  });
+
+  it('should play into a question and end the round on the summary stand-in', async () => {
+    await launchApp(setupRoute);
+    enterNames('Player A', 'Player B');
+    await pressStart();
+    await waitFor(() => expect(currentPathname()).toBe(playRoute));
+
+    fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.handoffButton }));
+    fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.endRound }));
+    fireEvent.press(
+      within(screen.getByLabelText(copy.roundPlay.endDialogTitle)).getByRole('button', {
+        name: copy.roundPlay.endDialogConfirm,
+      }),
+    );
+
+    await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+    expect(
+      screen.getByRole('header', { name: copy.questionsPlay.summaryStandInTitle }),
+    ).toBeOnTheScreen();
   });
 
   it('should go back from setup to the home and from the home to the hub', async () => {
@@ -78,7 +103,7 @@ describe('Drink If in the route tree', () => {
     expect(screen.getByRole('header', { name: copy.questionsHome.title })).toBeOnTheScreen();
   });
 
-  it('should fall back to setup from the stand-in opened by a deep link', async () => {
+  it('should fall back to setup from the round screen opened by a deep link', async () => {
     await launchApp(playRoute);
 
     fireEvent.press(screen.getByRole('button', { name: copy.questionsPlay.backLabel }));

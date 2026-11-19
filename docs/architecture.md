@@ -594,11 +594,16 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx
+        my-dares/
+          index.tsx      the My dares list
+          new.tsx        the dare editor, for a new dare
+          [id].tsx       the dare editor, for a dare that is stored
       questions/
         _layout.tsx      holds the question round for this route group
         index.tsx        the Drink If home
         setup.tsx
-        play.tsx         a stand-in until the play ticket replaces it
+        play.tsx
+        summary.tsx      a stand-in until the Drink If summary replaces it
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -615,15 +620,17 @@ apps/mobile/
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
+  features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
-  features/questionsPlay/  the Drink If play stand-in
+  features/questionsPlay/  the Drink If play screen, its turn views and the summary stand-in
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
-  storage/               the storage module
+  storage/               the storage module: settings, secure storage, the install marker, clear everything
+  lock/                  the lock service: the PIN, wrong PINs and their wait, and biometrics
 ```
 
 ### State
@@ -636,6 +643,12 @@ apps/mobile/
   The provider also keeps `lastStart`, the setup and deck the last round was started from, in
   memory only, so the summary can start another round like it. It goes with the round when the
   route group is left.
+- **Own dares** are held once for the `games/dares` route group by `OwnCardsProvider`
+  (`features/ownCards`), above the round provider. `useOwnCards` gives `isLoading`, `cards`,
+  `hasReachedLimit`, `save(draft)` and `remove(id)`. It reads the list from the repository of
+  `usePersonalData`, and a save or a delete goes through the repository and then reads the list again,
+  so setup, the list and the editor always agree. `save` returns the repository's result, so a
+  screen maps the problem codes to messages. Nothing in it logs.
 - **Question round state** works the same way for `questions`. The layout renders
   `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
   `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
@@ -652,6 +665,34 @@ apps/mobile/
   `setHapticsOn` never reject, and a failed write still holds for that session.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
+
+### My dares
+
+A couple write their own dares and deal them in with the starter deck. The code is in
+`features/ownCards`. A dare is a `PlayerCard`, stored by the personal repository, so tidying the text
+and the checks against the shipped deck and the player's other dares are the repository's, not the
+screen's. The screens map the problem codes to the messages in `content`, in `cardProblemMessage`.
+
+- **Setup.** `RoundSetupScreen` has a `My dares` row under the names: a pressable card named "My dares,
+  12 written" that opens the list. With at least one dare, a `Mix in my dares` switch sits under it,
+  in a bordered box. It is on each time setup opens, is not remembered, and applies to the starter
+  deck only. Start deals from `withOwnCards(starterDeck, dares)` when it is on and from the starter
+  deck alone when it is off. A player's dare can be in any category, and the level decides which are
+  dealt, as for shipped cards.
+- **List** (`my-dares`). The title with how many are written, then `Write a dare`, then the dares
+  grouped by category in rank order. Each group has a category chip and its count as a heading, and
+  each dare is a pressable card in its category colour, with a Together chip where it applies, that
+  opens it for editing. An empty list invites the first dare. At 300 dares (`limits.playerCards`)
+  `Write a dare` is disabled and the line under it says why. If the store reported that it could not
+  open saved data and started fresh, a notice shows once, on the next visit to the list.
+- **Editor** (`my-dares/new`, `my-dares/[id]`). A multiline `TextField` for the dare with a count against
+  140, four category chips (a radio group named Category), and a `SegmentedControl` for "For your
+  partner" or "Together". `Save dare` is pinned in the `Screen` footer. It is off while the field is
+  empty and until the store has loaded. A rejected save shows the message under the field, reads it
+  with the field and announces it. A dare that is being edited also has `Delete dare` at the end of
+  the form, which asks with the kit `Dialog`, then deletes through the repository, which also takes
+  the dare out of the favourites and the decks, and goes back.
+- **Not logged.** No dare text is logged or sent anywhere.
 
 ### Summary screen
 
@@ -823,6 +864,62 @@ opens it (`entryRoute` is `/games/questions`).
   and the player's own (an empty list until the device stores them), saves the names and opens the
   play route.
 
+### Drink If play screen
+
+`features/questionsPlay/QuestionsPlayScreen` reads `questionTurnView(round)` from
+`useQuestionRound()` and sends `answer`, `pick`, `next`, `removeQuestion`, `disableCategory` and
+`end`. It holds no rules. The question number is `history.length + 1`, and the cost is the
+category's `penalty`, or the drinks the reveal carries.
+
+- Each question can come with a step up screen and a pass the phone screen before it, in that
+  order, as for dares. The step up is `SteppingUpView` from `features/roundPlay`, given Theo as its
+  character, his line, and "A drink now costs {n}" in place of the passing line, because a question
+  has no pass. Pass the phone is `HandoffView`, shown when the holder differs from the previous
+  question's holder, and before the first question. These are state of the screen, kept with the
+  question number, and are not routes.
+- Three views draw the question, all inside `TurnFrame`: the end round pill, the count and progress
+  bar, the turn line with Theo's head at its end, the static question `Card` with its category and
+  topic chips, and the Not this one link. The lead of a question ("Drink if") is part of the prompt
+  in the accent deep colour, so it reads as one sentence.
+  - `StatementView` is for `ifYou` and `neverHave`. Each player has a `SegmentedControl` named by
+    the player, and neither is checked at first. The button sends `answer` once both are set, and
+    either player can change an answer until then. Never have I ever words the options "I have" and
+    "Never", and "I have" is the yes that drinks.
+  - `PickView` is for `eitherOr` and `guess`. Each option is a `Card` button named by its text.
+    Pressing one sends `pick`. The second pick of a would you rather question ignores presses for
+    700 ms, so a fast second tap by the first player cannot answer for both. The options are not
+    disabled and look the same.
+  - `RevealView` is for every reveal: who drinks, what each player picked, or the answer and the
+    guess. It reads the reveal and does no sums. The line that says the result is a live region.
+- Would you rather keeps the phone, with no pass the phone screen between the picks. After the
+  first pick the view draws the same options in the same order, with no selected state, a "Locked
+  in" chip and a line that names only who has picked. Guess your partner has the holder answer
+  under "Only {name} looks", then passes the phone to the guesser with `HandoffView` and its
+  `line`, with no look away box, then has the guesser pick. The screen keeps which question has
+  had its guess handoff, by question id, so a replacement question passes the phone again.
+- A pick screen never shows an earlier private pick. The screen reads `questionTurnView`, which
+  leaves the first pick out, and `PickView` is given only the stage and the options. It has no
+  state of its own for a pick. Not this one drops the engine's first pick and the replacement has a
+  new id, so nothing carries over. The statement view is keyed by the question id, so its answers
+  start empty after a skip.
+- Theo is the `shy` character. His mood follows the stage: resting while answering, sly when both
+  have answered or on the second pick, happy for a good result, shocked for a bad one, and covering
+  his eyes while the answerer picks. In a bold category (`c3` and `c4`) he is flustered at every
+  stage except when covering his eyes, and on the step up. He is decoration, so a screen reader
+  skips him.
+- The End round pill, the system back button and the iOS swipe open the confirm dialog, through
+  `usePreventRemove` as on the Freak or Drink screen. The same hook closes the Not this one sheet
+  when it is open. Confirming sends `end`.
+- Not this one opens `NotThisOneSheet` with the skip row worded for a question, which are its
+  optional `skipTitle` and `skipHint` props. The sheet has the category switches as on Freak or
+  Drink. A skip or a switch off pins the question view, so the replacement shows at once.
+- When the round is over after a question was in play, the screen replaces itself with
+  `/games/questions/summary`. That route is `SummaryStandIn` until the Drink If summary replaces it.
+  A round that starts with no questions says so, with a way back to setup.
+- The screen stores nothing. The discoveries a round makes are in the round state, and the summary
+  saves them.
+- The copy is in `copy.questionsPlay`, and the leads are in `copy.questionLeads`.
+
 ### Entry guard
 
 Until the player has confirmed on the `welcome` screen, no other screen exists. The screen asks the
@@ -861,7 +958,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 
 | Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                                                                                                                                  |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading. An optional `footer` is pinned under the content, outside a scroll view, above the keyboard.                                                                                                                                     |
 | `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
@@ -870,7 +967,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
 | `Countdown`        | One `timer` element named by its `label`, whose value is the time left (`secondsText`), with the digits as m:ss and a bar that empties from the right. It runs on real time from `startedAt`. See Countdown below.                                                                                                                                                                                                                                                                                          |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a primary confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing.                                                                                                                                         |
+| `TextField`        | A labelled text input, found by its label. `multiline` makes it three lines high. `count` with `maxCount` draws "count/maxCount" under it, and `error` draws a message. An error or a count over the maximum takes the accent border, and focus the foreground border. The error and count under the box are hidden from a screen reader, and its hint is the error, then `countHint`.                                                                                                                      |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                           |
 | `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                 |
@@ -1113,10 +1211,91 @@ interface Storage {
 - `createStorage(backend, clearPersonalStore)` takes the way to clear the personal store. `clearAll`
   clears both the key-value entries and the personal store. It tries both even when the first
   fails, then reports the first failure, so a retry finishes the job. Tests cover it.
-  Any later store (files, secure items) must be added to `clearAll` in the same change.
+  Secure items are cleared by `secureStorage.clearAll`, and `clearEverything` runs both. Any later
+  store (files, secure items) must be added to one of them in the same change.
 - Settings are the keys in `StorageKey`. `questionPreferences` (FRK-38) holds only the
   keep-discoveries switch. Nothing else from a round is kept, except the id of a card a player
   chooses to favourite on the summary, which goes to the personal store.
+
+### Secure storage
+
+The same module owns secure storage, which is the Keychain on iOS and Keystore-backed storage on
+Android, through `expo-secure-store`. Nothing else imports it.
+
+```ts
+interface SecureStorage {
+  get<T>(key: SecureKey, schema: ZodType<T>): Promise<T | undefined>;
+  set<T>(key: SecureKey, value: T): Promise<void>;
+  remove(key: SecureKey): Promise<void>;
+  clearAll(): Promise<void>;
+}
+```
+
+- **Closed list.** `secureKeys` is a list, and `SecureKey` is the type made from it, so `clearAll`
+  reaches every item by construction. The items are `personalDatabaseKey`, `lockPinHash`,
+  `lockAttempts` and `lockBiometricsChoice`. The name is the name of the item on the phone, so it
+  is never renamed.
+- **Values.** Every value is written as JSON and checked with a schema on read. A value that is
+  missing or fails its schema counts as absent. The schemas for the lock items are in `core`
+  (`lock.ts`). FRK-41 wrote the database key as bare text, and an upgraded phone keeps it, so a
+  value that fails as JSON is tried once as plain text against the same schema. Only a text item
+  can match, which is how the old key is still read.
+- **Accessibility.** Every item is written with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, in one place
+  (`defaultSecureStorage`), so none can be written without it.
+- **`clearAll`.** It removes every item in the list, tries all of them even when one fails, then
+  reports the first failure. Removing an item that is not there is fine, so it is safe to run twice.
+- **Tests** run over an in-memory backend, the same `createInMemoryBackend` the key-value tests
+  use, because the secure backend needs only `getItem`, `setItem` and `removeItem`.
+- Nothing logs. A parse or validation error can echo a PIN hash or the key, so none is passed up.
+
+### Install marker
+
+iOS keeps Keychain items after the app is deleted, so a reinstall could find an old PIN or database
+key. `ensureInstallMarker` runs before anything reads settings, the database key or the lock. In
+the root layout, `InstallMarkerGate` runs it and renders its children only once it is done.
+
+- The marker is the key `installMarker` (the value `true`) in the key-value store, which goes when
+  the app is deleted.
+- If the marker is missing, secure storage is cleared first and the marker is written after, so a
+  launch cut short in between runs the check again. The exception is an upgrade: a phone that ran
+  a build with no marker holds `entryConfirmation` in the key-value store, which a reinstall does
+  not. The marker is then written and nothing is cleared, so the database key survives.
+- A marker that cannot be read clears nothing, because a failed read does not say it is a fresh
+  install. A clear or a write that fails leaves the marker unwritten. In both cases the check runs
+  again at the next launch, and the app is never blocked. If a native call never answers, the
+  gate shows its children after 3 seconds anyway. The check then skips the clear and the marker
+  write, so a late answer cannot wipe secure items the running app has read.
+- It never throws and never logs.
+
+### Clear everything
+
+`createClearEverything` takes its steps as parameters and gives one function that returns
+`{ ok: true }` or `{ ok: false }`. It never throws, and the result holds no error, because an
+error message can hold stored text. The screens get it from `useClearEverything()`, which needs a
+`RootRemount` above it.
+
+1. Cancel every scheduled notification (`expo-notifications`).
+2. Clear secure storage (`secureStorage.clearAll`), which removes the PIN hash, the biometrics
+   choice, the wrong PIN count and the database key.
+3. `storage.clearAll()`, which closes and deletes the encrypted database and clears the key-value
+   store.
+4. Write the install marker back. Step 3 removed it, and without it the next launch would take
+   the app for a fresh install and clear a PIN set since.
+5. Remount the root.
+
+- Every step is safe to run twice. A step that fails does not stop the others, so as little as
+  possible is left behind. The marker is not written and the root is not remounted when any step
+  failed, and the result says so. A retry runs all the steps again and finishes.
+- `RootRemount` (in `app/_layout.tsx`, around the providers that read stored data) holds its
+  children under a changing `key`, so remounting mounts every provider again from empty storage.
+  A provider that a later milestone adds there needs no reset method. `InstallMarkerGate` sits
+  outside it, so a remount does not run the check again.
+- Afterwards the app is as on first launch: the entry guard sees no confirmation and shows the 18+
+  screen. It keeps the app, permissions given in the phone's settings and store purchases.
+- A test fills a phone with names, settings, 250 player cards and 150 discoveries and checks every
+  store is empty afterwards, then fails each step in turn and retries. Another renders the real
+  root layout with entry confirmed, runs `useClearEverything()` from a stand-in screen and expects
+  the 18+ confirmation screen.
 
 ### Personal store
 
@@ -1127,10 +1306,10 @@ module, `storage/personal`, and nothing else touches it.
   (`["expo-sqlite", { "useSQLCipher": true }]` in `app.json`). The database is opened with a random
   256-bit key, written as 64 hex characters and given to SQLCipher in its raw form
   (`PRAGMA key = "x'...'"`), so it runs no password derivation.
-- **The key.** It is made on first launch from `expo-crypto`'s random bytes and kept in
-  `expo-secure-store` with `WHEN_UNLOCKED_THIS_DEVICE_ONLY`, so it is readable only while the phone
-  is unlocked and never leaves this device. It is read only to open the database. It is never
-  logged.
+- **The key.** It is made on first launch from `expo-crypto`'s random bytes and kept in secure
+  storage (see Secure storage) under the item `personalDatabaseKey`, so it is readable only while
+  the phone is unlocked and never leaves this device. A stored value that is not 64 hex characters
+  counts as absent. It is read only to open the database. It is never logged.
 - **Schema.** Step 1 of the migrations makes four tables. `player_card` has `id`, `category` and
   `kind` (checked against the core ids), `text` (checked 1 to 140 characters), `created_at` and
   `updated_at`. `favourite` has `card_id` and `created_at`. `deck` has `id`, `name` (checked 1 to
@@ -1208,18 +1387,69 @@ module, `storage/personal`, and nothing else touches it.
   connection that does not have the key, so it cannot be used on an encrypted database.
 - **`clearAll`.** It closes the database, deletes `personal.db` and its `-journal` and `-wal` files, and deletes the key. Each step is
   safe to run twice. A later load makes a new key and an empty database.
-- **After `clearAll`.** The repository the provider holds points at a closed database. Whatever runs
-  clear everything (FRK-53) must call `usePersonalData().reload()` after `storage.clearAll()`, or
-  remount the provider. `reload` sets `isLoading` and opens a new database with a new key.
+- **After `clearAll`.** The repository the provider holds points at a closed database. Clear
+  everything remounts the root (see Clear everything), so the provider opens a new database with a
+  new key. A caller that runs `storage.clearAll()` by itself must call
+  `usePersonalData().reload()` after it. `reload` sets `isLoading` and opens a new database.
 - **While loading.** Screens must not write while `isLoading` is true, because a write to the
   placeholder store is dropped when the real repository arrives. The same holds after `loadFailed`,
   where writes last for the session only.
-- **Android backup.** The `expo-secure-store` plugin sets `fullBackupContent` and
-  `dataExtractionRules` that include only shared preferences and exclude SecureStore, so the key is
-  not backed up and, with it, the database is unreadable from a backup. It does not set
-  `allowBackup`. FRK-58 should set `android.allowBackup: false`.
+- **Android backup.** `android.allowBackup` is `false` (FRK-58). The `expo-secure-store` plugin also
+  sets `fullBackupContent` and `dataExtractionRules` that include only shared preferences and
+  exclude SecureStore, so the key is not backed up and, with it, the database is unreadable from a
+  backup.
 - **Native build.** SQLCipher, `expo-secure-store` and `expo-crypto` are native, so this needs a
   new build.
+
+## App lock
+
+The rules are pure and live in `packages/core/src/lock.ts`. The service that keeps the PIN is
+`apps/mobile/lock`. The screens that use them (FRK-63, FRK-65, FRK-66) are separate tickets.
+
+- **Off by default.** Nothing asks at first launch. A player turns it on in Settings. It needs a
+  4 digit PIN, and biometrics are an optional extra on top of it, offered only when the phone has
+  them set up.
+- **The PIN.** `isValidPin` accepts exactly 4 ASCII digits. It is kept as
+  `SHA-256(salt + ":" + PIN)` with a random 16 byte salt, in the secure item `lockPinHash`. Whether
+  the lock is on is read from the presence of that hash, so there is no flag that could disagree.
+  Four digits are only 10,000 values, so the hash alone does not stop someone who can read the
+  secure item. What holds is that the item is readable only on this unlocked phone, and the wait.
+- **When it locks.** `shouldLock(wentToBackgroundAt, now)` is true on a cold start (no time given),
+  after 60 seconds or more away, and when the clock went backwards. `countsAsBackground` is true
+  only for the `background` app state, so the iOS `inactive` state (the notification shade,
+  Control Center, a call banner) never starts the time away. The 60 seconds is a constant, not a
+  setting, and it applies mid-round too.
+- **Wrong PINs.** `waitAfterFailureMilliseconds` gives no wait until the fifth wrong PIN in a row,
+  then 30 seconds. Each further run of five doubles it, up to 15 minutes. The count and the end of
+  the wait are the secure item `lockAttempts`, so a restart does not reset them. A try made during a
+  wait is not looked at and not counted. The right PIN, or a pass at the biometrics prompt, starts
+  the count again. Wrong PINs never erase anything. `remainingWaitMilliseconds` is capped at the
+  longest wait, so a clock set far back cannot lock a player out for good.
+- **No recovery.** A forgotten PIN is fixed by Clear everything, which needs no PIN. Biometrics
+  still unlock if they were turned on.
+- **The service.** `createLockService` takes the secure storage, a biometrics device, a SHA-256
+  function, random bytes and a clock, so tests pass fakes. `lockService` is the one the app uses.
+  It can set a PIN (which also starts the wrong PIN count again), check a PIN, clear the PIN (which
+  removes the hash, the count and the biometrics choice), say whether the lock is on, give the
+  time left of a wait, say whether biometrics are available and which kind, ask for biometrics, and
+  read and set the biometrics choice. Checks run one at a time, so a burst of tries cannot get
+  past the count.
+- **What it leaves to the screens.** Changing the PIN or turning the lock off needs the current
+  PIN or biometrics. The service does not ask, so the screen must. A call that cannot reach secure
+  storage rejects, and the lock screen treats that as locked.
+- **Biometrics.** Available means the phone has the hardware and the player has set up a face or
+  finger. The kind is face, then fingerprint, then iris. The prompt does not offer the phone
+  passcode, because biometrics are never a way round the PIN. The prompt text comes from the
+  caller.
+- **Face ID text.** The usage text is in `app.json` through the `expo-local-authentication` plugin,
+  because the native build reads it before any JavaScript runs. That is an exception to "copy lives
+  in content". Change it there.
+- **Nothing logs** a PIN, a hash, a salt, a key or a stored value, and no error message holds one.
+  Tests spy on the console.
+- **Native modules.** `expo-local-authentication`, `expo-notifications` and `expo-screen-capture`
+  are added now so the milestone needs one new build. `expo-screen-capture` is first used by the
+  lock screen, and `expo-notifications` by the reminder. This needs a new build. The Android
+  permissions the modules add are listed under Checks and CI.
 
 ## Styling
 
@@ -1338,10 +1568,15 @@ files. Agents never run `eas build` or `eas submit`.
 `app.json` holds the native settings a store build needs. On iOS: iPhone only, the encryption flag
 `ITSAppUsesNonExemptEncryption` set to `true` (the answer in `docs/compliance.md`, since SQLCipher
 ships), and a privacy manifest declaring the required reason APIs the app and its libraries use.
-On Android: backups off, and `blockedPermissions` removing the three permissions that the Expo
-template adds and the app never uses (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
-`SYSTEM_ALERT_WINDOW`). `appConfig.test.ts` guards these, and also that nothing the lock, reminder
-and vibration work needs is ever blocked. These native changes alter the runtime version
+On Android: backups off, and `blockedPermissions` removing the permissions the app never uses.
+Those are the three the Expo template adds (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
+`SYSTEM_ALERT_WINDOW`), `READ_MEDIA_IMAGES` and `DETECT_SCREEN_CAPTURE` from `expo-screen-capture`
+(they serve its screenshot listener only), `com.google.android.c2dm.permission.RECEIVE` from the
+Firebase Messaging library inside `expo-notifications` (push), and the launcher badge permissions
+that the badge library inside `expo-notifications` declares. The reminder and the lock need none of
+them. `POST_NOTIFICATIONS`, `RECEIVE_BOOT_COMPLETED`, `USE_BIOMETRIC`, `USE_FINGERPRINT`, `VIBRATE`,
+`INTERNET`, `ACCESS_NETWORK_STATE`, `WAKE_LOCK` and `MODIFY_AUDIO_SETTINGS` stay.
+`appConfig.test.ts` guards both lists. These native changes alter the runtime version
 fingerprint, so the next build is a reinstall and updates made before it do not reach it.
 
 ## Privacy
@@ -1371,6 +1606,18 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
   to Expo. Never put player text in an `Error` message.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
+- The PIN is never stored. Only a salted SHA-256 hash is, in the secure store, readable only while
+  the phone is unlocked and only on this device. Nothing logs a PIN, a hash, a salt, a key or a
+  stored value, and an error message never holds one. The secure storage, install marker, clear
+  everything and lock tests spy on the console to check it. See App lock.
+- A fresh install starts clean: the install marker clears secure items that iOS kept after a
+  delete. Clear everything removes every stored item, the database and every scheduled
+  notification. See Storage.
+- The reminder is a local notification, so no push token is ever requested. Never call
+  `getExpoPushTokenAsync` or `getDevicePushTokenAsync`. `expo-notifications` bundles the Firebase
+  Messaging library on Android, which stays idle without a `google-services.json`, and the app has
+  none. Its iOS privacy manifest declares only the user defaults reason that is already in
+  `privacyManifests`, so that union did not change.
 - Test fixtures contain placeholder text only.
 
 ## Working conventions
@@ -1400,6 +1647,7 @@ its area under `docs/decisions/`:
 - [Questions](decisions/questions.md)
 - [Secret match](decisions/secret-match.md)
 - [Storage](decisions/storage.md)
+- [App lock](decisions/lock.md)
 - [Privacy](decisions/privacy.md)
 - [Press feedback and effects](decisions/feedback.md)
 - [Updates](decisions/updates.md)

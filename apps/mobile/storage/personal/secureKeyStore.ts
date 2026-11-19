@@ -1,19 +1,18 @@
-import {
-  deleteItemAsync,
-  getItemAsync,
-  setItemAsync,
-  WHEN_UNLOCKED_THIS_DEVICE_ONLY,
-} from 'expo-secure-store';
+import { z } from 'zod';
 
+import type { SecureStorage } from '../types';
 import type { KeyStore } from './types';
 
-// The closed list of secure items this module owns. FRK-53 adds the lock items beside it.
-const databaseKeyItem = 'personalDatabaseKey';
+const databaseKeySchema = z.string().regex(/^[0-9a-f]{64}$/);
 
-// Readable only while the phone is unlocked and never copied to another device. Nothing here logs.
-export const secureKeyStore: KeyStore = {
-  read: async () => (await getItemAsync(databaseKeyItem)) ?? undefined,
-  write: (key) =>
-    setItemAsync(databaseKeyItem, key, { keychainAccessible: WHEN_UNLOCKED_THIS_DEVICE_ONLY }),
-  delete: () => deleteItemAsync(databaseKeyItem),
-};
+/**
+ * The database key kept in secure storage. A stored value that is not 64 hex characters counts as
+ * absent. Nothing here logs.
+ */
+export function createSecureKeyStore(secureStorage: SecureStorage): KeyStore {
+  return {
+    read: () => secureStorage.get('personalDatabaseKey', databaseKeySchema),
+    write: (key) => secureStorage.set('personalDatabaseKey', key),
+    delete: () => secureStorage.remove('personalDatabaseKey'),
+  };
+}

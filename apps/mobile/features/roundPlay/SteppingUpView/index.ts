@@ -1,2 +1,2 @@
 export { SteppingUpView } from './SteppingUpView';
-export type { SteppingUpViewProps } from './types';
+export type { SteppingUpCharacter, SteppingUpViewProps } from './types';

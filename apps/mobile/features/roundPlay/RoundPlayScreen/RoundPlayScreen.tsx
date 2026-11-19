@@ -319,6 +319,7 @@ export function RoundPlayScreen() {
   } else {
     view = (
       <TurnView
+        key={cardNumber}
         turnLabel={
           isTogether
             ? copy.roundPlay.bothOfYou

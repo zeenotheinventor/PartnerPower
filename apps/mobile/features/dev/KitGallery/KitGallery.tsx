@@ -11,6 +11,7 @@ import {
   Card,
   Chip,
   Countdown,
+  Dialog,
   FavouriteToggle,
   Header,
   Screen,
@@ -50,6 +51,8 @@ export function KitGallery() {
   const [favouriteOff, setFavouriteOff] = useState(false);
   const [isToastShowing, setIsToastShowing] = useState(false);
   const [name, setName] = useState('');
+  const [note, setNote] = useState('');
+  const [isDialogShowing, setIsDialogShowing] = useState(false);
   const [option, setOption] = useState('b');
   const [categoryOn, setCategoryOn] = useState(true);
   const [categoryOff, setCategoryOff] = useState(false);
@@ -271,10 +274,39 @@ export function KitGallery() {
           />
         </Section>
 
+        <Section title="Text field, multiline">
+          <TextField
+            label="Multiline text field"
+            value={note}
+            onChangeText={setNote}
+            multiline
+            count={note.length}
+            maxCount={140}
+            error={note.length > 140 ? 'Keep it to 140 characters.' : undefined}
+          />
+        </Section>
+
+        <Section title="Dialog">
+          <Button
+            label="Show dialog"
+            variant="secondary"
+            onPress={() => setIsDialogShowing(true)}
+          />
+        </Section>
+
         <Section title="Toast">
           <Button label="Show toast" variant="secondary" onPress={() => setIsToastShowing(true)} />
         </Section>
       </Screen>
+      <Dialog
+        visible={isDialogShowing}
+        title="Dialog title"
+        body="A line that says what the choice does."
+        confirmLabel="Dialog confirm"
+        cancelLabel="Dialog cancel"
+        onConfirm={() => setIsDialogShowing(false)}
+        onCancel={() => setIsDialogShowing(false)}
+      />
       {isToastShowing ? (
         <Toast
           message="Toast message"
