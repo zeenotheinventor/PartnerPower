@@ -2,6 +2,7 @@
   "expo": {
     "name": "Get Freak",
     "slug": "get-freak",
+    "owner": "sojisoft",
     "scheme": "getfreak",
     "version": "1.0.0",
     "orientation": "portrait",
@@ -12,6 +13,22 @@
     "android": {
       "package": "com.sojisoft.getfreak"
     },
-    "plugins": [["expo-router", { "sitemap": false }], "expo-sqlite"]
+    "plugins": [
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
+      "expo-sqlite"
+    ],
+    "extra": {
+      "router": {
+        "sitemap": false
+      },
+      "eas": {
+        "projectId": "1834f7be-5756-4b68-a1d7-222025529b22"
+      }
+    }
   }
 }
