@@ -7,6 +7,7 @@ const silentFeedback: Feedback = {
   done: () => {},
   pass: () => {},
   roundComplete: () => {},
+  timerEnd: () => {},
   cancelHaptics: () => {},
 };
 

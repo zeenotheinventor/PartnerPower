@@ -29,7 +29,16 @@ function makeCards(category: CategoryId): Card[] {
     text: `Card ${category} together`,
     source: 'shipped',
   };
-  return [...solos, together];
+  // A timer card is only dealt by the timer surprise.
+  const timer: Card = {
+    id: `${category}-timer`,
+    category,
+    kind: 'solo',
+    text: `Card ${category} timer`,
+    source: 'shipped',
+    effect: { type: 'timer', seconds: 30 },
+  };
+  return [...solos, together, timer];
 }
 
 const testDeck: Deck = {
@@ -59,6 +68,13 @@ async function startTenCardRound({ withSurprises = false } = {}) {
 
 /** Presses whatever moves the round on, until the round leaves the play screen. */
 async function playUntilTheSummary() {
+  const waitForTheTimer = async () => {
+    // A timer card locks Done until its clock runs out, which on fake timers is when the clock moves.
+    if (!screen.queryByRole('timer')) return;
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(60_000);
+    });
+  };
   const nextButtons = [
     copy.roundPlay.handoffButton,
     copy.roundPlay.stepUpButton,
@@ -67,6 +83,16 @@ async function playUntilTheSummary() {
     copy.roundPlay.togetherDone,
   ];
   for (let presses = 0; presses < 60 && currentPathname() === playRoute; presses += 1) {
+    await waitForTheTimer();
+    // A partner's choice is settled with the first dare on offer.
+    if (screen.queryByRole('header', { name: /^Pick a dare for/ })) {
+      const dare = screen
+        .getAllByRole('button')
+        .find((button) => button.props.accessibilityLabel?.startsWith('Card '));
+      if (!dare) throw new Error('The choice screen has no dare to press');
+      fireEvent.press(dare);
+      continue;
+    }
     const name = nextButtons.find((label) => screen.queryByRole('button', { name: label }));
     if (!name) throw new Error('The play screen has nothing to press');
     fireEvent.press(screen.getByRole('button', { name }));
