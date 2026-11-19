@@ -1,3 +1,5 @@
+import { characterNames } from '@getfreak/content';
+import { characterIds } from '@getfreak/core';
 import { act, fireEvent, screen } from 'nativewind/test';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -81,5 +83,42 @@ describe('KitGallery', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Go back' }));
 
     expect(mockBack).toHaveBeenCalledTimes(1);
+  });
+
+  describe('the cast', () => {
+    it.each(characterIds)(
+      'should show the %s character with a sample line',
+      async (characterId) => {
+        await renderThemed(<KitGallery />);
+
+        expect(screen.getByText(characterNames[characterId].name)).toBeOnTheScreen();
+        expect(screen.getByText(characterNames[characterId].personality)).toBeOnTheScreen();
+      },
+    );
+
+    it('should let a mood be picked, as a pressable chip with a selected state', async () => {
+      await renderThemed(<KitGallery />);
+      const gatekeeper = characterNames.gatekeeper.name;
+      expect(
+        screen.getByRole('button', { name: `${gatekeeper}, idle`, selected: true }),
+      ).toBeOnTheScreen();
+
+      fireEvent.press(screen.getByRole('button', { name: `${gatekeeper}, armsCrossed` }));
+
+      expect(
+        screen.getByRole('button', { name: `${gatekeeper}, armsCrossed`, selected: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should offer a pose only to the character that has it', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(
+        screen.getByRole('button', { name: `${characterNames.host.name}, wave` }),
+      ).toBeOnTheScreen();
+      expect(
+        screen.queryByRole('button', { name: `${characterNames.shy.name}, wave` }),
+      ).not.toBeOnTheScreen();
+    });
   });
 });

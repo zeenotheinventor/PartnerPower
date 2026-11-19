@@ -1,5 +1,6 @@
 import type {
   CategoryId,
+  CharacterId,
   GameId,
   LevelId,
   QuestionFormat,
@@ -64,4 +65,34 @@ export const topicNames: Record<TopicId, string> = {
   t4: 'Kinks and fetishes',
   t5: 'History',
   t6: 'Wishlist',
+};
+
+export type CharacterDisplayName = {
+  name: string;
+  personality: string;
+};
+
+// The cast is addressed by role in code. Typed by character id, so a character without a name and a
+// personality line fails typecheck.
+export const characterNames: Record<CharacterId, CharacterDisplayName> = {
+  host: {
+    name: 'Amara',
+    personality: 'Warm and a little witchy. Welcomes you in and keeps the vibe right.',
+  },
+  dealer: {
+    name: 'Mei',
+    personality: 'Sweet face, wicked hand. Deals the card you were hoping to avoid.',
+  },
+  hype: {
+    name: 'Tyler',
+    personality: 'Sure he is the hottest man alive. Celebrates every dare you finish.',
+  },
+  gatekeeper: {
+    name: 'Nyx',
+    personality: 'Deadpan and hard to impress, and secretly the softest one here.',
+  },
+  shy: {
+    name: 'Theo',
+    personality: 'Gentle and nerdy. Gets flustered at the bold cards.',
+  },
 };

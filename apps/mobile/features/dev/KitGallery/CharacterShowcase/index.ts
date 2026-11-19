@@ -1,0 +1,1 @@
+export { CharacterShowcase } from './CharacterShowcase';
