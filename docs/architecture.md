@@ -504,6 +504,13 @@ protection. There is no workflow-level path filter, so `checks` always reports. 
 pull request cancels its older run, pushes to `main` get their own scoped run, and a full run can be
 started by hand. The shared setup lives in `.github/actions/setup`.
 
+The `release-bundle` job runs only on that full run, so it costs nothing per push. It bundles the
+Android release the way Gradle does: it runs the Expo CLI with plain `node` and `env -u NODE_PATH`,
+without pnpm's `.bin` shim, which would put the hidden hoist on `NODE_PATH`. A package that
+`apps/mobile` uses but does not declare, such as `babel-preset-expo`, then fails with "Cannot find
+module". The job is skipped on pull requests and pushes, and `checks` treats a skipped job as a pass.
+`.npmrc` stays free of hoisting settings, because they would hide the missing declarations.
+
 Installable builds are made with EAS Build from `apps/mobile/eas.json`. The `preview` profile makes
 an internal release APK that raises its version code on every build. The profiles pin Node 26.13.1
 and pnpm 9.11.0, and the README has the steps.

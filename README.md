@@ -76,6 +76,9 @@ GitHub Actions runs on every pull request, on every push to `main`, and on deman
 - `lint` runs ESLint and the Prettier check on every change.
 - `core`, `content`, `tokens` and `mobile` each run `typecheck` and `test` for that package, and are
   skipped when the change cannot affect them.
+- `release-bundle` runs only on a full run started by hand. It bundles the Android release the way
+  Gradle does, with the Expo CLI under plain `node` and without pnpm's shim, so a package that
+  `apps/mobile` uses but does not declare fails here.
 - `checks` is the one required status. It fails if any job failed or was cancelled, and passes when
   every job passed or was skipped. Branch protection names only `checks`.
 
