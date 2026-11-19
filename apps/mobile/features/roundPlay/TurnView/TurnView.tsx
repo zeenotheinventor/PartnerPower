@@ -1,13 +1,21 @@
-import { copy, surpriseNames } from '@getfreak/content';
-import { useEffect, useRef, type RefObject } from 'react';
+import { copy, fillCopy, surpriseNames } from '@getfreak/content';
+import { useEffect, useRef, useState, type RefObject } from 'react';
 import { AccessibilityInfo, Pressable, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
 
-import { Button, Card, Character, Chip, Screen } from '../../../components/ui';
+import { Button, Card, Character, Chip, Countdown, Screen } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import type { PressEffectKind } from '../pressEffect';
-import { ProgressBar } from '../ProgressBar';
+import { TurnTopBar } from '../TurnTopBar';
 import type { TurnViewProps } from './types';
 import { useCardFlip } from './useCardFlip';
+
+function countdownSecondsText(count: number) {
+  return fillCopy(
+    count === 1 ? copy.roundPlay.countdownSecondsOne : copy.roundPlay.countdownSecondsMany,
+    { count },
+  );
+}
 
 export function TurnView({
   turnLabel,
@@ -21,6 +29,7 @@ export function TurnView({
   surpriseName,
   mystery,
   freePass,
+  timer,
   kind,
   togetherNames,
   onDone,
@@ -34,6 +43,17 @@ export function TurnView({
   const passButtonRef = useRef<View>(null);
   const cardTextRef = useRef<Text>(null);
   const { isBackShowing, animatedStyle } = useCardFlip(mystery?.isFaceDown ?? false);
+
+  // A timer card's clock starts when this view first shows, which is after the reveal and the pass
+  // the phone screens. Done stays locked until the countdown ends, and ending it gives one haptic.
+  const { timerEnd } = useFeedback();
+  const [shownAt] = useState(() => Date.now());
+  const [isTimeUp, setIsTimeUp] = useState(false);
+  const isDoneLocked = timer !== undefined && !isTimeUp;
+  const endTimer = () => {
+    setIsTimeUp(true);
+    timerEnd();
+  };
   const faceDownMystery = mystery && isBackShowing ? mystery : undefined;
   const isFaceDownShowing = faceDownMystery !== undefined;
 
@@ -92,20 +112,7 @@ export function TurnView({
 
   return (
     <Screen scroll>
-      <View className="flex-row items-center justify-between gap-8">
-        <Pressable
-          accessibilityRole="button"
-          onPress={onEndRound}
-          className="min-h-48 justify-center rounded-pill border-2 border-border bg-surface px-12"
-        >
-          <Text className="type-caption text-foreground">{copy.roundPlay.endRound}</Text>
-        </Pressable>
-        <Text className="type-caption text-muted">{countLabel}</Text>
-      </View>
-
-      {progress ? (
-        <ProgressBar number={progress.number} length={progress.length} label={countLabel} />
-      ) : null}
+      <TurnTopBar countLabel={countLabel} progress={progress} onEndRound={onEndRound} />
 
       <View className="min-h-32 flex-row items-center justify-between gap-8">
         <Text accessibilityRole="header" className="type-body-bold flex-1 text-muted">
@@ -134,6 +141,17 @@ export function TurnView({
         playedCard
       )}
 
+      {timer ? (
+        <Countdown
+          seconds={timer.seconds}
+          startedAt={shownAt}
+          label={copy.roundPlay.countdownLabel}
+          secondsText={countdownSecondsText}
+          endText={copy.roundPlay.timerDone}
+          onEnd={endTimer}
+        />
+      ) : null}
+
       {faceDownMystery ? (
         <Button label={copy.roundPlay.flip} fullWidth onPress={faceDownMystery.onFlip} />
       ) : (
@@ -145,6 +163,7 @@ export function TurnView({
               <Button
                 label={isTogether ? copy.roundPlay.togetherDone : copy.roundPlay.done}
                 feedback="done"
+                disabled={isDoneLocked}
                 fullWidth
                 onPress={() => answer('done', doneButtonRef, onDone)}
               />
@@ -159,6 +178,11 @@ export function TurnView({
               />
             </View>
           </View>
+          {timer ? (
+            <Text className="type-caption text-center text-muted">
+              {isTimeUp ? copy.roundPlay.timerDone : copy.roundPlay.timerRunning}
+            </Text>
+          ) : null}
           {freePass ? (
             <Button
               label={copy.roundPlay.useFreePass}

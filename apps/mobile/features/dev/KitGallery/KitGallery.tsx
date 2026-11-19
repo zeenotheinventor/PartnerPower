@@ -10,6 +10,7 @@ import {
   CategoryToggle,
   Card,
   Chip,
+  Countdown,
   Dialog,
   FavouriteToggle,
   Header,
@@ -29,6 +30,8 @@ const castMoods: { [Id in CharacterId]: readonly [MoodOf<Id>, ...MoodOf<Id>[]] }
   gatekeeper: ['idle', 'happy', 'flirty', 'shocked', 'armsCrossed'],
   shy: ['idle', 'happy', 'flirty', 'shocked', 'flustered', 'coverEyes'],
 };
+
+const secondsText = (count: number) => `${count} ${count === 1 ? 'second' : 'seconds'}`;
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -53,6 +56,9 @@ export function KitGallery() {
   const [option, setOption] = useState('b');
   const [categoryOn, setCategoryOn] = useState(true);
   const [categoryOff, setCategoryOff] = useState(false);
+  const [liveCountdownStartedAt, setLiveCountdownStartedAt] = useState<number | null>(null);
+  // The ended one started a long time ago, so it is already at zero.
+  const [endedCountdownStartedAt] = useState(() => Date.now() - 120_000);
   const [selectedCategories, setSelectedCategories] = useState<CategoryId[]>(['c1', 'c2']);
 
   const toggleCategory = (categoryId: CategoryId) =>
@@ -215,6 +221,35 @@ export function KitGallery() {
               <CategoryToggle label="Category four" category="c4" value onValueChange={() => {}} />
             </View>
           </View>
+        </Section>
+
+        <Section title="Countdown">
+          <Countdown
+            seconds={60}
+            startedAt={null}
+            label="Countdown, idle"
+            secondsText={secondsText}
+            endText="Time is up"
+          />
+          <Countdown
+            seconds={10}
+            startedAt={liveCountdownStartedAt}
+            label="Countdown, live"
+            secondsText={secondsText}
+            endText="Time is up"
+          />
+          <Button
+            label="Start the live countdown"
+            variant="secondary"
+            onPress={() => setLiveCountdownStartedAt(Date.now())}
+          />
+          <Countdown
+            seconds={60}
+            startedAt={endedCountdownStartedAt}
+            label="Countdown, ended"
+            secondsText={secondsText}
+            endText="Time is up"
+          />
         </Section>
 
         <Section title="Cast">
