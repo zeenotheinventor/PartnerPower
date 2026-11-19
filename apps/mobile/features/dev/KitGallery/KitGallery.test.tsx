@@ -1,4 +1,4 @@
-import { fireEvent, screen } from 'nativewind/test';
+import { act, fireEvent, screen } from 'nativewind/test';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { KitGallery } from './KitGallery';
@@ -75,6 +75,17 @@ describe('KitGallery', () => {
 
     expect(screen.getByRole('group', { name: /Accent card/ })).toBeOnTheScreen();
     expect(screen.getByRole('text', { name: 'Accent chip' })).toBeOnTheScreen();
+  });
+
+  it('should show a toast when asked, and not before', async () => {
+    await renderThemed(<KitGallery />);
+    expect(screen.queryByRole('button', { name: 'Toast message' })).not.toBeOnTheScreen();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Show toast' }));
+
+    // The toast reads the reduce motion setting asynchronously, so the test waits for it to settle.
+    expect(await screen.findByRole('button', { name: 'Toast message' })).toBeOnTheScreen();
+    await act(async () => {});
   });
 
   it('should go back from the header', async () => {

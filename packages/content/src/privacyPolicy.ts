@@ -25,7 +25,7 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'The short version',
       paragraphs: [
-        'Get Freak collects nothing about you. There are no accounts, no adverts, no analytics and no crash reporting in the app.',
+        'Get Freak has no accounts, no adverts and no analytics. We do not collect your name, your answers or anything else you put into the app.',
         'Everything you put into the app stays on your phone. We have no server, and we cannot see anything you do in the app.',
       ],
     },
@@ -41,15 +41,22 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'What leaves your phone',
       paragraphs: [
-        'Nothing that you enter. The app does not send anything to us or to any other company.',
+        'Nothing that you enter or play. The only thing the app sends is the check for updates, described in the next section.',
         'If you buy something in the app, Apple or Google handles the payment under their own privacy policies. The app asks the store on your phone what you own. We never see your payment details.',
         'If you turn on the reminder, it is scheduled on your phone. No server sends it.',
       ],
     },
     {
+      heading: 'Checking for updates',
+      paragraphs: [
+        'When the app opens, it checks with Expo, the service that delivers app updates, whether a newer version is available. That check sends technical details about the app version and your phone, such as whether it is an iPhone or an Android phone, and a random number made when the app was installed. It also sends a crash report if the app crashed last time.',
+        "Like any request over the internet, the check shows Expo your IP address. The app never sends anything you type or play. Expo's own privacy policy covers what it receives.",
+      ],
+    },
+    {
       heading: 'Crash reports',
       paragraphs: [
-        'The app has no crash reporting built in. If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
+        'The app has no crash reporting service built in, apart from the crash report that the update check sends. If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
       ],
     },
     {
@@ -70,7 +77,7 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'Adults only',
       paragraphs: [
-        'Get Freak is for adults aged 18 and over. It is not meant for anyone under 18. The app collects nothing from anyone, whatever their age.',
+        'Get Freak is for adults aged 18 and over. It is not meant for anyone under 18.',
       ],
     },
     {

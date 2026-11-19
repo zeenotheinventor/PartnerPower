@@ -3,6 +3,7 @@ export type { GameEntry, GameId, GameStatus } from './games';
 export {
   entryConfirmationSchema,
   hapticsOnSchema,
+  lastShownUpdateIdSchema,
   playerNamesSchema,
   soundOnSchema,
 } from './settings';

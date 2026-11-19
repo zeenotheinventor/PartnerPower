@@ -16,6 +16,11 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.hub);
   });
 
+  it('should give the update toast every line as non-empty text', () => {
+    expect(Object.keys(copy.updateToast).sort()).toEqual(['dismissHint', 'message']);
+    expectEveryValueToBeText(copy.updateToast);
+  });
+
   it('should give the settings screen every line as non-empty text', () => {
     expect(Object.keys(copy.settings).sort()).toEqual(
       [
