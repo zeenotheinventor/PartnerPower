@@ -11,3 +11,4 @@
 - **Duplicate ids in the question list** (FRK-35): The engine deals the first question of an id and ignores the rest, so a repeated id cannot be dealt twice.
 - **Screens read a turn view** (FRK-35): `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.
 - **Pacing is shared** (FRK-35): `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.
+- **Format and topic choices are not kept** (FRK-60): Like level and length, they reset each visit. Only the names are remembered.

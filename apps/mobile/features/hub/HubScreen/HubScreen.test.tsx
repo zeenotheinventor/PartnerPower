@@ -78,35 +78,15 @@ describe('HubScreen', () => {
       },
     );
 
-    it('should open the setup route of an available game when its tile is pressed', async () => {
+    it('should open the entry route of an available game when its tile is pressed', async () => {
       await renderThemed(<HubScreen />);
       const available = gameEntries.filter((entry) => entry.status === 'available');
 
       available.forEach((entry) => {
         fireEvent.press(screen.getByRole('button', { name: expectedTileName(entry) }));
-        expect(mockPush).toHaveBeenLastCalledWith(entry.setupRoute);
+        expect(mockPush).toHaveBeenLastCalledWith(entry.entryRoute);
       });
       expect(available).not.toHaveLength(0);
-    });
-
-    it('should disable the tile of a coming soon game and open nothing when it is pressed', async () => {
-      await renderThemed(<HubScreen />);
-      const comingSoon = gameEntries.filter((entry) => entry.status === 'comingSoon');
-
-      comingSoon.forEach((entry) => {
-        const tile = screen.getByRole('button', { name: expectedTileName(entry) });
-        fireEvent.press(tile);
-        expect(tile).toBeDisabled();
-      });
-      expect(comingSoon).not.toHaveLength(0);
-      expect(mockPush).not.toHaveBeenCalled();
-    });
-
-    it('should show the coming soon marker once for each coming soon game and no more', async () => {
-      await renderThemed(<HubScreen />);
-
-      const comingSoonCount = gameEntries.filter((entry) => entry.status === 'comingSoon').length;
-      expect(screen.getAllByText(copy.hub.comingSoon)).toHaveLength(comingSoonCount);
     });
   });
 
