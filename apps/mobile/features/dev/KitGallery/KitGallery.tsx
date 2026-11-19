@@ -118,6 +118,12 @@ export function KitGallery() {
       <Section title="Toggles">
         <Toggle label="Switch" value={soundOn} onValueChange={setSoundOn} />
         <Toggle label="Switch, off" value={false} onValueChange={() => {}} />
+        <Toggle
+          label="Switch, with a description"
+          description="A line that says what the switch does."
+          value={soundOn}
+          onValueChange={setSoundOn}
+        />
         <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
       </Section>
 

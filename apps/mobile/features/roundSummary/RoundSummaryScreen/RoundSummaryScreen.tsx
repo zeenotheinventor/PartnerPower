@@ -1,10 +1,11 @@
 import { copy, fillCopy } from '@getfreak/content';
-import { summarise } from '@getfreak/core';
+import { isRoundOver, summarise, type RoundState } from '@getfreak/core';
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, Screen } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { useRound } from '../../round/RoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
 import { PlayerScore } from '../PlayerScore';
@@ -12,6 +13,9 @@ import { PlayerScore } from '../PlayerScore';
 const hubRoute = '/';
 const setupRoute = '/games/dares/setup';
 const playRoute = '/games/dares/play';
+
+// A round state is replaced by a new object on every action, so the finished round is one object.
+const celebratedRounds = new WeakSet<RoundState>();
 
 const plural = (count: number, one: string, many: string) => (count === 1 ? one : many);
 
@@ -24,6 +28,20 @@ export function RoundSummaryScreen() {
   const router = useRouter();
   const { round, lastStart, startNewRound } = useRound();
   const summary = round ? summarise(round) : undefined;
+
+  // The celebration buzz fires when the summary first shows, once for the round. The round is
+  // remembered outside the screen, so a screen that mounts again for the same round does not fire
+  // it twice. Play again starts a new round while this screen is still up, and that one is not over,
+  // so it waits for its own summary.
+  const { roundComplete, cancelHaptics } = useFeedback();
+  useEffect(() => {
+    if (!round || !isRoundOver(round) || celebratedRounds.has(round)) return;
+    celebratedRounds.add(round);
+    roundComplete();
+  }, [round, roundComplete]);
+
+  // Leaving the summary drops the rest of the buzz.
+  useEffect(() => cancelHaptics, [cancelHaptics]);
 
   // Setup is under this screen, so going back to it is how Settings opens it.
   const openSettings = () => (router.canGoBack() ? router.back() : router.replace(setupRoute));

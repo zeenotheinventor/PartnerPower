@@ -4,11 +4,11 @@ An 18+ mobile app of games for couples, played together on one phone.
 
 ## Stack
 
-Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend.
+Expo, React Native, TypeScript, Expo Router and NativeWind. Node 26 and pnpm. No backend. Native modules: `expo-sqlite` for storage, `expo-audio` for button sounds and `expo-haptics` for vibration feedback.
 
 ## Layout
 
-- `apps/mobile`: the Expo app.
+- `apps/mobile`: the Expo app. Its button sounds are in `assets/sounds`, made by `scripts/generateSounds.mjs`.
 - `packages/core`: game rules in pure TypeScript, with no React, React Native or Expo imports.
 - `packages/content`: user-facing copy and other data.
 - `packages/tokens`: design tokens: colours for the light and dark themes, type, spacing and radius.
@@ -47,6 +47,9 @@ To make an Android build, from `apps/mobile`:
    Android asks you to allow installs from your browser the first time.
 
 Installing a newer `.apk` over the old one keeps what the app has stored on the phone.
+
+Adding or changing a native module, such as `expo-audio` or `expo-haptics`, needs a new build. A
+development client made before the change does not have the module, so make a new one.
 
 iPhone builds need a paid Apple Developer account and are not set up yet.
 

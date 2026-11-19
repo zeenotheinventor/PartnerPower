@@ -13,6 +13,14 @@ export type Settings = {
   playerNames: PlayerNames;
   /** Stores the names to prefill next time. It never rejects, a failed write is ignored. */
   savePlayerNames: (playerNames: PlayerNames) => Promise<void>;
+  /** Whether button and card sounds play. On until the player turns it off. */
+  soundOn: boolean;
+  /** Stores the sound switch. It never rejects, a failed write is ignored. */
+  setSoundOn: (soundOn: boolean) => Promise<void>;
+  /** Whether presses and the end of a round buzz. On until the player turns it off. */
+  hapticsOn: boolean;
+  /** Stores the vibration switch. It never rejects, a failed write is ignored. */
+  setHapticsOn: (hapticsOn: boolean) => Promise<void>;
 };
 
 export type SettingsProviderProps = {

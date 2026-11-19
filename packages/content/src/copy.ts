@@ -16,6 +16,15 @@ export const copy = {
   hub: {
     greeting: 'Welcome back, you two. What are we feeling?',
     comingSoon: 'Coming soon',
+    settings: 'Settings',
+  },
+  settings: {
+    title: 'Settings',
+    backLabel: 'Back',
+    soundsLabel: 'Sounds',
+    soundsCaption: 'Button and card sounds.',
+    vibrationLabel: 'Vibration',
+    vibrationCaption: 'A buzz when you press, and when a round ends.',
   },
   roundSetup: {
     title: 'Set the round',

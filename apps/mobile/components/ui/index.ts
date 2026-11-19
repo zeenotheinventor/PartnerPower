@@ -1,5 +1,5 @@
 export { Button } from './Button';
-export type { ButtonProps, ButtonVariant } from './Button';
+export type { ButtonFeedback, ButtonProps, ButtonVariant } from './Button';
 export { Card } from './Card';
 export type { CardProps } from './Card';
 export { CategoryToggle } from './CategoryToggle';

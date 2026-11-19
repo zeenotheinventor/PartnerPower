@@ -1,6 +1,8 @@
 import { act, renderRouter } from 'expo-router/testing-library';
 import backend from 'expo-sqlite/kv-store';
 
+import { createNativeFeedbackDevice } from '../../../feedback/nativeFeedbackDevice';
+
 // Importing this file first sets up what the real route tree needs under Jest. The real storage
 // module runs over an in-memory backend, so the native module is not needed and a "second launch"
 // is a fresh render over the same stored data.
@@ -29,7 +31,16 @@ jest.mock('expo-constants', () => {
 // The style sheet is compiled by Metro, which Jest does not run.
 jest.mock('../../../global.css', () => ({}));
 
+// The phone's sounds and haptics are replaced by one recording device, so a route test can check
+// what a press asked for. A test clears it before it starts.
+jest.mock('../../../feedback/nativeFeedbackDevice', () => {
+  const device = { playSound: jest.fn(), triggerHaptic: jest.fn(), cancelHaptics: jest.fn() };
+  return { createNativeFeedbackDevice: () => device };
+});
+
 export { backend };
+
+export const feedbackDevice = createNativeFeedbackDevice();
 
 type RouterContext = Parameters<typeof renderRouter>[0];
 

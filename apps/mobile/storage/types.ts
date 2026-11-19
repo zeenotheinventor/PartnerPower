@@ -5,7 +5,7 @@ import type { ZodType } from 'zod';
  * add its name here and a schema for its value in `core`. Never rename an
  * existing key, because the string is what is written to the device.
  */
-export type StorageKey = 'entryConfirmation' | 'playerNames';
+export type StorageKey = 'entryConfirmation' | 'playerNames' | 'soundOn' | 'hapticsOn';
 
 export type StorageBackend = {
   getItem(key: string): Promise<string | null>;

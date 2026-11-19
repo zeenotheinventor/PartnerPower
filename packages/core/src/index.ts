@@ -1,6 +1,11 @@
 export { gameEntries, gameIds, isGameId } from './games';
 export type { GameEntry, GameId, GameStatus } from './games';
-export { entryConfirmationSchema, playerNamesSchema } from './settings';
+export {
+  entryConfirmationSchema,
+  hapticsOnSchema,
+  playerNamesSchema,
+  soundOnSchema,
+} from './settings';
 export type { EntryConfirmation, PlayerNames } from './settings';
 export { checkCardText, limits, tidyCardText } from './cardText';
 export type { CardTextProblem } from './cardText';

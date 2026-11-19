@@ -2,6 +2,8 @@ import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { StyleSheet } from 'react-native';
 
+import { createMockFeedback } from '../../../feedback/createMockFeedback';
+import { FeedbackContext } from '../../../feedback/FeedbackProvider';
 import { hostViewsInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { Button } from './Button';
@@ -81,6 +83,85 @@ describe('Button', () => {
 
     expect(edgeOf(button)).toHaveStyle({ position: 'absolute', top: 4, bottom: 0 });
     expect(StyleSheet.flatten(button.props.style).backgroundColor).toBeUndefined();
+  });
+
+  describe('press feedback', () => {
+    async function renderWithFeedback(button: React.ReactElement) {
+      const feedback = createMockFeedback();
+      await renderThemed(
+        <FeedbackContext.Provider value={feedback}>{button}</FeedbackContext.Provider>,
+      );
+      return feedback;
+    }
+
+    it('should ask for the default tap when pressed', async () => {
+      const feedback = await renderWithFeedback(<Button label="Continue" onPress={jest.fn()} />);
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(feedback.tap).toHaveBeenCalledTimes(1);
+      expect(feedback.done).not.toHaveBeenCalled();
+      expect(feedback.pass).not.toHaveBeenCalled();
+    });
+
+    it.each(['done', 'pass'] as const)('should ask for %s when named', async (moment) => {
+      const feedback = await renderWithFeedback(
+        <Button label="Continue" feedback={moment} onPress={jest.fn()} />,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(feedback[moment]).toHaveBeenCalledTimes(1);
+      expect(feedback.tap).not.toHaveBeenCalled();
+    });
+
+    it('should ask for nothing when it opts out', async () => {
+      const onPress = jest.fn();
+      const feedback = await renderWithFeedback(
+        <Button label="Continue" feedback="none" onPress={onPress} />,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+      expect(feedback.tap).not.toHaveBeenCalled();
+      expect(feedback.done).not.toHaveBeenCalled();
+      expect(feedback.pass).not.toHaveBeenCalled();
+    });
+
+    it('should ask for nothing when disabled', async () => {
+      const feedback = await renderWithFeedback(
+        <Button label="Continue" disabled onPress={jest.fn()} />,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(feedback.tap).not.toHaveBeenCalled();
+    });
+
+    it('should ask for the feedback before running the action, and still run it', async () => {
+      const order: string[] = [];
+      const feedback = createMockFeedback();
+      feedback.tap.mockImplementation(() => order.push('feedback'));
+      await renderThemed(
+        <FeedbackContext.Provider value={feedback}>
+          <Button label="Continue" onPress={() => order.push('action')} />
+        </FeedbackContext.Provider>,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(order).toEqual(['feedback', 'action']);
+    });
+
+    it('should press quietly with no provider', async () => {
+      const onPress = jest.fn();
+      await renderThemed(<Button label="Continue" onPress={onPress} />);
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe.each(themeNames)('with the device in %s mode', (themeName) => {

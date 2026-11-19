@@ -13,7 +13,19 @@
     "android": {
       "package": "com.sojisoft.getfreak"
     },
-    "plugins": [["expo-router", { "sitemap": false }], "expo-sqlite"],
+    "plugins": [
+      ["expo-router", { "sitemap": false }],
+      "expo-sqlite",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": false,
+          "recordAudioAndroid": false,
+          "enableBackgroundPlayback": false
+        }
+      ],
+      "expo-asset"
+    ],
     "extra": {
       "eas": {
         "projectId": "1834f7be-5756-4b68-a1d7-222025529b22"

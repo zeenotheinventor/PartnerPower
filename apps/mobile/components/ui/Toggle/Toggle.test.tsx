@@ -8,7 +8,8 @@ import { Toggle } from './Toggle';
 const themeNames = ['light', 'dark'] as const;
 
 function trackAndKnobOf(toggle: ReturnType<typeof screen.getByRole>) {
-  const [track, knob] = hostViewsInside(toggle);
+  // The track and the knob are the last two views, after the one that holds the text.
+  const [track, knob] = hostViewsInside(toggle).slice(-2);
   return { track, knob };
 }
 
@@ -17,6 +18,34 @@ describe('Toggle', () => {
     await renderThemed(<Toggle label="Sound" value={false} onValueChange={jest.fn()} />);
 
     expect(screen.getByRole('switch', { name: 'Sound' })).toBeOnTheScreen();
+  });
+
+  it('should give the description as the hint of the switch and show it', async () => {
+    await renderThemed(
+      <Toggle label="Sound" description="Button sounds." value onValueChange={jest.fn()} />,
+    );
+
+    expect(screen.getByRole('switch', { name: 'Sound' }).props.accessibilityHint).toBe(
+      'Button sounds.',
+    );
+    expect(screen.getByText('Button sounds.')).toBeOnTheScreen();
+  });
+
+  it('should set the description in the body type and the muted colour', async () => {
+    await renderThemed(
+      <Toggle label="Sound" description="Button sounds." value onValueChange={jest.fn()} />,
+    );
+
+    expect(screen.getByText('Button sounds.')).toHaveStyle({
+      color: colorThemes.light.muted.toLowerCase(),
+    });
+  });
+
+  it('should have no hint and no extra text without a description', async () => {
+    await renderThemed(<Toggle label="Sound" value onValueChange={jest.fn()} />);
+
+    expect(screen.getByRole('switch', { name: 'Sound' }).props.accessibilityHint).toBeUndefined();
+    expect(screen.getAllByText(/./)).toHaveLength(1);
   });
 
   it('should expose that it is on', async () => {
