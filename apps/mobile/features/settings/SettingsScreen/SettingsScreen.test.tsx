@@ -245,6 +245,8 @@ describe('SettingsScreen', () => {
       };
       await renderScreen(createInMemoryBackend(), lateReminder);
 
+      // Before the read finishes the row has no value, so its name is the label alone.
+      expect(screen.getByRole('button', { name: copy.settings.reminderLabel })).toBeOnTheScreen();
       await act(async () => finishRead());
 
       expect(
