@@ -28,6 +28,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | App            | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
 | Navigation     | Expo Router, file-based                                                                                                      |
 | Press feedback | `expo-audio` for the button sounds and `expo-haptics` for the haptics. Both are native modules.                              |
+| Press effects  | `react-native-reanimated`, with plain views for every shape. No other native module.                                         |
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
 | Storage        | `expo-sqlite` (SQLCipher build) for what players write, its key-value store for settings, `expo-secure-store` for the key    |
@@ -572,7 +573,7 @@ apps/mobile/
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen
-  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
+  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
@@ -723,18 +724,19 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                              |
-| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                     |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                           |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.    |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                     |
-| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look. |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.  |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                               |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                  |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                 |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                      |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                        |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                              |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.       |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                        |
+| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.    |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.     |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                  |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                     |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                    |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                         |
+| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches. |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -809,6 +811,41 @@ player to confirm they are 18 or over, and its wording is in `content`.
   asked of them mocks them itself. Route tests replace the native device with one recording device,
   `feedbackDevice` in `features/welcome/testing/appEnvironment`.
 
+## Press effects
+
+Pressing Done or Pass on the turn screen plays a short effect from the button. They live in
+`features/roundPlay/pressEffect`. They are decoration only.
+
+- **Done** is a starburst of 590 ms: a core star and twelve stars, diamonds and dots fanning up from
+  the top edge of the button, in the colour of the card's category (together cards too). **Pass** is
+  a splash of 700 ms: a muted ring and six drops that jump and fall back under gravity. They differ
+  in shape, direction and colour, so they can be told apart with the sound off.
+- Every shape is a plain view in token classes, because the app has no svg library. A star is two
+  stretched squares, a diamond is a turned square and a dot is a pill.
+- `motion.ts` holds every duration, easing, angle and distance in typed constants, with the per
+  particle tables from the design. `effectDuration` is derived from them.
+- The effect is hosted in `RoundPlayScreen`, not in the button, because answering replaces the
+  buttons at once. `TurnView` measures the pressed button with `measureInWindow` before it calls
+  the answer, and the answer never waits for the measurement. The screen then measures its own
+  root view, shifts the bounds to that view's corner, and draws `PressEffectLayer` over the
+  current view. The effect starts at the centre of the button's top edge.
+- There is one effect at a time. A new press gives the effect a new key, which remounts the layer
+  and drops the particles of the one still playing. The layer takes itself off after the effect's
+  duration with a timer, and clears the timer if it unmounts first, so leaving the screen
+  mid effect leaves nothing behind.
+- The layer has `pointerEvents="none"`, `accessibilityElementsHidden` and
+  `importantForAccessibility="no-hide-descendants"`. The buttons keep their role and name.
+- With the system reduce motion setting on (`useReducedMotion()`), no particle is mounted. An 8 dp
+  ring around the button fades in and out instead, in the category colour for Done and muted for
+  Pass. Its timings carry `reduceMotion: ReduceMotion.Never`, or Reanimated would skip them.
+- The effect of the last card is not shown. The screen is replaced by the summary as soon as the
+  round ends, which unmounts the layer.
+- The effects are not tied to the Settings switches. Sound and vibration have their own, and the
+  system reduce motion setting is the only control of the animation.
+- Under Jest, `jest.setup.js` mocks `react-native-worklets` and `react-native-reanimated` with their
+  own mocks, so an animation jumps to its end and never runs. Tests check what is mounted, not the
+  frames. `useReducedMotion` is a Jest mock there, set per test.
+
 ## Settings screen
 
 `features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
@@ -819,6 +856,30 @@ stored at once through the settings context. The hub has a secondary Settings bu
 tiles, pushed to the bottom by a flexible spacer. The dev kit link stays below it, in development builds only. The route is in the second protected group of `EntryStack`, so it is closed until the player
 has confirmed. Back goes to the hub, and a deep link with nothing behind it replaces the screen with
 the hub. All its text is in `content`.
+
+## Updates
+
+JavaScript and content changes reach installed phones over the air, through EAS Update.
+
+- `expo-updates` is configured in `apps/mobile/app.json`. `updates.url` points at the EAS project,
+  `checkAutomatically` is `ON_LOAD` and `fallbackToCacheTimeout` is 0. At launch the app checks for
+  an update and downloads it in the background without waiting for it, and the update runs from the
+  next cold start. Nothing calls `reloadAsync`, so the app never restarts in the middle of a round.
+- `runtimeVersion` uses the `fingerprint` policy, a hash of the project's native parts. A new native
+  module, plugin, permission or native config moves the hash by itself, and a JavaScript-only change
+  does not. An update only reaches builds with the same runtime version, so one built from a
+  different lockfile or config just does not reach the phone. Any native change needs a new build.
+- Each EAS build profile has a channel: `preview` and `development` for now, and `production` gets
+  its own when the store profile exists. An update is published to a channel from `apps/mobile`
+  with `eas update`, see the README. CI never publishes.
+- A failed check or download is silent. The app keeps the version it has, and nothing is logged.
+- `apps/mobile/updates` holds the toast logic. `announceUpdateOnce` takes an `UpdatesDevice`, which
+  is the only thing that touches `expo-updates` (`nativeUpdatesDevice`), and the storage. It returns
+  true once for each update id that differs from the stored `lastShownUpdateId`, and records it. An
+  embedded launch (a fresh install or the installed build), no update id, or a device that cannot be
+  read gives false. `UpdateToastHost` sits in the root layout and shows the kit `Toast` with the
+  line from `content` when that is true. Under Jest `expo-updates` is replaced by an embedded
+  launch, so no test announces an update by accident.
 
 ## Storage
 
@@ -921,7 +982,8 @@ module, `storage/personal`, and nothing else touches it.
   inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
   a test does the same for the app's CSS files. Named colours such as `red` are not checked, so
-  review has to keep those out.
+  review has to keep those out. The one allowed `style` prop is an animated style on a Reanimated
+  `Animated.View`, see Press effects.
 - The one exception is `apps/mobile/app.json`. The splash screen background (light and dark) and
   the Android adaptive icon background are read by native code before any JavaScript runs, so they
   must be written there as hex values. `apps/mobile/appConfig.test.ts` keeps them equal to the
@@ -1015,8 +1077,16 @@ and pnpm 9.11.0, and the README has the steps.
 
 - No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
   data comes only from what Apple and Google collect from players who opt in on their phones.
-- The app makes no network calls and collects no data, so both store privacy answers are "no data
-  collected". `docs/compliance.md` checks every library against that answer.
+- The app makes one network call, the check for an update. It goes to Expo's update service
+  (`u.expo.dev`) and sends the platform, the runtime version, the channel, the ids of the update the
+  app is running and of the embedded build, a random install id that `expo-updates` makes (not tied
+  to a person or a device), the update protocol versions, and the text of a crash from the previous
+  launch if there was one. It sends no player names, card text, settings or anything typed. The
+  request also reveals the phone's IP address to Expo, as any network request does. The crash text
+  (`Expo-Fatal-Error`) holds whatever a thrown error's message holds. Because of the install id and
+  the crash text, the store privacy answers probably become crash data and a device id, not linked
+  to the user, which is an owner decision in FRK-79. `docs/compliance.md` checks every library
+  against the answers, and it and the privacy policy now describe the update check.
 - The privacy policy is one export, `privacyPolicy`, in `packages/content`. The settings screen
   shows it, and the owner hosts the same words at the URL given to the stores.
 - The policy describes the launch build. `docs/compliance.md` lists what must be true before it is
@@ -1026,7 +1096,8 @@ and pnpm 9.11.0, and the README has the steps.
   data updates `docs/compliance.md` and `privacyPolicy` in the same pull request.
 - Never log player names, card text or anything a player typed. That includes deck names, the
   database key and anything read from the personal store. The storage and provider tests spy on the
-  console to check it.
+  console to check it. The same goes for the message of a thrown error, because a crash is reported
+  to Expo. Never put player text in an `Error` message.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
 - Test fixtures contain placeholder text only.
@@ -1127,11 +1198,27 @@ and pnpm 9.11.0, and the README has the steps.
 | Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                                                           | FRK-35 |
 | Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                                                               | FRK-35 |
 | The app icon is discreet                             | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                                                                | FRK-19 |
+| Runtime version policy                               | `fingerprint`, a hash of the native parts of the project that EAS computes, so a native change moves it with no manual step and an update never reaches a build with different native code. `appVersion` was rejected, because a forgotten `version` bump would ship JavaScript to phones with different native code and crash them.                                                    | FRK-80 |
+| When an update applies                               | Check on launch, download in the background, run from the next cold start (`ON_LOAD`, timeout 0). The app never reloads while in use, so a round is never cut off.                                                                                                                                                                                                                      | FRK-80 |
+| Update failures                                      | Silent. The app keeps its version and nothing is logged.                                                                                                                                                                                                                                                                                                                                | FRK-80 |
+| When the update toast shows                          | On a launch that is not embedded, when the running update id differs from the stored `lastShownUpdateId`. Never on a fresh install or the installed build. The id is stored when the toast is decided, so a launch that is closed early still counts as told.                                                                                                                           | FRK-80 |
+| Toast placement and dismissal                        | A kit component at the bottom, over every screen, from the root layout. About 3 seconds, tap to dismiss, polite live region, announced on iOS, no fade with reduce motion.                                                                                                                                                                                                              | FRK-80 |
+| Over-the-air network call                            | The update check is the app's first network call. See Privacy.                                                                                                                                                                                                                                                                                                                          | FRK-80 |
+| Toast fade style                                     | The Toast's Animated `{ opacity }` is the one non-test `style=` outside Reanimated animated styles. An `Animated.Value` is a runtime value that a class cannot express, and it is not a CSS value from a token.                                                                                                                                                                         | FRK-80 |
 | Secret match is its own reducer                      | Secret match is a reducer in `secretMatch.ts`, not part of the round engine. It has its own state, setup and actions, and takes the questions as an argument.                                                                                                                                                                                                                           | FRK-37 |
 | Revealed state holds matches only                    | The revealed state is the phase, the matches and the item count. It holds no names and no ratings, so nothing is left to leak.                                                                                                                                                                                                                                                          | FRK-37 |
 | Stop at the reveal does nothing                      | `stop` applies in a pass and at the handoff. Once the session is revealed it returns the same state, because the reveal is the end of the session and the screens leave it by navigating.                                                                                                                                                                                               | FRK-37 |
 | Short categories in a session                        | When a category has too few items for its share, the others make it up, mild to bold, fresh items first, then avoided ones. The session only gets shorter when the whole pool is short.                                                                                                                                                                                                 | FRK-37 |
 | Player names in the view                             | The view gives the current player's name, and the handoff view names both players, so screens hold no state to look names up.                                                                                                                                                                                                                                                           | FRK-37 |
+| Press effects library                                | `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.                                                                                                                                                                                                                                                        | FRK-27 |
+| Where press effects are drawn                        | A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.                                                                                                                                                                                                           | FRK-27 |
+| Style prop for animated styles                       | `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.                                                                                                                                                                                                    | FRK-27 |
+| One press effect at a time                           | The design said to let two run. The ticket says effects must not stack, so a new press replaces the one playing, by remounting the layer with a new key.                                                                                                                                                                                                                                | FRK-27 |
+| Motion constants                                     | Durations, easings, angles, distances and particle tables are typed constants in `pressEffect/motion.ts`, the seed for a `motion` token group if more motion arrives.                                                                                                                                                                                                                   | FRK-27 |
+| Reduce motion effect                                 | No particles are mounted. A fade only ring sits 8 dp outside the button, 400 ms for Done and 480 ms for Pass, with `ReduceMotion.Never` so Reanimated does not skip it.                                                                                                                                                                                                                 | FRK-27 |
+| Reanimated under Jest                                | `jest.setup.js` uses the worklets and Reanimated mocks, where an animation jumps to its end, so tests check what is mounted. `useReducedMotion` is a Jest mock. A spy on `withTiming` covers the ignored `reduceMotion` option.                                                                                                                                                         | FRK-27 |
+| Effect layer test ids                                | The layer is decoration with no role or name and is hidden from screen readers, so tests find it by test id with hidden elements included. This is the one case where a test id is the right query.                                                                                                                                                                                     | FRK-27 |
+| Effect not in the kit gallery                        | The layer belongs to the play screen and is not a reusable kit component, so it has no gallery entry.                                                                                                                                                                                                                                                                                   | FRK-27 |
 | Favourite writes are optimistic                      | The summary flips a favourite control at once, writes it through the repository and, on failure, puts it back and shows the message under that card. One message shows at a time and it clears when that control next changes. The design's engineering notes set this.                                                                                                                 | FRK-55 |
 | Favourites are ignored while the store loads         | The control does nothing until the personal store has loaded and the favourites are read, because a write to the placeholder store is lost when the real one arrives. It has no disabled look, since the design has none and the load finishes at launch, long before a round ends. A load that failed still allows writes, which last for the session.                                 | FRK-55 |
 | The summary list stays in the scrolling Screen       | FRK-36 asks long lists to use a list component. The design's notes say a `Screen` that scrolls is fine for the summary, a round being short, and reserve the list component for the deck editor and My dares. The summary keeps `Screen scroll`, so this screen is not rebuilt around a list while the characters ticket edits it. An endless round is the one case that could grow it. | FRK-55 |

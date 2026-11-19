@@ -2,14 +2,20 @@ import { categoryNames, copy, fillCopy } from '@getfreak/content';
 import { categories, isRoundOver, type CategoryId, type RoundState } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { usePreventRemove } from 'expo-router/react-navigation';
-import { useEffect, useState } from 'react';
-import { Text } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import { Text, View } from 'react-native';
 
 import { Header, Screen } from '../../../components/ui';
 import { useRound } from '../../round/RoundProvider';
 import { EndRoundDialog } from '../EndRoundDialog';
 import { HandoffView } from '../HandoffView';
 import { NotThisOneSheet } from '../NotThisOneSheet';
+import {
+  PressEffectLayer,
+  type ButtonBounds,
+  type PressEffect,
+  type PressEffectKind,
+} from '../pressEffect';
 import { SteppingUpView } from '../SteppingUpView';
 import { TurnView } from '../TurnView';
 
@@ -55,6 +61,30 @@ export function RoundPlayScreen() {
   const stage = round && stageState?.cardNumber === cardNumber ? stageState.stage : null;
   const currentStage = stage ?? (round ? firstStage(round) : 'card');
   const showStage = (nextStage: Stage) => setStageState({ cardNumber, stage: nextStage });
+
+  // The effect of the answer button that was pressed, drawn over whichever view is showing. A new
+  // press replaces the one still playing, so effects never stack.
+  const hostRef = useRef<View>(null);
+  const effectCount = useRef(0);
+  const [pressEffect, setPressEffect] = useState<PressEffect>();
+  const category = current?.card.category;
+  const playPressEffect = (kind: PressEffectKind, buttonInWindow: ButtonBounds) => {
+    if (!category) return;
+    // The button is measured in the window, and the layer draws from the corner of this view.
+    hostRef.current?.measureInWindow((hostX, hostY) => {
+      effectCount.current += 1;
+      setPressEffect({
+        key: effectCount.current,
+        kind,
+        category,
+        bounds: { ...buttonInWindow, x: buttonInWindow.x - hostX, y: buttonInWindow.y - hostY },
+      });
+    });
+  };
+  const finishPressEffect = useCallback(
+    (key: number) => setPressEffect((playing) => (playing?.key === key ? undefined : playing)),
+    [],
+  );
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
@@ -169,12 +199,15 @@ export function RoundPlayScreen() {
         onPass={() => dispatch({ type: 'pass' })}
         onEndRound={() => setIsDialogOpen(true)}
         onNotThisOne={() => setIsSheetOpen(true)}
+        onPressEffect={playPressEffect}
       />
     );
   }
 
   return (
-    <>
+    // Not collapsable, because this view is measured and a view with no style of its own is
+    // removed on Android.
+    <View ref={hostRef} collapsable={false} className="flex-1">
       {view}
       <NotThisOneSheet
         visible={isSheetOpen}
@@ -192,6 +225,13 @@ export function RoundPlayScreen() {
         onConfirm={endRound}
         onCancel={() => setIsDialogOpen(false)}
       />
-    </>
+      {pressEffect ? (
+        <PressEffectLayer
+          key={pressEffect.key}
+          effect={pressEffect}
+          onFinished={finishPressEffect}
+        />
+      ) : null}
+    </View>
   );
 }

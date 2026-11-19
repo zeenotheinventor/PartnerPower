@@ -16,5 +16,7 @@ export { SegmentedControl } from './SegmentedControl';
 export type { SegmentedControlOption, SegmentedControlProps } from './SegmentedControl';
 export { TextField } from './TextField';
 export type { TextFieldProps } from './TextField';
+export { Toast } from './Toast';
+export type { ToastProps } from './Toast';
 export { Toggle } from './Toggle';
 export type { ToggleProps } from './Toggle';

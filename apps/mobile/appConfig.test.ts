@@ -62,3 +62,12 @@ describe('app.json colours', () => {
     expect(collectColorValues(appConfig)).toHaveLength(3);
   });
 });
+
+describe('app.json updates', () => {
+  // With the app version policy, a native change without a version bump would send JavaScript to
+  // phones whose native code does not match it, and they would crash. The fingerprint policy
+  // follows the native code on its own, so a revert to another policy must fail here.
+  it('should follow the native fingerprint for the runtime version', () => {
+    expect(appConfig.expo.runtimeVersion.policy).toBe('fingerprint');
+  });
+});

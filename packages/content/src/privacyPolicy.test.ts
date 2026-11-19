@@ -32,6 +32,40 @@ describe('privacyPolicy', () => {
     expect(privacyPolicy.contactEmail).not.toMatch(/@example\.com$/);
   });
 
+  describe('the update check', () => {
+    const updateSection = privacyPolicy.sections.find((section) =>
+      section.heading.toLowerCase().includes('update'),
+    );
+    const updateText = (updateSection?.paragraphs ?? []).join(' ');
+
+    it('should have a section that says the app checks with Expo for updates when it opens', () => {
+      expect(updateText).toMatch(/when the app opens/i);
+      expect(updateText).toContain('Expo');
+    });
+
+    it('should name Expo and the update check, and point to its own privacy policy', () => {
+      expect(updateSection?.heading).toBe('Checking for updates');
+      expect(updateText).toContain('Expo');
+      expect(updateText).toMatch(/check/);
+      expect(updateText).toContain("Expo's own privacy policy covers what it receives.");
+    });
+
+    it('should say what the check sends, including the crash report and the IP address', () => {
+      expect(updateText).toMatch(/crash report/i);
+      expect(updateText).toMatch(/IP address/);
+    });
+
+    it('should say it never sends what you type or play', () => {
+      expect(updateText).toMatch(/never sends anything you type or play/);
+    });
+
+    it('should not claim that nothing is sent, or that nothing is collected from anyone', () => {
+      allText.forEach((text) => {
+        expect(text).not.toMatch(/does not send anything|collects nothing/i);
+      });
+    });
+  });
+
   it('should follow the house style, with no dashes as punctuation and no semicolons', () => {
     allText.forEach((text) => {
       expect(text).not.toMatch(/[–—;]|\s-\s/);

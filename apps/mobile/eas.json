@@ -12,6 +12,7 @@
       "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
+      "channel": "development",
       "android": {
         "buildType": "apk"
       }
@@ -19,6 +20,7 @@
     "preview": {
       "extends": "base",
       "distribution": "internal",
+      "channel": "preview",
       "autoIncrement": true,
       "android": {
         "buildType": "apk"
