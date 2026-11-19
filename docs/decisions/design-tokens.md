@@ -9,3 +9,4 @@
 - **Together card tint** (FRK-13): The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.
 - **Spacing and radius utility names** (FRK-3): Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.
 - **Design sizes off the scales** (FRK-4): The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.
+- **Palettes in tokens, as named slots** (FRK-18): Each character has a light and a dark palette of the same slots in `packages/tokens`. The art names a slot and never a colour, so one drawing serves both themes. A `rim` slot separates the figure from the dark background.

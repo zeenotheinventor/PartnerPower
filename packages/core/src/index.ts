@@ -1,3 +1,5 @@
+export { characterIds, isCharacterId } from './characters';
+export type { CharacterId } from './characters';
 export { gameEntries, gameIds, isGameId } from './games';
 export type { GameEntry, GameId, GameStatus } from './games';
 export {

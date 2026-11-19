@@ -4,6 +4,7 @@ import { colorThemes, typeScale } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { HubScreen } from './HubScreen';
 
 const mockPush = jest.fn();
@@ -37,6 +38,25 @@ describe('HubScreen', () => {
     await renderThemed(<HubScreen />);
 
     expect(screen.getByText(copy.hub.greeting)).toBeOnTheScreen();
+  });
+
+  it('should have Amara wave and say the greeting, with the heads of Mei and Theo on the tiles', async () => {
+    await renderThemed(<HubScreen />);
+
+    expect(drawnCharacters()).toEqual([
+      {
+        props: { character: 'host', mood: 'wave', size: 'hero' },
+        isHiddenFromScreenReaders: true,
+      },
+      {
+        props: { character: 'dealer', mood: 'flirty', size: 'tile', crop: 'head' },
+        isHiddenFromScreenReaders: true,
+      },
+      {
+        props: { character: 'shy', mood: 'shocked', size: 'tile', crop: 'head' },
+        isHiddenFromScreenReaders: true,
+      },
+    ]);
   });
 
   describe('the game tiles', () => {

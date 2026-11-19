@@ -59,6 +59,7 @@ const favouriteName = copy.favourite.label;
 function makeRepository(): PersonalRepository {
   return createInMemoryPersonalRepository({
     getShippedCards: () => deck.cards,
+    getShippedQuestions: () => [],
     randomUUID: () => '00000000-0000-4000-8000-000000000001',
     now: () => 1,
   });

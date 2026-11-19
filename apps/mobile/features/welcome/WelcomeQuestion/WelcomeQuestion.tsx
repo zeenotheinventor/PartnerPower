@@ -1,14 +1,16 @@
 import { copy } from '@getfreak/content';
 import { Text, View } from 'react-native';
 
-import { Button, Card, Screen } from '../../../components/ui';
+import { Button, Card, Character, Screen, SpeechBubble } from '../../../components/ui';
 import type { WelcomeQuestionProps } from './types';
 
-// The character art joins this screen in a later ticket, so the greeting sits above the card.
 export function WelcomeQuestion({ onConfirm, onDecline }: WelcomeQuestionProps) {
   return (
     <Screen scroll>
-      <Text className="type-body-bold text-foreground">{copy.welcome.greeting}</Text>
+      <View className="items-center gap-16">
+        <SpeechBubble text={copy.welcome.greeting} tail="center" />
+        <Character character="gatekeeper" mood="armsCrossed" size="hero" />
+      </View>
       <Card grouped={false}>
         <Text accessibilityRole="header" className="type-heading text-center text-foreground">
           {copy.welcome.question}

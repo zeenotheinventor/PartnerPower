@@ -1,8 +1,10 @@
-import { categoryIds, type CategoryId } from '@getfreak/core';
+import { characterNames } from '@getfreak/content';
+import { categoryIds, characterIds, type CategoryId, type CharacterId } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { useState, type ReactNode } from 'react';
 import { Text, View } from 'react-native';
 
+import type { MoodOf } from '../../../characters';
 import {
   Button,
   CategoryToggle,
@@ -16,6 +18,16 @@ import {
   Toast,
   Toggle,
 } from '../../../components/ui';
+import { CharacterShowcase } from './CharacterShowcase';
+
+// The moods each character shows in the gallery, typed so a mood a character cannot show fails.
+const castMoods: { [Id in CharacterId]: readonly [MoodOf<Id>, ...MoodOf<Id>[]] } = {
+  host: ['idle', 'happy', 'flirty', 'shocked', 'wave'],
+  dealer: ['idle', 'happy', 'flirty', 'shocked'],
+  hype: ['idle', 'happy', 'flirty', 'shocked', 'celebrate'],
+  gatekeeper: ['idle', 'happy', 'flirty', 'shocked', 'armsCrossed'],
+  shy: ['idle', 'happy', 'flirty', 'shocked', 'flustered', 'coverEyes'],
+};
 
 function Section({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -192,6 +204,18 @@ export function KitGallery() {
               <CategoryToggle label="Category four" category="c4" value onValueChange={() => {}} />
             </View>
           </View>
+        </Section>
+
+        <Section title="Cast">
+          {characterIds.map((characterId) => (
+            <CharacterShowcase
+              key={characterId}
+              character={characterId}
+              name={characterNames[characterId].name}
+              line={characterNames[characterId].personality}
+              moods={castMoods[characterId]}
+            />
+          ))}
         </Section>
 
         <Section title="Text field">
