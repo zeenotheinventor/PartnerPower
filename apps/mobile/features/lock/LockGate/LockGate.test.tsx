@@ -445,6 +445,25 @@ describe('LockGate', () => {
       expect(lockHeading()).toBeOnTheScreen();
     });
 
+    it('should lock when the app state handler throws on the return', async () => {
+      await renderGate();
+      await unlockWithPin();
+      await changeAppState('background');
+      await advance(1_000);
+
+      // Only the gate's own read of the clock fails, so React's scheduler keeps working.
+      const realNow = Date.now.bind(Date);
+      jest.spyOn(Date, 'now').mockImplementation(() => {
+        if (new Error().stack?.includes('useLockGate')) throw new Error('The clock failed');
+        return realNow();
+      });
+      await changeAppState('active');
+      jest.mocked(Date.now).mockRestore();
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
     it('should lock when the steady clock answers with something that is not a number', async () => {
       await renderGate();
       await unlockWithPin();
