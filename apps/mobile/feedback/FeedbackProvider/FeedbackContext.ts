@@ -6,9 +6,19 @@ const silentFeedback: Feedback = {
   tap: () => {},
   done: () => {},
   pass: () => {},
+  toggleOn: () => {},
+  toggleOff: () => {},
+  select: () => {},
+  back: () => {},
+  locked: () => {},
+  deal: () => {},
+  stepUp: () => {},
+  handover: () => {},
+  sheetOpen: () => {},
   roundComplete: () => {},
   timerEnd: () => {},
   cancelHaptics: () => {},
+  cancelScheduled: () => {},
 };
 
 // With no provider above, feedback does nothing. The app has one at its root, so only a component

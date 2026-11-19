@@ -1,6 +1,7 @@
 import { copy } from '@getfreak/content';
 import { fireEvent, screen, within } from 'nativewind/test';
 
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { NotThisOneSheet } from './NotThisOneSheet';
 import type { SheetCategory } from './types';
@@ -176,5 +177,39 @@ describe('NotThisOneSheet', () => {
     fireEvent(screen.getByRole('header', { name: copy.roundPlay.sheetTitle }), 'requestClose');
 
     expect(onClose).toHaveBeenCalledTimes(1);
+  });
+});
+
+describe('NotThisOneSheet feedback', () => {
+  function sheet(visible: boolean) {
+    return (
+      <NotThisOneSheet
+        visible={visible}
+        categories={allOn}
+        onSkip={jest.fn()}
+        onSwitchOff={jest.fn()}
+        onClose={jest.fn()}
+      />
+    );
+  }
+
+  it('should play the opening swoosh once when it opens', async () => {
+    const feedback = await renderWithMockFeedback(sheet(true));
+
+    expect(feedback.sheetOpen).toHaveBeenCalledTimes(1);
+  });
+
+  it('should play nothing while it stays closed', async () => {
+    const feedback = await renderWithMockFeedback(sheet(false));
+
+    expect(feedback.sheetOpen).not.toHaveBeenCalled();
+  });
+
+  it('should give the skip row the ordinary tap', async () => {
+    const feedback = await renderWithMockFeedback(sheet(true));
+
+    fireEvent.press(screen.getByRole('button', { name: copy.roundPlay.skipTitle }));
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
   });
 });

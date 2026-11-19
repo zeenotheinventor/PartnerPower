@@ -1,9 +1,11 @@
 import { copy } from '@getfreak/content';
 import { cssInterop } from 'nativewind';
-import { Modal, Pressable, Text, View } from 'react-native';
+import { useEffect } from 'react';
+import { Modal, Text, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 
-import { Button, CategoryToggle } from '../../../components/ui';
+import { Button, CategoryToggle, FeedbackPressable } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import type { NotThisOneSheetProps } from './types';
 
 // The safe area view needs the interop so that it accepts a class name.
@@ -25,6 +27,11 @@ export function NotThisOneSheet({
   onSwitchOff,
   onClose,
 }: NotThisOneSheetProps) {
+  const { sheetOpen } = useFeedback();
+  useEffect(() => {
+    if (visible) sheetOpen();
+  }, [visible, sheetOpen]);
+
   const isLastCategoryOn = categories.filter(({ isOn }) => isOn).length === 1;
 
   return (
@@ -43,7 +50,7 @@ export function NotThisOneSheet({
               {copy.roundPlay.sheetTitle}
             </Text>
 
-            <Pressable
+            <FeedbackPressable
               accessibilityRole="button"
               accessibilityLabel={skipTitle}
               accessibilityHint={skipHint}
@@ -52,7 +59,7 @@ export function NotThisOneSheet({
             >
               <Text className="type-heading text-foreground">{skipTitle}</Text>
               <Text className="type-caption text-muted">{skipHint}</Text>
-            </Pressable>
+            </FeedbackPressable>
 
             <View className="gap-4">
               <Text className="type-caption uppercase text-muted">

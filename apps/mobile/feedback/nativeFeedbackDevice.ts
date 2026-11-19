@@ -2,9 +2,7 @@ import { createAudioPlayer, setAudioModeAsync, type AudioPlayer } from 'expo-aud
 import * as Haptics from 'expo-haptics';
 import { Platform } from 'react-native';
 
-import doneSound from '../assets/sounds/done.wav';
-import passSound from '../assets/sounds/pass.wav';
-import tapSound from '../assets/sounds/tap.wav';
+import { soundAssets } from './soundAssets';
 import type { FeedbackDevice, FeedbackMoment, FeedbackSound } from './types';
 
 // The phone's own settings decide whether any of this is felt or heard. These calls return a
@@ -28,13 +26,29 @@ const androidEffect = (effect: Haptics.AndroidHaptics) => () =>
 const { ImpactFeedbackStyle, NotificationFeedbackType, AndroidHaptics } = Haptics;
 
 // iOS taps and notifications are its own system patterns, and they follow the System Haptics
-// setting. A press is one pulse, done and pass are two different notification patterns, the end
-// of a round is a longer run of pulses and the end of a timer is one heavy knock, so none of them
-// can be mistaken for another.
+// setting. A press is one light pulse, done and pass are two different notification patterns, and
+// the end of a round is a longer run of pulses, so none of them can be mistaken for another. The
+// other moments are kept subtle: a single light or medium impact, and a double tick for a refusal. The end of a
+// timer is one heavy knock, which no press uses.
 const iosPlans: Record<FeedbackMoment, HapticStep[]> = {
   tap: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
   done: [{ afterMilliseconds: 0, fire: notification(NotificationFeedbackType.Success) }],
   pass: [{ afterMilliseconds: 0, fire: notification(NotificationFeedbackType.Warning) }],
+  toggleOn: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Medium) }],
+  toggleOff: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
+  select: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
+  back: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
+  locked: [
+    { afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) },
+    { afterMilliseconds: 70, fire: impact(ImpactFeedbackStyle.Light) },
+  ],
+  deal: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
+  stepUp: [
+    { afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Medium) },
+    { afterMilliseconds: 110, fire: impact(ImpactFeedbackStyle.Medium) },
+  ],
+  handover: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Medium) }],
+  sheetOpen: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
   roundComplete: [
     { afterMilliseconds: 0, fire: notification(NotificationFeedbackType.Success) },
     { afterMilliseconds: 220, fire: impact(ImpactFeedbackStyle.Rigid) },
@@ -51,6 +65,18 @@ const androidPlans: Record<FeedbackMoment, HapticStep[]> = {
   tap: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Virtual_Key) }],
   done: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Confirm) }],
   pass: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Reject) }],
+  toggleOn: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Toggle_On) }],
+  toggleOff: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Toggle_Off) }],
+  select: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Segment_Tick) }],
+  back: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Virtual_Key_Release) }],
+  locked: [
+    { afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Keyboard_Tap) },
+    { afterMilliseconds: 70, fire: androidEffect(AndroidHaptics.Keyboard_Tap) },
+  ],
+  deal: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Clock_Tick) }],
+  stepUp: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Confirm) }],
+  handover: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Context_Click) }],
+  sheetOpen: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Gesture_Start) }],
   roundComplete: [
     { afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Confirm) },
     { afterMilliseconds: 200, fire: androidEffect(AndroidHaptics.Long_Press) },
@@ -83,9 +109,20 @@ export function createNativeFeedbackDevice(): FeedbackDevice {
   );
 
   const players: Record<FeedbackSound, AudioPlayer> = {
-    tap: createAudioPlayer(tapSound),
-    done: createAudioPlayer(doneSound),
-    pass: createAudioPlayer(passSound),
+    tap: createAudioPlayer(soundAssets.tap),
+    done: createAudioPlayer(soundAssets.done),
+    pass: createAudioPlayer(soundAssets.pass),
+    toggleOn: createAudioPlayer(soundAssets.toggleOn),
+    toggleOff: createAudioPlayer(soundAssets.toggleOff),
+    select: createAudioPlayer(soundAssets.select),
+    back: createAudioPlayer(soundAssets.back),
+    locked: createAudioPlayer(soundAssets.locked),
+    deal: createAudioPlayer(soundAssets.deal),
+    stepUp: createAudioPlayer(soundAssets.stepUp),
+    handover: createAudioPlayer(soundAssets.handover),
+    sheetOpen: createAudioPlayer(soundAssets.sheetOpen),
+    timerEnd: createAudioPlayer(soundAssets.timerEnd),
+    roundComplete: createAudioPlayer(soundAssets.roundComplete),
   };
 
   // The timers of a pattern that is still running, so they can be dropped.

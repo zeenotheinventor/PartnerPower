@@ -1,8 +1,8 @@
 import { copy, fillCopy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { Card, Chip, Header, Screen } from '../../../components/ui';
+import { Card, Chip, FeedbackPressable, Header, Screen } from '../../../components/ui';
 import { useOwnCards } from '../../ownCards/OwnCardsProvider';
 import { setupRoute } from '../../ownCards/routes';
 import { useDeckChoice } from '../DeckChoiceProvider';
@@ -69,7 +69,7 @@ export function DeckPickerScreen() {
               </Card>
             </View>
             {deck === 'favourites' ? (
-              <Pressable
+              <FeedbackPressable
                 accessibilityRole="button"
                 accessibilityLabel={copy.decks.viewFavouritesName}
                 onPress={() => router.push(favouritesRoute)}
@@ -78,7 +78,7 @@ export function DeckPickerScreen() {
                 <Text className="type-caption uppercase text-foreground">
                   {copy.decks.viewFavourites}
                 </Text>
-              </Pressable>
+              </FeedbackPressable>
             ) : null}
           </View>
         ))}

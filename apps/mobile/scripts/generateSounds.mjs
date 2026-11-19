@@ -2,6 +2,11 @@
 // owned by the project. There are no dependencies and nothing random, so a run always writes the
 // same bytes.
 //
+// Variant A also holds the sounds for the rest of the app: the toggles, select, back, locked, the
+// card deal, the step up sting, the hand over chime, the sheet swoosh, the timer end dings and the
+// round jingle. The
+// alternatives only restyle tap, done and pass.
+//
 //   node scripts/generateSounds.mjs               writes variant A to assets/sounds, and
 //                                                 variants B and C to assets/sounds/alternatives
 //   node scripts/generateSounds.mjs --variant b   writes variant B to assets/sounds, to swap it in
@@ -37,8 +42,9 @@ function addNote(samples, { start, frequency, length, decay, overtones = [1] }) 
   }
 }
 
-// A blip whose pitch glides from one frequency to another while it fades out.
-function addGlide(samples, { start, from, to, length, decay }) {
+// A blip whose pitch glides from one frequency to another while it fades out. An attack, in
+// seconds, fades it in first, which makes a soft swoosh in place of a blip.
+function addGlide(samples, { start, from, to, length, decay, attack = 0 }) {
   const first = secondsToSamples(start);
   const count = Math.min(secondsToSamples(length), samples.length - first);
   let phase = 0;
@@ -46,7 +52,8 @@ function addGlide(samples, { start, from, to, length, decay }) {
     const time = index / sampleRate;
     const frequency = from + (to - from) * (time / length);
     phase += (2 * Math.PI * frequency) / sampleRate;
-    samples[first + index] += Math.sin(phase) * Math.exp(-time / decay);
+    const fadeIn = attack > 0 ? Math.min(1, time / attack) : 1;
+    samples[first + index] += Math.sin(phase) * Math.exp(-time / decay) * fadeIn;
   }
 }
 
@@ -103,6 +110,155 @@ const variants = {
       const samples = silence(0.3);
       addGlide(samples, { start: 0, from: 520, to: 400, length: 0.14, decay: 0.07 });
       addGlide(samples, { start: 0.13, from: 400, to: 230, length: 0.17, decay: 0.09 });
+      return samples;
+    },
+
+    // The two states of a switch. On rises and off falls, so they cannot be mixed up.
+    toggleOn: () => {
+      const samples = silence(0.11);
+      addGlide(samples, { start: 0, from: 700, to: 1000, length: 0.06, decay: 0.05 });
+      addGlide(samples, { start: 0.05, from: 1000, to: 1500, length: 0.06, decay: 0.05 });
+      return samples;
+    },
+    toggleOff: () => {
+      const samples = silence(0.11);
+      addGlide(samples, { start: 0, from: 1500, to: 1000, length: 0.06, decay: 0.05 });
+      addGlide(samples, { start: 0.05, from: 1000, to: 700, length: 0.06, decay: 0.05 });
+      return samples;
+    },
+    // Choosing an option: two quick rising ticks, brighter than a tap.
+    select: () => {
+      const samples = silence(0.08);
+      addNote(samples, {
+        start: 0,
+        frequency: 1200,
+        length: 0.05,
+        decay: 0.015,
+        overtones: [1, 0.3],
+      });
+      addNote(samples, {
+        start: 0.03,
+        frequency: 1800,
+        length: 0.05,
+        decay: 0.015,
+        overtones: [1, 0.3],
+      });
+      return samples;
+    },
+    // Going back: one soft, low, falling blip.
+    back: () => {
+      const samples = silence(0.09);
+      addGlide(samples, { start: 0, from: 700, to: 450, length: 0.09, decay: 0.035 });
+      return samples;
+    },
+    // A locked control: two short low notes, the second lower. Plain sine, so it is never harsh.
+    locked: () => {
+      const samples = silence(0.11);
+      addNote(samples, {
+        start: 0,
+        frequency: 330,
+        length: 0.05,
+        decay: 0.02,
+        overtones: [1, 0.3],
+      });
+      addNote(samples, {
+        start: 0.055,
+        frequency: 262,
+        length: 0.055,
+        decay: 0.02,
+        overtones: [1, 0.3],
+      });
+      return samples;
+    },
+    // A new card: three quick ticks that rise, like a card being flicked down.
+    deal: () => {
+      const samples = silence(0.2);
+      [1000, 1300, 1700].forEach((frequency, index) => {
+        addNote(samples, {
+          start: index * 0.06,
+          frequency,
+          length: 0.07,
+          decay: index === 2 ? 0.025 : 0.012,
+          overtones: [1, 0.35],
+        });
+      });
+      return samples;
+    },
+    // The category steps up: a bright rising arpeggio.
+    stepUp: () => {
+      const samples = silence(0.5);
+      [523, 659, 784, 1047].forEach((frequency, index) => {
+        addNote(samples, {
+          start: index * 0.07,
+          frequency,
+          length: 0.3,
+          decay: 0.09,
+          overtones: [1, 0.4, 0.15],
+        });
+      });
+      return samples;
+    },
+    // Hand the phone over: a two note ding dong.
+    handover: () => {
+      const samples = silence(0.55);
+      addNote(samples, {
+        start: 0,
+        frequency: 988,
+        length: 0.3,
+        decay: 0.11,
+        overtones: [1, 0.4, 0.2],
+      });
+      addNote(samples, {
+        start: 0.17,
+        frequency: 784,
+        length: 0.38,
+        decay: 0.13,
+        overtones: [1, 0.4, 0.2],
+      });
+      return samples;
+    },
+    // A sheet or dialog opening: a soft rise that fades in, as two glides slightly apart so they
+    // shimmer.
+    sheetOpen: () => {
+      const samples = silence(0.2);
+      addGlide(samples, { start: 0, from: 300, to: 900, length: 0.2, decay: 0.12, attack: 0.05 });
+      addGlide(samples, { start: 0, from: 308, to: 915, length: 0.2, decay: 0.12, attack: 0.05 });
+      return samples;
+    },
+    // A timer ran out: three bright bell dings at the same pitch, each softer than the last.
+    timerEnd: () => {
+      const samples = silence(0.7);
+      [1, 0.7, 0.45].forEach((level, index) => {
+        const notes = { start: index * 0.2, frequency: 1319, length: 0.3, decay: 0.09 };
+        const ding = silence(0.7);
+        addNote(ding, { ...notes, overtones: [1, 0.4, 0.15] });
+        ding.forEach((value, at) => {
+          samples[at] += value * level;
+        });
+      });
+      return samples;
+    },
+    // The round is over: four rising notes, then a held major chord.
+    roundComplete: () => {
+      const samples = silence(1.15);
+      [523, 659, 784, 1047].forEach((frequency, index) => {
+        addNote(samples, {
+          start: index * 0.12,
+          frequency,
+          length: 0.25,
+          decay: 0.08,
+          overtones: [1, 0.4, 0.15],
+        });
+      });
+      [1047, 1319, 1568].forEach((frequency) => {
+        addNote(samples, {
+          start: 0.5,
+          frequency,
+          length: 0.65,
+          decay: 0.22,
+          overtones: [1, 0.3, 0.1],
+        });
+      });
       return samples;
     },
   },

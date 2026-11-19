@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import type { CategoryId } from '@getfreak/core';
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { CardProps, ShownCardProps } from './types';
 
 type CardTone = CategoryId | 'plain' | 'accent';
@@ -115,10 +116,10 @@ function ShownCard({
   }
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="button"
       accessibilityLabel={label}
-      accessibilityState={selected === undefined ? { disabled } : { disabled, selected }}
+      accessibilityState={selected === undefined ? undefined : { selected }}
       disabled={disabled}
       onPress={onPress}
       className={`group ${disabled ? 'opacity-50' : ''}`}
@@ -146,6 +147,6 @@ function ShownCard({
           </>
         )}
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

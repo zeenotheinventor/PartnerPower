@@ -14,6 +14,8 @@ export { Dialog } from './Dialog';
 export type { DialogProps } from './Dialog';
 export { FavouriteToggle } from './FavouriteToggle';
 export type { FavouriteToggleProps } from './FavouriteToggle';
+export { FeedbackPressable } from './FeedbackPressable';
+export type { FeedbackPressableProps, PressFeedback } from './FeedbackPressable';
 export { Header } from './Header';
 export type { HeaderProps } from './Header';
 export { Screen } from './Screen';
