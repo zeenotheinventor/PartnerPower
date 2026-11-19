@@ -20,3 +20,9 @@
 - **Notice on the next screen** (FRK-49): The free pass confirmation is a `NoticeBox` on the first screen of the next card, a live region that iOS also announces. It is dropped when the player moves on, or when the round ends on that card.
 - **Turn line is always a row** (FRK-49): `TurnView` draws the turn line in a row so the free pass marker can sit at its end. With no marker the row holds only the turn line.
 - **Route tests and surprises** (FRK-49): Surprises are on by default, so route test helpers that start a plain round switch them off, and one route test plays with them on.
+- **Drink If has a home screen** (FRK-60): Unlike Freak or Drink it has four places to go, so the hub tile opens a home and the home opens setup. Secret match is a separate session from a round, because it needs two private passes.
+- **`GameEntry` has an `entryRoute`** (FRK-60): The field was `setupRoute`. It is renamed because a tile now opens a game's home as well as its setup. No registered game is coming soon now, so the hub tests cover that state through the game list.
+- **Entries switch on by a route** (FRK-60): `homeEntries` gives each entry a `route`, null while coming soon, so a later ticket changes one line.
+- **Home shows the returning line** (FRK-60): Nothing records a first visit yet, so the home always shows the line for a return visit. The first visit line is not in `content` until something can choose it. Counts on Discoveries and Your questions wait for their hooks.
+- **Format and topic switches share a card** (FRK-60): Each group is one `Card` with `grouped={false}`, so a screen reader reaches each switch, and rows are split by a border. Static cards are otherwise one accessible group.
+- **Drink If play is a stand-in** (FRK-60): A header and one line, with a way back to setup, until the play ticket replaces it. It does not read the round.

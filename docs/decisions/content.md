@@ -16,3 +16,6 @@
 - **Matches deck limits** (FRK-40): Up to 20 cards, offered at 5 or more suggestions, as constants in `core`. A smaller deck is still valid, so `buildMatchesDeck` does not refuse.
 - **Placeholder secret match tags** (FRK-40): The 12 existing items took the nearest tags in the vocabulary. The secret match content ticket rewrites them.
 - **Surprise names exported** (FRK-49): `packages/content` exports `surpriseNames` from its index, which the screens need.
+- **Secret match library has 70 items, no new tags** (FRK-48): 16 Soft, 16 Foreplay, 18 Oral and 20 Sex, with at least 2 in every topic of every category. The 29 tags already cover the items, so the vocabulary is unchanged. This replaces the FRK-40 placeholder items.
+- **Topic t5 is the couple's own history** (FRK-48): History items are about moments the two of them shared, such as recreating a first date. They never mention a past partner or anyone outside the couple.
+- **No hyphens in item text** (FRK-48): Following the house style for shipped cards, an item says "Sixty nine" with no hyphen, while the tag stays `sixty-nine`. The test rejects any hyphen in item text.

@@ -6,7 +6,6 @@ import { gameEntries } from '@getfreak/core';
 import { fireEvent, screen, waitFor } from 'expo-router/testing-library';
 
 const availableEntry = gameEntries.find((entry) => entry.status === 'available');
-const comingSoonEntry = gameEntries.find((entry) => entry.status === 'comingSoon');
 
 describe('the hub in the route tree', () => {
   beforeEach(async () => {
@@ -27,7 +26,7 @@ describe('the hub in the route tree', () => {
     await launchApp('/');
 
     fireEvent.press(screen.getByRole('button', { name: displayNames[availableEntry.id].title }));
-    await waitFor(() => expect(currentPathname()).toBe(availableEntry.setupRoute));
+    await waitFor(() => expect(currentPathname()).toBe(availableEntry.entryRoute));
 
     expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
@@ -36,7 +35,7 @@ describe('the hub in the route tree', () => {
     if (!availableEntry) throw new Error('The registry has no available game');
     await launchApp('/');
     fireEvent.press(screen.getByRole('button', { name: displayNames[availableEntry.id].title }));
-    await waitFor(() => expect(currentPathname()).toBe(availableEntry.setupRoute));
+    await waitFor(() => expect(currentPathname()).toBe(availableEntry.entryRoute));
 
     fireEvent.press(screen.getByRole('button', { name: copy.roundSetup.backLabel }));
     await waitFor(() => expect(currentPathname()).toBe('/'));
@@ -44,24 +43,20 @@ describe('the hub in the route tree', () => {
     expect(screen.getByText(copy.hub.greeting)).toBeOnTheScreen();
   });
 
-  it('should leave the hub where it is when the coming soon tile is pressed', async () => {
-    if (!comingSoonEntry) throw new Error('The registry has no coming soon game');
+  it('should open the Drink If home from its tile', async () => {
     await launchApp('/');
 
-    fireEvent.press(
-      screen.getByRole('button', {
-        name: `${displayNames[comingSoonEntry.id].title}, ${copy.hub.comingSoon}`,
-      }),
-    );
+    fireEvent.press(screen.getByRole('button', { name: displayNames.questions.title }));
+    await waitFor(() => expect(currentPathname()).toBe('/games/questions'));
 
-    expect(currentPathname()).toBe('/');
+    expect(screen.getByRole('header', { name: copy.questionsHome.title })).toBeOnTheScreen();
   });
 
   it('should open round setup straight from a deep link', async () => {
     if (!availableEntry) throw new Error('The registry has no available game');
-    await launchApp(availableEntry.setupRoute);
+    await launchApp(availableEntry.entryRoute);
 
-    expect(currentPathname()).toBe(availableEntry.setupRoute);
+    expect(currentPathname()).toBe(availableEntry.entryRoute);
     expect(screen.getByRole('header', { name: copy.roundSetup.title })).toBeOnTheScreen();
   });
 });
