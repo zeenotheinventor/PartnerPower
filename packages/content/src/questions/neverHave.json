@@ -1,0 +1,102 @@
+{
+  "id": "neverHave",
+  "version": 1,
+  "questions": [
+    {
+      "id": "neverHave-c1-01",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t5",
+      "text": "kissed someone in a lift",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-02",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t5",
+      "text": "written a love letter and kept it a secret",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c1-03",
+      "format": "neverHave",
+      "category": "c1",
+      "topic": "t5",
+      "text": "fallen for someone on the first date",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-01",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "sent a message to the wrong person by mistake",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-02",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "been caught staring at someone across a room",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c2-03",
+      "format": "neverHave",
+      "category": "c2",
+      "topic": "t5",
+      "text": "kissed someone in the rain",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-01",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t5",
+      "text": "been so distracted by someone that I forgot where I was going",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-02",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t3",
+      "text": "imagined a stranger on a train in a very different setting",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c3-03",
+      "format": "neverHave",
+      "category": "c3",
+      "topic": "t5",
+      "text": "blushed so hard that someone pointed it out",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-01",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t5",
+      "text": "lost track of an entire afternoon with someone I liked",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-02",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t3",
+      "text": "planned a romantic evening and had it go off the rails in the best way",
+      "source": "shipped"
+    },
+    {
+      "id": "neverHave-c4-03",
+      "format": "neverHave",
+      "category": "c4",
+      "topic": "t5",
+      "text": "tiptoed through a house trying not to be heard",
+      "source": "shipped"
+    }
+  ]
+}

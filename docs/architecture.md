@@ -179,6 +179,77 @@ string literals for copy. A line with a value in it carries a marker such as `{n
 `fillCopy` fills it. Its type reads the markers from the line, so a missing or misspelled value
 fails typecheck.
 
+## Questions game
+
+The second game, `questions`, is built from questions instead of cards. This section is the model
+that the round engine, the secret match engine, storage and the content tickets build on. It has no
+UI. It lives in `core`, in `questionModel.ts`, and reuses the categories and levels above. A level
+picks the categories in play exactly as for dares, and the penalty for a question is its
+category's penalty.
+
+```ts
+type QuestionFormat = 'ifYou' | 'neverHave' | 'guess' | 'eitherOr' | 'secretMatch';
+type TopicId = 't1' | 't2' | 't3' | 't4' | 't5' | 't6';
+
+type Question = {
+  id: string;
+  category: CategoryId;
+  topic: TopicId;
+  source: 'shipped' | 'player'; // required
+} & (
+  | { format: 'ifYou' | 'neverHave'; text: string }
+  | { format: 'guess'; text: string; options: QuestionOption[] } // 2 to 4 options
+  | { format: 'eitherOr'; text?: string; options: QuestionOption[] } // exactly 2 options
+  | { format: 'secretMatch'; text: string; tags: string[] } // 1 to 3 tags
+);
+
+type QuestionOption = { id: string; text: string }; // id is unique within its question
+```
+
+Four formats are played in a round and `secretMatch` is played in its own session. Format ids,
+topic ids and option ids are neutral. Discoveries refer to an option by its id, so content can
+reorder options safely. `tags` is a list of plain strings for now. The interest tags ticket adds
+the vocabulary that limits it.
+
+A question deck is `{ id, version, questions }`. `parseQuestionDeck` checks an unknown value against
+the Zod schema and names each bad question by index and id, as `parseDeck` does, for example
+`questions[2] (id "q-3"): options must have 2 to 4 entries`. The schema rejects duplicate ids in a
+deck, a wrong number of options, a repeated option id, and `tags` on any format but `secretMatch`
+(every question object is strict, so a field a format does not have is an unrecognised field).
+`findDuplicateQuestionIds` checks ids across every question deck the app ships.
+
+A `Discovery` is a saved entry. Each kind carries the question id and a date:
+
+| Kind     | Meaning                                                                           | Fields                     |
+| -------- | --------------------------------------------------------------------------------- | -------------------------- |
+| `match`  | A secret match item both partners rated yes or maybe                              | `strength`: `yes`, `maybe` |
+| `agree`  | A would you rather question where both picked the same option                     | `optionId`                 |
+| `answer` | A guess your partner question, with the option the answerer picked and their name | `optionId`, `answererName` |
+
+`maybe` means at least one partner said maybe. A match never says who. The date is an ISO date and
+time string. Engines return a `NewDiscovery`, which is a discovery without the date, and the app
+adds the date when it saves the entry.
+
+`CustomQuestion` is the schema for a player-written question. It is the question schema with
+`source: 'player'` and an id of `pq-` plus a UUID, as player dares use `p-`. It covers `ifYou`,
+`neverHave`, `guess` and `eitherOr`. It has no `secretMatch`, because a written item would tell the
+partner what its writer wants. The text rules for player text are applied where the question is
+stored.
+
+`content` holds one data file per format in `src/questions/`: `ifYou.json`, `neverHave.json`,
+`guess.json`, `eitherOr.json` and `secretMatch.json`. `questions.ts` runs each through
+`parseQuestionDeck` at import time and exports `questionDecks`, so a bad file fails loudly. Each
+file ships at least 3 questions in every category. Question ids read `<format>-<category>-<number>`.
+The text rules for cards (the card text limit, no gendered words, no forfeit word, no dashes or
+semicolons) apply to every question text, option text and tag, and a test checks them with the same
+helpers as the deck test.
+
+Names are content, typed by id so a missing one fails typecheck. `topicNames` and
+`questionFormatNames` are in `displayNames.ts`. The leads ("Drink if", "Never have I ever", "Would
+you rather") are in `copy` as `questionLeads`, so question text holds only the clause after the
+lead. The topics are t1 favourites, t2 turn-ons and turn-offs, t3 fantasies, t4 kinks and fetishes,
+t5 history and t6 wishlist.
+
 ## Round engine
 
 A round of the `dares` game is a reducer in `core`, in `round.ts`. It is pure: no React and no I/O.
@@ -610,3 +681,5 @@ and pnpm 9.11.0, and the README has the steps.
 | Timer cards are surprise only              | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                       | FRK-39 |
 | Limits live in `cardText.ts`               | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                      | FRK-39 |
 | Player card text is stored tidied          | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                  | FRK-39 |
+| Format on the question                     | A question carries its own `format` and a deck can hold any mix. The content package ships one file per format, and a test checks that each file holds only its own format.                                                                 | FRK-34 |
+| Discovery date format                      | An ISO date and time string, checked by the schema. Storage can keep it as text.                                                                                                                                                            | FRK-34 |

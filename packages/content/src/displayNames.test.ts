@@ -1,6 +1,12 @@
-import { categoryIds, gameIds, levelIds } from '@getfreak/core';
+import { categoryIds, gameIds, levelIds, questionFormats, topicIds } from '@getfreak/core';
 
-import { categoryNames, displayNames, levelNames } from './displayNames';
+import {
+  categoryNames,
+  displayNames,
+  levelNames,
+  questionFormatNames,
+  topicNames,
+} from './displayNames';
 
 describe('displayNames', () => {
   it.each(gameIds)('should give the %s game a title and a description', (gameId) => {
@@ -25,5 +31,41 @@ describe('category and level names', () => {
   it('should name no category or level that is not defined', () => {
     expect(Object.keys(categoryNames).sort()).toEqual([...categoryIds].sort());
     expect(Object.keys(levelNames).sort()).toEqual([...levelIds].sort());
+  });
+});
+
+describe('question names', () => {
+  it.each(questionFormats)('should give format %s a non-empty name', (format) => {
+    expect(questionFormatNames[format].trim()).not.toBe('');
+  });
+
+  it.each(topicIds)('should give topic %s a non-empty name', (topicId) => {
+    expect(topicNames[topicId].trim()).not.toBe('');
+  });
+
+  it('should name no format or topic that is not defined', () => {
+    expect(Object.keys(questionFormatNames).sort()).toEqual([...questionFormats].sort());
+    expect(Object.keys(topicNames).sort()).toEqual([...topicIds].sort());
+  });
+
+  it('should name the formats as the game shows them', () => {
+    expect(questionFormatNames).toEqual({
+      ifYou: 'Drink if',
+      neverHave: 'Never have I ever',
+      guess: 'Guess your partner',
+      eitherOr: 'Would you rather',
+      secretMatch: 'Secret match',
+    });
+  });
+
+  it('should name the topics as the game shows them', () => {
+    expect(topicNames).toEqual({
+      t1: 'Favourites',
+      t2: 'Turn-ons and turn-offs',
+      t3: 'Fantasies',
+      t4: 'Kinks and fetishes',
+      t5: 'History',
+      t6: 'Wishlist',
+    });
   });
 });

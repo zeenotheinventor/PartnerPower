@@ -1,0 +1,102 @@
+{
+  "id": "ifYou",
+  "version": 1,
+  "questions": [
+    {
+      "id": "ifYou-c1-01",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t5",
+      "text": "you have ever sent your partner a message just to say you were thinking of them",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-02",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t1",
+      "text": "you still get butterflies when your partner walks into the room",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-03",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t5",
+      "text": "you have ever planned a surprise date and kept it secret for a whole week",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-01",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t2",
+      "text": "you love being kissed slowly on the neck",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-02",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t5",
+      "text": "you have ever sent a flirty message at completely the wrong moment",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-03",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t2",
+      "text": "you would pick a long massage over a film on a quiet night in",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-01",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you can spend a whole evening on kissing and nothing else",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-02",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you have a favourite spot to be kissed that you have never mentioned",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-03",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t3",
+      "text": "you have ever daydreamed about a night that started in the kitchen",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-01",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t3",
+      "text": "you have ever thought about trying something new in the bedroom and never said so",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-02",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t1",
+      "text": "you have a favourite place at home that is not the bedroom",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-03",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t6",
+      "text": "you have ever wished a night together could last until sunrise",
+      "source": "shipped"
+    }
+  ]
+}
