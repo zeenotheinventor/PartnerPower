@@ -262,17 +262,22 @@ describe('cards with a timer effect', () => {
     expect(isRoundOver(state)).toBe(true);
   });
 
-  it('should not make a fifth card together when only a timer card is together', () => {
+  it('should not make the fifth card together when its category has only a timer together card', () => {
     const timerTogether = makeCards('c1', 'together', 1).map((card) => ({
       ...card,
       effect: timerEffect,
     }));
-    const deck = deckOf(...makeCards('c1', 'solo', 10), ...timerTogether);
+    const deck = deckOf(
+      ...makeCards('c1', 'solo', 10),
+      ...timerTogether,
+      ...makeCards('c2', 'solo', 10),
+      ...makeCards('c2', 'together', 2),
+    );
     const dealt = playOut(
-      startRound(setupWith({ enabledCategories: ['c1'], level: 'l1', length: 10 }), deck),
+      startRound(setupWith({ enabledCategories: ['c1', 'c2'], level: 'l2', length: 10 }), deck),
     );
 
-    expect(dealt.map((card) => card.kind)).toEqual(Array.from({ length: 10 }, () => 'solo'));
+    expect(dealt[4]).toMatchObject({ category: 'c1', kind: 'solo' });
   });
 
   it('should leave a vibrate card in the normal deal', () => {

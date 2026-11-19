@@ -321,6 +321,7 @@ describe('playerCardSchema', () => {
     'p-123',
     'p-',
     'q-3b241101-e2bb-4255-8caf-4136c566a962',
+    'xp-3b241101-e2bb-4255-8caf-4136c566a962',
   ])('should reject the id "%s"', (id) => {
     expect(playerCardSchema.safeParse({ ...validPlayerCard, id }).success).toBe(false);
   });
