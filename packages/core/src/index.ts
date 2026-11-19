@@ -87,3 +87,24 @@ export type {
   QuestionOption,
   TopicId,
 } from './questionModel';
+export {
+  availableQuestionCount,
+  isQuestionRoundOver,
+  playableFormats,
+  reduceQuestionRound,
+  startQuestionRound,
+  summariseQuestionRound,
+} from './questionRound';
+export type {
+  CurrentQuestion,
+  PlayableFormat,
+  PlayableQuestion,
+  PlayedQuestion,
+  QuestionPlayerSummary,
+  QuestionReveal,
+  QuestionRoundAction,
+  QuestionRoundSetup,
+  QuestionRoundState,
+  QuestionRoundSummary,
+  QuestionStage,
+} from './questionRound';
