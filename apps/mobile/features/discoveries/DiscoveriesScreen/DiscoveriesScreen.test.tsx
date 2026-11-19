@@ -626,8 +626,11 @@ describe('DiscoveriesScreen', () => {
 
     it('should still ask what to do with what is saved when it is only about a written question', async () => {
       const { finish } = await renderWithSlowPlayerQuestions();
-      await finish();
 
+      // The player reaches for the switch while the questions are pending: nothing can be used.
+      expect(screen.queryByRole('switch')).not.toBeOnTheScreen();
+      expect(screen.queryByLabelText(copy.discoveries.offTitle)).not.toBeOnTheScreen();
+      await finish();
       fireEvent.press(saveSwitch());
 
       expect(await screen.findByLabelText(copy.discoveries.offTitle)).toBeOnTheScreen();

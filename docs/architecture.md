@@ -1085,8 +1085,9 @@ starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them
   Whether saving is on is the hook's to decide. A round with no discoveries writes nothing.
 - When saving is on and the round made discoveries, a card shows "{n} new discoveries". It is a link
   to the Discoveries screen, because `discoveriesRoute` in the feature holds its route (a null there
-  would show a plain count instead). When saving is off nothing about discoveries shows. A failed save replaces the card
-  with a short message in a bordered box, and nothing else on the screen is blocked.
+  would show a plain count instead). When saving is off nothing about discoveries shows. A failed
+  save replaces the card with a short message in a bordered box, and nothing else on the screen is
+  blocked.
 - Play again starts a round from `lastStart` (the setup and the questions) with a new seed from
   `randomSeed`, then replaces the summary with the play route. Settings goes back to setup, which is
   still mounted under the summary. Home goes to the Drink If home with `dismissTo`. The back gesture
