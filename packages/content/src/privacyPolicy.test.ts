@@ -66,6 +66,50 @@ describe('privacyPolicy', () => {
     });
   });
 
+  describe('crash reports', () => {
+    const crashSection = privacyPolicy.sections.find(
+      (section) => section.heading === 'Crash reports',
+    );
+    const crashText = (crashSection?.paragraphs ?? []).join(' ');
+
+    it('should name Sentry and point to its own privacy policy', () => {
+      expect(crashText).toContain('Sentry');
+      expect(crashText).toContain("Sentry's own privacy policy covers what it receives.");
+    });
+
+    it('should say what a report holds', () => {
+      expect(crashText).toMatch(/what kind of error/);
+      expect(crashText).toMatch(/names of the screens/);
+      expect(crashText).toMatch(/phone model and system version/);
+    });
+
+    it('should say a report never includes what you type or play, your names or your cards', () => {
+      expect(crashText).toMatch(
+        /never includes anything you type or play, your player names, your cards or your answers/,
+      );
+    });
+
+    it('should mention the IP address, the random number on Android and where reports are kept', () => {
+      expect(crashText).toMatch(/IP address/);
+      expect(crashText).toMatch(/random number/);
+      expect(crashText).toMatch(/European Union/);
+    });
+
+    it('should not say the app has no crash reporting service', () => {
+      allText.forEach((text) => {
+        expect(text).not.toMatch(/no crash reporting/i);
+      });
+    });
+
+    it('should say that crash reports leave the phone, in the section about what leaves it', () => {
+      const leavesSection = privacyPolicy.sections.find(
+        (section) => section.heading === 'What leaves your phone',
+      );
+
+      expect((leavesSection?.paragraphs ?? []).join(' ')).toMatch(/crash reports/);
+    });
+  });
+
   it('should follow the house style, with no dashes as punctuation and no semicolons', () => {
     allText.forEach((text) => {
       expect(text).not.toMatch(/[–—;]|\s-\s/);

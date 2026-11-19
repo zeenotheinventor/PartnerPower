@@ -212,3 +212,51 @@ describe('eas.json production profile', () => {
     });
   });
 });
+
+describe('error reporting config', () => {
+  const sentryPlugin = appConfig.expo.plugins.find(
+    (plugin) => Array.isArray(plugin) && plugin[0] === '@sentry/react-native/expo',
+  );
+
+  it("should point the Sentry plugin at the EU region and this app's project", () => {
+    expect(sentryPlugin).toEqual([
+      '@sentry/react-native/expo',
+      {
+        url: 'https://de.sentry.io/',
+        organization: 'sojisoft-limited',
+        project: 'getfreak-mobile',
+      },
+    ]);
+  });
+
+  // The DSN and the auth token are secrets of the build service. Neither belongs in a committed
+  // file, and the repository is public.
+  it('should hold no DSN and no auth token in app.json or eas.json', () => {
+    const committed = JSON.stringify([appConfig, easConfig]);
+
+    expect(committed).not.toMatch(/ingest\.[a-z.]*sentry\.io/);
+    expect(committed).not.toMatch(/authToken|SENTRY_AUTH_TOKEN|EXPO_PUBLIC_SENTRY_DSN/);
+  });
+
+  // The Sentry build step fails a build that has no auth token. Development and preview builds
+  // are made without one, so they skip the upload. A store build uploads, so it must not skip it.
+  it.each(['development', 'preview'] as const)(
+    'should skip the source map upload in the %s profile',
+    (profile) => {
+      expect(easConfig.build[profile].env).toEqual({ SENTRY_DISABLE_AUTO_UPLOAD: 'true' });
+    },
+  );
+
+  // The DSN is a variable of one environment of the build service. Each profile names its
+  // environment, so which builds report is a decision and not a default.
+  it.each(['development', 'preview', 'production'] as const)(
+    'should build the %s profile in the environment of the same name',
+    (profile) => {
+      expect(easConfig.build[profile].environment).toBe(profile);
+    },
+  );
+
+  it('should upload source maps in the production profile', () => {
+    expect(easConfig.build.production).not.toHaveProperty('env');
+  });
+});

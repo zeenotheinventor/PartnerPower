@@ -53,3 +53,14 @@ jest.mock('expo-updates', () => ({ isEmbeddedLaunch: true, updateId: null }));
 jest.mock('expo-notifications', () => ({
   cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
 }));
+
+// The real error reporting SDK starts a timer as it loads, which would keep a test file that loads
+// the root layout from exiting, and it would report to the network if it were started. Nothing
+// starts it in a test. This stands in for the calls the app makes, and a test reads what was
+// called. The test that checks what would be sent takes the real SDK with `jest.requireActual`.
+jest.mock('@sentry/react-native', () => ({
+  init: jest.fn(),
+  captureException: jest.fn(),
+  addBreadcrumb: jest.fn(),
+  breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
+}));

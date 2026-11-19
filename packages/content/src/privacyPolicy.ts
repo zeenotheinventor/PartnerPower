@@ -41,7 +41,7 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'What leaves your phone',
       paragraphs: [
-        'Nothing that you enter or play. The only thing the app sends is the check for updates, described in the next section.',
+        'Nothing that you enter or play. The only things the app sends are the check for updates and crash reports, described in the next two sections.',
         'If you buy something in the app, Apple or Google handles the payment under their own privacy policies. The app asks the store on your phone what you own. We never see your payment details.',
         'If you turn on the reminder, it is scheduled on your phone. No server sends it.',
       ],
@@ -56,7 +56,10 @@ export const privacyPolicy: PrivacyPolicy = {
     {
       heading: 'Crash reports',
       paragraphs: [
-        'The app has no crash reporting service built in, apart from the crash report that the update check sends. If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
+        'If the app hits an error, it sends a crash report to Sentry, the service we use to find and fix bugs. The report says what kind of error it was, where in our code it happened, the names of the screens you had opened, and technical details such as your phone model and system version.',
+        'A crash report never includes anything you type or play, your player names, your cards or your answers. We remove the wording of every error before it is sent, in case it quotes something from the app.',
+        "Like any request over the internet, a crash report shows Sentry your IP address, and we have set Sentry not to store it. On Android, a report can include a random number made when the app was installed. It does not identify you. Sentry keeps these reports in the European Union, and Sentry's own privacy policy covers what it receives.",
+        'If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may also pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
       ],
     },
     {

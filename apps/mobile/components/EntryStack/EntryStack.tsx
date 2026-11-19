@@ -29,6 +29,7 @@ export function EntryStack() {
           <Stack.Screen name="games/dares" />
           <Stack.Screen name="games/questions" />
           <Stack.Screen name="dev/kit" />
+          <Stack.Screen name="dev/test-error" />
         </Stack.Protected>
       </Stack>
     </SplashReveal>

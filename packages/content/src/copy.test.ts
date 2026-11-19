@@ -412,6 +412,11 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.welcomeDeclined);
   });
 
+  it('should give the crash screen every line as non-empty text', () => {
+    expect(Object.keys(copy.crash).sort()).toEqual(['body', 'restartLabel', 'title']);
+    expectEveryValueToBeText(copy.crash);
+  });
+
   it('should give the three leads as non-empty text, with none for the other formats', () => {
     expect(Object.keys(copy.questionLeads).sort()).toEqual(['eitherOr', 'ifYou', 'neverHave']);
     expectEveryValueToBeText(copy.questionLeads);
