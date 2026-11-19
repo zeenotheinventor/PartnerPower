@@ -14,8 +14,18 @@
       "package": "com.sojisoft.getfreak"
     },
     "plugins": [
-      ["expo-router", { "sitemap": false }],
-      "expo-sqlite",
+      [
+        "expo-router",
+        {
+          "sitemap": false
+        }
+      ],
+      [
+        "expo-sqlite",
+        {
+          "useSQLCipher": true
+        }
+      ],
       [
         "expo-audio",
         {
@@ -24,7 +34,13 @@
           "enableBackgroundPlayback": false
         }
       ],
-      "expo-asset"
+      "expo-asset",
+      [
+        "expo-secure-store",
+        {
+          "faceIDPermission": false
+        }
+      ]
     ],
     "extra": {
       "eas": {
