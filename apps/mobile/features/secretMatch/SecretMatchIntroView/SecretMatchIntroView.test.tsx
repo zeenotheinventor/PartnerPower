@@ -25,6 +25,8 @@ jest.mock('../../../personal', () => ({
 
 // A player has written a question, which the session must never be given. A written item would tell
 // the partner what its writer wants.
+// The intro never imports this provider, so the mock is a tripwire and not proof: it fails only if
+// the intro starts to read player questions.
 jest.mock('../../ownQuestions/OwnQuestionsProvider', () => ({
   useOwnQuestions: () => ({
     isLoading: false,

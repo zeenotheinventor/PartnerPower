@@ -61,6 +61,20 @@ describe('KitGallery', () => {
     expect(screen.getAllByRole('switch', { name: 'Favourite', checked: true })).toHaveLength(2);
   });
 
+  it('should show selectable cards that select when pressed, and one that cannot be pressed', async () => {
+    await renderThemed(<KitGallery />);
+    expect(screen.getByRole('button', { name: 'Choice one', selected: false })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Choice two', selected: true })).toBeOnTheScreen();
+
+    fireEvent.press(screen.getByRole('button', { name: 'Choice one' }));
+
+    expect(screen.getByRole('button', { name: 'Choice one', selected: true })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'Choice two', selected: false })).toBeOnTheScreen();
+    expect(
+      screen.getByRole('button', { name: 'Choice, disabled', selected: false, disabled: true }),
+    ).toBeOnTheScreen();
+  });
+
   it('should show a locked switch that stays on and says why', async () => {
     await renderThemed(<KitGallery />);
 

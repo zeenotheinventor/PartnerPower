@@ -785,6 +785,96 @@ describe('QuestionEditorScreen', () => {
     });
   });
 
+  describe('a change that removes discoveries', () => {
+    async function openGuessWithDiscovery() {
+      const fixture = makeOwnQuestionsFixture();
+      const stored = await addQuestion(fixture, {
+        format: 'guess',
+        options: ['Option a', 'Option b', 'Option c'],
+      });
+      await fixture.repository.addDiscoveries([
+        { kind: 'agree', questionId: stored.id, optionId: 'o1' },
+      ]);
+      await renderEditor(fixture, stored.id);
+      return { fixture, stored };
+    }
+    const dialog = () => screen.getByLabelText(message.saveChangeTitle);
+
+    it('should ask first when an option is removed, and save nothing yet', async () => {
+      const { fixture } = await openGuessWithDiscovery();
+      fireEvent.press(removeButton(3));
+
+      await pressSave();
+
+      expect(within(dialog()).getByText(message.saveChangeBody)).toBeOnTheScreen();
+      expect(await fixture.repository.listPlayerQuestions()).toEqual([
+        expect.objectContaining({
+          options: expect.arrayContaining([{ id: 'o3', text: 'Option c' }]),
+        }),
+      ]);
+      expect(mockBack).not.toHaveBeenCalled();
+    });
+
+    it('should ask first when the format changes', async () => {
+      await openGuessWithDiscovery();
+      chooseFormat('neverHave');
+
+      await pressSave();
+
+      expect(dialog()).toBeOnTheScreen();
+    });
+
+    it('should keep the question and its discoveries when cancelled, and keep editing', async () => {
+      const { fixture } = await openGuessWithDiscovery();
+      fireEvent.press(removeButton(3));
+      await pressSave();
+
+      fireEvent.press(within(dialog()).getByRole('button', { name: message.saveChangeCancel }));
+      await act(async () => {});
+
+      expect(await fixture.repository.listDiscoveries()).toHaveLength(1);
+      expect(await fixture.repository.listPlayerQuestions()).toEqual([
+        expect.objectContaining({
+          options: expect.arrayContaining([{ id: 'o3', text: 'Option c' }]),
+        }),
+      ]);
+      expect(mockBack).not.toHaveBeenCalled();
+      expect(optionField(2)).toBeOnTheScreen();
+    });
+
+    it('should save the change and delete the discoveries when confirmed', async () => {
+      const { fixture } = await openGuessWithDiscovery();
+      fireEvent.press(removeButton(3));
+      await pressSave();
+
+      fireEvent.press(within(dialog()).getByRole('button', { name: message.saveChangeConfirm }));
+      await act(async () => {});
+
+      expect(await fixture.repository.listDiscoveries()).toEqual([]);
+      expect(await fixture.repository.listPlayerQuestions()).toEqual([
+        expect.objectContaining({
+          options: [
+            { id: 'o1', text: 'Option a' },
+            { id: 'o2', text: 'Option b' },
+          ],
+        }),
+      ]);
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+
+    it('should save a reword without asking, and keep the discoveries', async () => {
+      const { fixture } = await openGuessWithDiscovery();
+      typeText('Placeholder question 2');
+      typeOption(1, 'Option x');
+
+      await pressSave();
+
+      expect(screen.queryByLabelText(message.saveChangeTitle)).not.toBeOnTheScreen();
+      expect(await fixture.repository.listDiscoveries()).toHaveLength(1);
+      expect(mockBack).toHaveBeenCalledTimes(1);
+    });
+  });
+
   describe('deleting', () => {
     async function openDeleteDialog(fixture: Fixture, questionId: string) {
       await renderEditor(fixture, questionId);

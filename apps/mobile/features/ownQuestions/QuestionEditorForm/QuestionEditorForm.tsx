@@ -13,6 +13,7 @@ import { useRef, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 
 import { Button, Chip, Dialog, Header, Screen, TextField } from '../../../components/ui';
+import { buildPlayerQuestion, changeInvalidatesDiscoveries } from '../../../storage/personal/rules';
 import { OptionsEditor } from '../OptionsEditor';
 import { useOwnQuestions } from '../OwnQuestionsProvider';
 import {
@@ -56,6 +57,7 @@ export function QuestionEditorForm({ question }: QuestionEditorFormProps) {
   );
   const [errors, setErrors] = useState<FieldErrors>(noErrors);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
+  const [isConfirmingSave, setIsConfirmingSave] = useState(false);
   // A second press while a write is under way must not write twice.
   const isWriting = useRef(false);
 
@@ -87,7 +89,30 @@ export function QuestionEditorForm({ question }: QuestionEditorFormProps) {
     setErrors((current) => ({ ...current, options: [] }));
   };
 
-  const submit = async () => {
+  // The repository deletes a question's discoveries when a change gives it another format or fewer
+  // options. The same rule decides here, against the stored question, so the screen and the
+  // repository cannot disagree. Only the format and the number of options matter to it, so the text
+  // is a stand-in. A draft the schema rejects has problems the save reports, so it needs no warning.
+  const wouldRemoveDiscoveries = () => {
+    if (!question) return false;
+    try {
+      const changed = buildPlayerQuestion(
+        question.id,
+        { format, category, topic },
+        { text: 'x', options: options.length > 0 ? options.map(() => 'x') : undefined },
+      );
+      return changeInvalidatesDiscoveries(question, changed);
+    } catch {
+      return false;
+    }
+  };
+
+  const submit = () => {
+    if (wouldRemoveDiscoveries()) setIsConfirmingSave(true);
+    else void write();
+  };
+
+  const write = async () => {
     if (isWriting.current) return;
     isWriting.current = true;
     try {
@@ -259,6 +284,19 @@ export function QuestionEditorForm({ question }: QuestionEditorFormProps) {
           ) : null}
         </View>
       </Screen>
+
+      <Dialog
+        visible={isConfirmingSave}
+        title={copy.ownQuestions.saveChangeTitle}
+        body={copy.ownQuestions.saveChangeBody}
+        confirmLabel={copy.ownQuestions.saveChangeConfirm}
+        cancelLabel={copy.ownQuestions.saveChangeCancel}
+        onConfirm={() => {
+          setIsConfirmingSave(false);
+          void write();
+        }}
+        onCancel={() => setIsConfirmingSave(false)}
+      />
 
       <Dialog
         visible={isConfirmingDelete}

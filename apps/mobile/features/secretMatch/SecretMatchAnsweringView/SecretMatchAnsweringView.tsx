@@ -1,7 +1,7 @@
 import { categoryNames, copy, fillCopy } from '@getfreak/content';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { Button, Card, Character, Chip, Screen } from '../../../components/ui';
+import { Button, Card, Character, Chip, FeedbackPressable, Screen } from '../../../components/ui';
 import { ProgressBar } from '../../roundPlay/ProgressBar';
 import { isBoldCategory } from '../../questionsPlay/isBoldCategory';
 import type { SecretMatchAnsweringViewProps } from './types';
@@ -27,13 +27,13 @@ export function SecretMatchAnsweringView({
   return (
     <Screen scroll>
       <View className="flex-row items-center justify-between gap-8">
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onStop}
           className="min-h-48 justify-center rounded-pill border-2 border-border bg-surface px-12"
         >
           <Text className="type-caption text-foreground">{copy.secretMatch.stop}</Text>
-        </Pressable>
+        </FeedbackPressable>
         <Text className="type-caption text-muted">{countLabel}</Text>
       </View>
       <ProgressBar number={view.position} length={view.total} label={countLabel} />
@@ -85,13 +85,13 @@ export function SecretMatchAnsweringView({
         />
       </View>
       {view.canGoBack ? (
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onBack}
           className="min-h-48 items-center justify-center"
         >
           <Text className="type-caption text-muted underline">{copy.secretMatch.back}</Text>
-        </Pressable>
+        </FeedbackPressable>
       ) : null}
     </Screen>
   );

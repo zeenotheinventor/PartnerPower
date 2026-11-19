@@ -1,6 +1,6 @@
 import { categoryIds } from './contentModel';
 import type { Card, CardKind, CategoryId, Deck, LevelId } from './contentModel';
-import { isRoundOver, reduceRound, startRound, summarise } from './round';
+import { isDealable, isRoundOver, reduceRound, startRound, summarise } from './round';
 import type { RoundAction, RoundLength, RoundSetup, RoundState } from './round';
 
 type KindCounts = { solo: number; together: number };
@@ -629,5 +629,27 @@ describe('properties over many seeds', () => {
         );
       }
     }
+  });
+});
+
+describe('isDealable', () => {
+  const plainCard: Card = {
+    id: 'card-1',
+    category: 'c1',
+    kind: 'solo',
+    text: 'Card text',
+    source: 'shipped',
+  };
+
+  it('should deal a card with no effect', () => {
+    expect(isDealable(plainCard)).toBe(true);
+  });
+
+  it('should deal a card whose effect is a vibration', () => {
+    expect(isDealable({ ...plainCard, effect: { type: 'vibrate', seconds: 10 } })).toBe(true);
+  });
+
+  it('should not deal a timer card, because only the timer surprise deals it', () => {
+    expect(isDealable({ ...plainCard, effect: { type: 'timer', seconds: 15 } })).toBe(false);
   });
 });
