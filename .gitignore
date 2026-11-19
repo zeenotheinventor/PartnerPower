@@ -9,3 +9,7 @@ coverage/
 *.tsbuildinfo
 expo-env.d.ts
 .DS_Store
+
+# Store submission keys (Apple API key, Google service account key)
+secrets/
+*.p8

@@ -1,0 +1,12 @@
+# UI kit
+
+- **Role and name for the screen shell** (FRK-4): The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves.
+- **Depth edge** (FRK-4): Built from layered views in token colours. Token-coloured shadows do not exist.
+- **Settings screen captions** (FRK-26): The kit `Toggle` has an optional `description`, drawn under the label and given as the switch's accessibility hint. The settings rows use it.
+- **Characters are code-drawn vector art** (FRK-18): The cast is drawn by us as vector art in code, rendered with `react-native-svg` and animated with Reanimated, instead of Rive files from an illustrator. Decided by the owner on 2026-11-19, so the cast ships without waiting on an illustrator.
+- **Neutral role ids for the cast** (FRK-18): `host`, `dealer`, `hype`, `gatekeeper` and `shy`, because a display name changed twice. Names and personality lines are in `characterNames` in `content`. The id type is in `core`, which `content` may import.
+- **Animated views, not animated SVG groups** (FRK-18): Each moving part is a full-size `Svg` layer in a Reanimated `View`. react-native-svg converts `transform` to a matrix in JavaScript, so a transform on an SVG group from the UI thread is unreliable. A `View` transform is known to work.
+- **Reanimated animated styles may be inline** (FRK-18): An animated view takes its style through the `style` prop and `StyleSheet.absoluteFill`, because Reanimated writes it on the UI thread. Everything else keeps to classes.
+- **Mood moves with the character** (FRK-18): A mood a character cannot show is a compile error. The `Character` props are a union over the roles, so the role and the mood are checked as a pair. At runtime an unknown mood falls back to idle instead of throwing.
+- **Character art is data, not screen code** (FRK-18): The art is plain data files in `apps/mobile/characters`, one per character, with the layer order in one `composeLayers` that the component and the preview script share.
+- **Reanimated under Jest, one shared mock** (FRK-18): Reanimated's official mock is registered as one shared module object, with `useReducedMotion` and `withRepeat` as `jest.fn`, because the router's testing library registers its own mock of the same module. A resolver loads the plain JavaScript worklets only for Reanimated and worklets, because a broader one broke packages whose pnpm path names the worklets as a peer.
