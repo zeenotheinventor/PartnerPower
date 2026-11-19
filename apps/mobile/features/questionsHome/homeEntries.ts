@@ -14,7 +14,11 @@ export const homeEntries: readonly HomeEntry[] = [
     body: copy.questionsHome.playBody,
     route: '/games/questions/setup',
   },
-  { title: copy.questionsHome.matchTitle, body: copy.questionsHome.matchBody, route: null },
+  {
+    title: copy.questionsHome.matchTitle,
+    body: copy.questionsHome.matchBody,
+    route: '/games/questions/match',
+  },
   {
     title: copy.questionsHome.discoveriesTitle,
     body: copy.questionsHome.discoveriesBody,
