@@ -1,10 +1,11 @@
 import { copy, fillCopy } from '@getfreak/content';
 import { summarise } from '@getfreak/core';
 import { useRouter } from 'expo-router';
-import { useRef } from 'react';
+import { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 
 import { Button, Screen } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { useRound } from '../../round/RoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
 import { PlayerScore } from '../PlayerScore';
@@ -24,6 +25,17 @@ export function RoundSummaryScreen() {
   const router = useRouter();
   const { round, lastStart, startNewRound } = useRound();
   const summary = round ? summarise(round) : undefined;
+
+  // The celebration buzz fires when the summary first shows, once for the round. The ref keeps a
+  // repeated render or effect from firing it again. A summary with no round has nothing to celebrate.
+  const { roundComplete } = useFeedback();
+  const hasCelebrated = useRef(false);
+  const hasSummary = summary !== undefined;
+  useEffect(() => {
+    if (!hasSummary || hasCelebrated.current) return;
+    hasCelebrated.current = true;
+    roundComplete();
+  }, [hasSummary, roundComplete]);
 
   // Setup is under this screen, so going back to it is how Settings opens it.
   const openSettings = () => (router.canGoBack() ? router.back() : router.replace(setupRoute));

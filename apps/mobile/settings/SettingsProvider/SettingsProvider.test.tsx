@@ -246,4 +246,81 @@ describe('SettingsProvider', () => {
 
     expect(() => renderHook(() => useSettings())).toThrow('useSettings needs a SettingsProvider');
   });
+
+  describe.each([
+    ['soundOn', 'setSoundOn'],
+    ['hapticsOn', 'setHapticsOn'],
+  ] as const)('the %s switch', (name, setter) => {
+    it('should be on when nothing is stored', async () => {
+      const { result } = renderSettings(createStorage(createInMemoryBackend()));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current[name]).toBe(true);
+    });
+
+    it('should be on while the settings are still loading', async () => {
+      const { result } = renderSettings(createStorage(createInMemoryBackend()));
+
+      expect(result.current[name]).toBe(true);
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+    });
+
+    it('should report a stored false as off', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set(name, 'false');
+      const { result } = renderSettings(createStorage(backend));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current[name]).toBe(false);
+    });
+
+    it('should treat an invalid stored value as on', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set(name, '"no"');
+      const { result } = renderSettings(createStorage(backend));
+
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      expect(result.current[name]).toBe(true);
+    });
+
+    it('should store the new value and report it', async () => {
+      const backend = createInMemoryBackend();
+      const { result } = renderSettings(createStorage(backend));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(() => result.current[setter](false));
+
+      expect(backend.entries.get(name)).toBe('false');
+      expect(result.current[name]).toBe(false);
+      expectNothingLogged();
+    });
+
+    it('should still report the new value for this session when the write fails', async () => {
+      const failingStorage: Storage = {
+        ...createStorage(createInMemoryBackend()),
+        set: () => Promise.reject(new Error('The write failed')),
+      };
+      const { result } = renderSettings(failingStorage);
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(() => result.current[setter](false));
+
+      expect(result.current[name]).toBe(false);
+      expectNothingLogged();
+    });
+
+    it('should leave the other settings alone when it changes', async () => {
+      const backend = createInMemoryBackend();
+      backend.entries.set('entryConfirmation', 'true');
+      const { result } = renderSettings(createStorage(backend));
+      await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+      await act(() => result.current[setter](false));
+
+      expect(result.current.hasConfirmedEntry).toBe(true);
+    });
+  });
 });

@@ -1,4 +1,9 @@
-import { entryConfirmationSchema, playerNamesSchema } from './settings';
+import {
+  entryConfirmationSchema,
+  hapticsOnSchema,
+  playerNamesSchema,
+  soundOnSchema,
+} from './settings';
 
 describe('entryConfirmationSchema', () => {
   it('should accept true', () => {
@@ -32,5 +37,18 @@ describe('playerNamesSchema', () => {
 
   it('should reject a value that is not a list', () => {
     expect(playerNamesSchema.safeParse('Name 1').success).toBe(false);
+  });
+});
+
+describe.each([
+  ['soundOnSchema', soundOnSchema],
+  ['hapticsOnSchema', hapticsOnSchema],
+])('%s', (_name, schema) => {
+  it.each([true, false])('should accept %p', (value) => {
+    expect(schema.safeParse(value).success).toBe(true);
+  });
+
+  it.each(['true', 1, null, {}])('should reject %p', (value) => {
+    expect(schema.safeParse(value).success).toBe(false);
   });
 });

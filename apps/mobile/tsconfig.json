@@ -2,5 +2,9 @@
   "extends": ["expo/tsconfig.base", "../../tsconfig.base.json"],
   "compilerOptions": { "lib": ["ESNext"] },
   "include": ["**/*.ts", "**/*.tsx", "nativewind-env.d.ts"],
-  "exclude": ["tailwind/rawColorGuard.test.ts", "features/welcome/routeCoverage.test.tsx"]
+  "exclude": [
+    "tailwind/rawColorGuard.test.ts",
+    "features/welcome/routeCoverage.test.tsx",
+    "feedback/sounds.test.ts"
+  ]
 }

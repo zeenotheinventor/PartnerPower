@@ -3,10 +3,12 @@ import { gameEntries } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { View } from 'react-native';
 
-import { Header, Screen } from '../../../components/ui';
+import { Button, Header, Screen } from '../../../components/ui';
 import { GameList } from '../GameList';
 
 type DevKitLinkModule = typeof import('../../dev/DevKitLink');
+
+const settingsRoute = '/settings';
 
 const listedGames = gameEntries.map((entry) => ({ ...entry, ...displayNames[entry.id] }));
 
@@ -32,6 +34,12 @@ export function HubScreen() {
     <Screen scroll>
       <Header title={copy.appName} subtitle={copy.hub.greeting} />
       <GameList games={listedGames} onOpen={(setupRoute) => router.push(setupRoute)} />
+      <Button
+        label={copy.hub.settings}
+        variant="secondary"
+        fullWidth
+        onPress={() => router.push(settingsRoute)}
+      />
       {renderDevLink()}
     </Screen>
   );

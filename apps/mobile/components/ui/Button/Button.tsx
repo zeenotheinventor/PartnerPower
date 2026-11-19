@@ -1,5 +1,6 @@
 import { Pressable, Text, View } from 'react-native';
 
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import type { ButtonProps, ButtonVariant } from './types';
 
 // The edge is a decorative view that starts 4px below the top of the button and runs to the
@@ -23,7 +24,9 @@ export function Button({
   variant = 'primary',
   fullWidth = false,
   disabled = false,
+  feedback = 'tap',
 }: ButtonProps) {
+  const pressFeedback = useFeedback();
   const sizeClass = fullWidth ? 'w-full' : 'self-start';
   const disabledClass = disabled ? 'opacity-50' : '';
 
@@ -32,7 +35,11 @@ export function Button({
       accessibilityRole="button"
       accessibilityState={{ disabled }}
       disabled={disabled}
-      onPress={onPress}
+      onPress={() => {
+        // Fired first and never waited on, so the action is not delayed.
+        if (feedback !== 'none') pressFeedback[feedback]();
+        onPress();
+      }}
       className={`group ${sizeClass} ${disabledClass}`}
     >
       <View className={edgeClasses[variant]} />

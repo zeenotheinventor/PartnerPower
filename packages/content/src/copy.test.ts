@@ -10,8 +10,22 @@ describe('copy', () => {
   });
 
   it('should give the hub every line as non-empty text', () => {
-    expect(Object.keys(copy.hub).sort()).toEqual(['comingSoon', 'greeting'].sort());
+    expect(Object.keys(copy.hub).sort()).toEqual(['comingSoon', 'greeting', 'settings'].sort());
     expectEveryValueToBeText(copy.hub);
+  });
+
+  it('should give the settings screen every line as non-empty text', () => {
+    expect(Object.keys(copy.settings).sort()).toEqual(
+      [
+        'backLabel',
+        'soundsCaption',
+        'soundsLabel',
+        'title',
+        'vibrationCaption',
+        'vibrationLabel',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.settings);
   });
 
   it('should give the round setup screen every line as non-empty text', () => {

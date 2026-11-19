@@ -22,18 +22,19 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Stack
 
-| Concern    | Choice                                                                                                                       |
-| ---------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Runtime    | Node 26, pnpm                                                                                                                |
-| App        | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
-| Navigation | Expo Router, file-based                                                                                                      |
-| Styling    | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
-| Fonts      | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
-| Storage    | `expo-sqlite`, through its key-value store                                                                                   |
-| Validation | Zod, in the core package                                                                                                     |
-| Tests      | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
-| Checks     | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
-| CI         | GitHub Actions                                                                                                               |
+| Concern        | Choice                                                                                                                       |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Runtime        | Node 26, pnpm                                                                                                                |
+| App            | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
+| Navigation     | Expo Router, file-based                                                                                                      |
+| Press feedback | `expo-audio` for the button sounds and `expo-haptics` for the haptics. Both are native modules.                              |
+| Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
+| Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
+| Storage        | `expo-sqlite`, through its key-value store                                                                                   |
+| Validation     | Zod, in the core package                                                                                                     |
+| Tests          | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
+| Checks         | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
+| CI             | GitHub Actions                                                                                                               |
 
 There is no global state library. See State below.
 
@@ -275,6 +276,7 @@ apps/mobile/
     _layout.tsx          root layout: providers and the root navigator with the entry guard
     +not-found.tsx       sends an unknown path to the one screen that is open to the player
     index.tsx            hub
+    settings.tsx         the sound and vibration settings
     welcome.tsx          entry confirmation, shown on first launch
     dev/kit.tsx          gallery of the UI kit, development builds only
     games/
@@ -286,11 +288,15 @@ apps/mobile/
   components/ui/         the UI kit
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
-  settings/              the settings context, including the remembered player names
+  settings/              the settings context, including the remembered player names and the sound and vibration switches
+  feedback/              the press feedback module: sound and haptic for each moment
+  assets/sounds/         the button sounds, with a README about where they come from
+  scripts/               `generateSounds.mjs`, which makes the sounds
   fonts/                 the font files the type scale uses
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
-  features/hub/          the hub: the first screen, with a tile for each game
+  features/hub/          the hub: the first screen, with a tile for each game and a Settings button
+  features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen
   features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
@@ -317,6 +323,9 @@ apps/mobile/
   invalid stored
   value counts as not confirmed. If the write on confirming fails, the player is still let in for
   that session and is asked again at the next launch. Nothing in it logs.
+- The sound and vibration switches, `soundOn` and `hapticsOn`, are settings too. Both are on until the
+  player turns one off, and a missing or invalid stored value counts as on. `setSoundOn` and
+  `setHapticsOn` never reject, and a failed write still holds for that session.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
 
@@ -341,6 +350,10 @@ on it is stored or logged.
   which leaves the route group and discards the round and `lastStart`. A new visit to the game
   starts setup at its defaults. The names are still remembered, because they are settings.
 - Going back by the system back button or the iOS swipe goes to setup, as Settings does.
+- The round complete haptic fires when the summary first shows, once for the round. A ref in the
+  screen guards it, so a render or an effect that runs again does not fire it twice. It fires the same
+  way whether the round ended by itself or from End round, because both end at this screen. Play
+  again replaces the screen, and the next summary is a new round with its own single haptic.
 
 ### Play screen
 
@@ -418,7 +431,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                             |
 | ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants.                                                                                                                                                                                                                                                                            |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                          |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.   |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                                                                                                                       |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
@@ -439,6 +452,59 @@ player to confirm they are 18 or over, and its wording is in `content`.
   silently does not resolve.
 - Decorative parts with no role, such as a depth edge or a toggle's knob, are reached in tests
   through `tailwind/hostViewsInside`, starting from the element that was found by role.
+
+## Press feedback
+
+`apps/mobile/feedback` gives a press a sound and a haptic in one call. It sits beside `settings` and
+`storage`, not under `features`, because the UI kit `Button` uses it.
+
+- There are four moments: `tap`, `done`, `pass` and `roundComplete`. `useFeedback()` returns one call
+  for each. A call plays the moment's sound first and then fires its haptic, in the same call, so
+  they land together. `roundComplete` has a haptic and no sound.
+- `Button` takes `feedback`, which is `tap` unless it says `done`, `pass` or `none`. A press asks for
+  its feedback and then runs `onPress`. Nothing waits on the feedback, so the action is never
+  delayed. A disabled button gives none. The turn's Done and Pass use `done` and `pass`, and so do the
+  together card's "We did it" and "We drink".
+- `createFeedback(device, { soundOn, hapticsOn })` holds the rules: skip the sound when sound is off,
+  skip the haptic when vibration is off, and swallow any error without logging it. It is pure, and
+  its tests use a fake device.
+- A `FeedbackDevice` is the phone: `playSound` and `triggerHaptic`, both fire and forget.
+  `nativeFeedbackDevice` is the real one and the only code that imports `expo-audio` and
+  `expo-haptics`. Tests replace the device, or the provider, and never reach the native modules.
+- `FeedbackProvider` sits inside `SettingsProvider` at the root. It creates the native device once,
+  when it first renders, which sets the audio session and loads all three sounds, so the first press
+  has nothing left to load. It rebuilds the calls when a setting changes. With no provider above, the
+  calls do nothing, so a component can be rendered alone.
+- Audio session: `playsInSilentMode: false`, so the iOS silent switch mutes the sounds, and
+  `interruptionMode: 'mixWithOthers'`, so music already playing is neither stopped nor lowered. On
+  Android that mode asks for no audio focus. The sounds follow the media volume on both platforms.
+  The `expo-audio` config plugin is set to add no microphone permission, no record permission and no
+  background playback service.
+- Haptics follow the phone's own setting. On iOS the impact and notification generators are silent
+  when System Haptics is off. On Android the effects are the view haptic effects from
+  `performAndroidHapticsAsync`, which follow the touch feedback setting and need no permission. The
+  vibrator calls are not used, because they ignore that setting. A phone with no haptic hardware
+  does nothing and no error shows. Each haptic call is wrapped, so a rejection or a throw is dropped.
+- Each moment has its own feel. On iOS a tap is a light impact, done is a success notification and
+  pass is a warning notification. On Android they are the virtual key, confirm and reject effects.
+  The round complete haptic is a run of four pulses over about half a second on both platforms, so it
+  cannot be taken for a press.
+- The sounds are in `assets/sounds` and are original. `scripts/generateSounds.mjs` makes them, and
+  the folder README says so and lists the alternatives. A test reads the shipped files and checks
+  they are short, mono, 16-bit and quiet.
+- Native modules are not available under Jest. `jest.setup.js` replaces `expo-audio` and
+  `expo-haptics` with stand-ins that do nothing for every test, and a test that checks what was
+  asked of them mocks them itself. Route tests replace the native device with one recording device,
+  `feedbackDevice` in `features/welcome/testing/appEnvironment`.
+
+## Settings screen
+
+`features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
+and the title, then two `Toggle` rows, Sounds and Vibration, each with a caption under it. A change is
+stored at once through the settings context. The hub has a secondary Settings button below the game
+tiles. The route is in the second protected group of `EntryStack`, so it is closed until the player
+has confirmed. Back goes to the hub, and a deep link with nothing behind it replaces the screen with
+the hub. All its text is in `content`.
 
 ## Storage
 
@@ -567,39 +633,48 @@ and pnpm 9.11.0, and the README has the steps.
 
 ## Decisions made
 
-| Decision                                   | Outcome                                                                                                                                                                                                                                     | Ticket |
-| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                          | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                       | FRK-1  |
-| Colours before the tokens package          | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                              | FRK-1  |
-| Themes                                     | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                      | FRK-3  |
-| Typefaces                                  | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                            | FRK-3  |
-| Category colours in the light theme        | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                               | FRK-3  |
-| Text on the accent colour                  | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                       | FRK-3  |
-| Small text on the accent colour            | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.    | FRK-13 |
-| Together card tint                         | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                        | FRK-13 |
-| Spacing and radius utility names           | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                         | FRK-3  |
-| Role and name for the screen shell         | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
-| Depth edge                                 | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |
-| Design sizes off the scales                | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                  | FRK-4  |
-| Entry guard mechanism                      | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.  | FRK-6  |
-| Declining the entry confirmation           | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                           | FRK-6  |
-| A failed write when confirming             | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                        | FRK-6  |
-| Built-in sitemap route                     | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                          | FRK-6  |
-| Game tiles on the hub                      | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                         | FRK-7  |
-| Round setup before its ticket              | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                          | FRK-7  |
-| Node version                               | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
-| App name and identifiers                   | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
-| Not this one is not a penalty              | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.          | FRK-14 |
-| Staging after a replacement                | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                     | FRK-14 |
-| Switched off categories stay off           | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                | FRK-14 |
-| Sheet frame, skip row                      | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                        | FRK-14 |
-| Sheet frame, shape and spacing             | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                           | FRK-14 |
-| Sheet frame, quiet control                 | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                  | FRK-14 |
-| Sheet frame, last category hint            | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                 | FRK-14 |
-| For your partner means a solo card         | A player-written dare marked for your partner is a `solo` card, dealt to whoever's turn it is, as FRK-8 defines a card for one partner. Addressing a dare to one named partner is a separate product question.                              | FRK-39 |
-| Same base rules, different editorial rules | Player text follows the same length and repeat rules as shipped text, through `checkCardText`. The house style rules stay on shipped cards, because a couple writing for themselves know who they are.                                      | FRK-39 |
-| Duplicates checked against shipped text    | A player cannot add a card the deck already has.                                                                                                                                                                                            | FRK-39 |
-| Mixing ratio of one half                   | With 30 or more shipped cards per category, a plain shuffle would rarely deal a couple's own dares in a 10 card round. One half shows them without crowding out the deck.                                                                   | FRK-39 |
-| Timer cards are surprise only              | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                       | FRK-39 |
-| Limits live in `cardText.ts`               | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                      | FRK-39 |
-| Player card text is stored tidied          | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                  | FRK-39 |
+| Decision                                   | Outcome                                                                                                                                                                                                                                          | Ticket |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------ |
+| Expo SDK 57 or 58                          | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                            | FRK-1  |
+| Colours before the tokens package          | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                                   | FRK-1  |
+| Themes                                     | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                           | FRK-3  |
+| Typefaces                                  | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                                 | FRK-3  |
+| Category colours in the light theme        | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                                    | FRK-3  |
+| Text on the accent colour                  | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                            | FRK-3  |
+| Small text on the accent colour            | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.         | FRK-13 |
+| Together card tint                         | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                             | FRK-13 |
+| Spacing and radius utility names           | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                              | FRK-3  |
+| Role and name for the screen shell         | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves.      | FRK-4  |
+| Depth edge                                 | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                                  | FRK-4  |
+| Design sizes off the scales                | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                       | FRK-4  |
+| Entry guard mechanism                      | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.       | FRK-6  |
+| Declining the entry confirmation           | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                                | FRK-6  |
+| A failed write when confirming             | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                             | FRK-6  |
+| Built-in sitemap route                     | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                               | FRK-6  |
+| Game tiles on the hub                      | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                              | FRK-7  |
+| Round setup before its ticket              | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                               | FRK-7  |
+| Node version                               | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                             | FRK-1  |
+| App name and identifiers                   | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                               | FRK-1  |
+| Not this one is not a penalty              | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.               | FRK-14 |
+| Staging after a replacement                | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                          | FRK-14 |
+| Switched off categories stay off           | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                     | FRK-14 |
+| Sheet frame, skip row                      | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                             | FRK-14 |
+| Sheet frame, shape and spacing             | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                                | FRK-14 |
+| Sheet frame, quiet control                 | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                       | FRK-14 |
+| Sheet frame, last category hint            | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                      | FRK-14 |
+| For your partner means a solo card         | A player-written dare marked for your partner is a `solo` card, dealt to whoever's turn it is, as FRK-8 defines a card for one partner. Addressing a dare to one named partner is a separate product question.                                   | FRK-39 |
+| Same base rules, different editorial rules | Player text follows the same length and repeat rules as shipped text, through `checkCardText`. The house style rules stay on shipped cards, because a couple writing for themselves know who they are.                                           | FRK-39 |
+| Duplicates checked against shipped text    | A player cannot add a card the deck already has.                                                                                                                                                                                                 | FRK-39 |
+| Mixing ratio of one half                   | With 30 or more shipped cards per category, a plain shuffle would rarely deal a couple's own dares in a 10 card round. One half shows them without crowding out the deck.                                                                        | FRK-39 |
+| Timer cards are surprise only              | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                            | FRK-39 |
+| Limits live in `cardText.ts`               | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                           | FRK-39 |
+| Player card text is stored tidied          | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                       | FRK-39 |
+| Press feedback libraries                   | `expo-audio` and `expo-haptics`, installed with `expo install` for SDK 57. Both need a new native build.                                                                                                                                         | FRK-26 |
+| Button sounds are generated                | The three sounds are synthesised by `scripts/generateSounds.mjs`, so they are original and the project owns them, with no licence to record. Variant A ships, and two alternatives sit in `assets/sounds/alternatives` for the owner to swap in. | FRK-26 |
+| Audio session                              | Mix with other audio and respect the iOS silent switch, so a sound never stops or lowers music. The `expo-audio` plugin adds no microphone or background permissions.                                                                            | FRK-26 |
+| Where press feedback lives                 | A top level `feedback` module beside `settings` and `storage`, not under `features`, because the UI kit `Button` depends on it and the kit should not import from a feature.                                                                     | FRK-26 |
+| Button feedback option                     | `Button` has one `feedback` prop, `tap`, `done`, `pass` or `none`, that picks the sound and the haptic together. They are not set apart, so a moment never has a sound with the wrong haptic. Only the kit `Button` gives feedback.              | FRK-26 |
+| Feedback with no provider                  | Calls do nothing, so a component renders alone. The route tests prove the real root layout wires the provider.                                                                                                                                   | FRK-26 |
+| Android haptics                            | The view haptic effects, not the vibrator, so the phone's touch feedback setting is respected and no permission is needed. iOS uses its system generators, which follow System Haptics.                                                          | FRK-28 |
+| Round complete haptic                      | A run of four pulses over about half a second, fired once from the summary screen when it first shows. The summary is where both ways of ending a round meet, so one guard gives once only.                                                      | FRK-28 |
+| Settings screen captions                   | Each caption is plain text under its `Toggle`, because the kit `Toggle` has no caption. A screen reader reads the switch and then the caption.                                                                                                   | FRK-26 |

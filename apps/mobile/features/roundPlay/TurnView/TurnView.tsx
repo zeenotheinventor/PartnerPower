@@ -60,6 +60,7 @@ export function TurnView({
         <View className="flex-1">
           <Button
             label={isTogether ? copy.roundPlay.togetherDone : copy.roundPlay.done}
+            feedback="done"
             fullWidth
             onPress={onDone}
           />
@@ -68,6 +69,7 @@ export function TurnView({
           <Button
             label={isTogether ? copy.roundPlay.togetherPass : copy.roundPlay.pass}
             variant="secondary"
+            feedback="pass"
             fullWidth
             onPress={onPass}
           />
