@@ -598,7 +598,8 @@ apps/mobile/
         _layout.tsx      holds the question round for this route group
         index.tsx        the Drink If home
         setup.tsx
-        play.tsx         a stand-in until the play ticket replaces it
+        play.tsx
+        summary.tsx      a stand-in until the Drink If summary replaces it
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -620,7 +621,7 @@ apps/mobile/
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
-  features/questionsPlay/  the Drink If play stand-in
+  features/questionsPlay/  the Drink If play screen, its turn views and the summary stand-in
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -799,6 +800,62 @@ opens it (`entryRoute` is `/games/questions`).
 - Start builds the `QuestionRoundSetup`, starts the round with the shipped questions of every deck
   and the player's own (an empty list until the device stores them), saves the names and opens the
   play route.
+
+### Drink If play screen
+
+`features/questionsPlay/QuestionsPlayScreen` reads `questionTurnView(round)` from
+`useQuestionRound()` and sends `answer`, `pick`, `next`, `removeQuestion`, `disableCategory` and
+`end`. It holds no rules. The question number is `history.length + 1`, and the cost is the
+category's `penalty`, or the drinks the reveal carries.
+
+- Each question can come with a step up screen and a pass the phone screen before it, in that
+  order, as for dares. The step up is `SteppingUpView` from `features/roundPlay`, given Theo as its
+  character, his line, and "A drink now costs {n}" in place of the passing line, because a question
+  has no pass. Pass the phone is `HandoffView`, shown when the holder differs from the previous
+  question's holder, and before the first question. These are state of the screen, kept with the
+  question number, and are not routes.
+- Three views draw the question, all inside `TurnFrame`: the end round pill, the count and progress
+  bar, the turn line with Theo's head at its end, the static question `Card` with its category and
+  topic chips, and the Not this one link. The lead of a question ("Drink if") is part of the prompt
+  in the accent deep colour, so it reads as one sentence.
+  - `StatementView` is for `ifYou` and `neverHave`. Each player has a `SegmentedControl` named by
+    the player, and neither is checked at first. The button sends `answer` once both are set, and
+    either player can change an answer until then. Never have I ever words the options "I have" and
+    "Never", and "I have" is the yes that drinks.
+  - `PickView` is for `eitherOr` and `guess`. Each option is a `Card` button named by its text.
+    Pressing one sends `pick`. The second pick of a would you rather question ignores presses for
+    700 ms, so a fast second tap by the first player cannot answer for both. The options are not
+    disabled and look the same.
+  - `RevealView` is for every reveal: who drinks, what each player picked, or the answer and the
+    guess. It reads the reveal and does no sums. The line that says the result is a live region.
+- Would you rather keeps the phone, with no pass the phone screen between the picks. After the
+  first pick the view draws the same options in the same order, with no selected state, a "Locked
+  in" chip and a line that names only who has picked. Guess your partner has the holder answer
+  under "Only {name} looks", then passes the phone to the guesser with `HandoffView` and its
+  `line`, with no look away box, then has the guesser pick. The screen keeps which question has
+  had its guess handoff, by question id, so a replacement question passes the phone again.
+- A pick screen never shows an earlier private pick. The screen reads `questionTurnView`, which
+  leaves the first pick out, and `PickView` is given only the stage and the options. It has no
+  state of its own for a pick. Not this one drops the engine's first pick and the replacement has a
+  new id, so nothing carries over. The statement view is keyed by the question id, so its answers
+  start empty after a skip.
+- Theo is the `shy` character. His mood follows the stage: resting while answering, sly when both
+  have answered or on the second pick, happy for a good result, shocked for a bad one, and covering
+  his eyes while the answerer picks. In a bold category (`c3` and `c4`) he is flustered at every
+  stage except when covering his eyes, and on the step up. He is decoration, so a screen reader
+  skips him.
+- The End round pill, the system back button and the iOS swipe open the confirm dialog, through
+  `usePreventRemove` as on the Freak or Drink screen. The same hook closes the Not this one sheet
+  when it is open. Confirming sends `end`.
+- Not this one opens `NotThisOneSheet` with the skip row worded for a question, which are its
+  optional `skipTitle` and `skipHint` props. The sheet has the category switches as on Freak or
+  Drink. A skip or a switch off pins the question view, so the replacement shows at once.
+- When the round is over after a question was in play, the screen replaces itself with
+  `/games/questions/summary`. That route is `SummaryStandIn` until the Drink If summary replaces it.
+  A round that starts with no questions says so, with a way back to setup.
+- The screen stores nothing. The discoveries a round makes are in the round state, and the summary
+  saves them.
+- The copy is in `copy.questionsPlay`, and the leads are in `copy.questionLeads`.
 
 ### Entry guard
 

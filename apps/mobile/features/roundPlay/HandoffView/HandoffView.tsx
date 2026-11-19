@@ -5,7 +5,7 @@ import { Button, Screen } from '../../../components/ui';
 import { NoticeBox } from '../NoticeBox';
 import type { HandoffViewProps } from './types';
 
-export function HandoffView({ name, previousName, notice, onContinue }: HandoffViewProps) {
+export function HandoffView({ name, previousName, notice, line, onContinue }: HandoffViewProps) {
   return (
     <Screen>
       <View className="flex-1 items-center justify-center gap-24">
@@ -20,6 +20,7 @@ export function HandoffView({ name, previousName, notice, onContinue }: HandoffV
         <Text accessibilityRole="header" className="type-title text-center text-foreground">
           {fillCopy(copy.roundPlay.handoffTitle, { name })}
         </Text>
+        {line ? <Text className="type-body-bold text-center text-muted">{line}</Text> : null}
       </View>
       <Button label={copy.roundPlay.handoffButton} fullWidth onPress={onContinue} />
     </Screen>

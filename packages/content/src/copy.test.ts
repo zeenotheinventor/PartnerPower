@@ -1,6 +1,7 @@
 import { surpriseIds } from '@getfreak/core';
 
 import { copy } from './copy';
+import { hasDashOrSemicolon } from './textRules';
 
 function expectEveryValueToBeText(group: Record<string, string>) {
   Object.values(group).forEach((value) => expect(value.trim()).not.toBe(''));
@@ -97,11 +98,63 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.questionsSetup);
   });
 
-  it('should give the Drink If round stand-in every line as non-empty text', () => {
+  it('should give the Drink If round screen every line as non-empty text', () => {
     expect(Object.keys(copy.questionsPlay).sort()).toEqual(
-      ['backLabel', 'standInLine', 'title'].sort(),
+      [
+        'answerChip',
+        'answers',
+        'backLabel',
+        'bothNames',
+        'drinksChip',
+        'drinksResult',
+        'guessChip',
+        'guessHandoffLine',
+        'guessTitle',
+        'have',
+        'lockedChip',
+        'lockedIn',
+        'matchLine',
+        'never',
+        'nextQuestion',
+        'no',
+        'noMatchLine',
+        'noQuestions',
+        'onlyLooks',
+        'penaltyEitherOr',
+        'penaltyGuess',
+        'penaltyIfYou',
+        'penaltyNeverHave',
+        'pickPrivate',
+        'picks',
+        'questionCount',
+        'questionCountEndless',
+        'readAloud',
+        'reads',
+        'resultLabel',
+        'rightLine',
+        'safeChip',
+        'safeResult',
+        'showWhoDrinks',
+        'skipBody',
+        'skipTitle',
+        'stepUpCost',
+        'stepUpLine',
+        'stepUpLineBold',
+        'summaryStandInHome',
+        'summaryStandInLine',
+        'summaryStandInTitle',
+        'title',
+        'wrongLine',
+        'yes',
+      ].sort(),
     );
     expectEveryValueToBeText(copy.questionsPlay);
+  });
+
+  it('should keep the Drink If round lines free of dashes and semicolons', () => {
+    Object.values(copy.questionsPlay).forEach((line) =>
+      expect(hasDashOrSemicolon(line)).toBe(false),
+    );
   });
 
   it('should give the round screen every line as non-empty text', () => {
