@@ -29,6 +29,38 @@ export const copy = {
     soundsCaption: 'Button and card sounds.',
     vibrationLabel: 'Vibration',
     vibrationCaption: 'A buzz when you press, and when a round ends.',
+    playSection: 'While you play',
+    privacySection: 'Privacy',
+    privacyLabel: 'Privacy policy',
+    clearSection: 'Start again',
+    clearLabel: 'Clear everything',
+    clearCaption: 'Remove everything this app keeps on this phone.',
+    version: 'Version {version} ({build})',
+    // For a build that has no build number, such as one run from a development server.
+    versionWithoutBuild: 'Version {version}',
+  },
+  // The privacy policy text itself is its own export, `privacyPolicy`.
+  privacy: {
+    backLabel: 'Back',
+  },
+  clear: {
+    title: 'Clear everything?',
+    body: 'This removes everything Get Freak keeps on this phone. It cannot be undone.',
+    removedLabel: 'What goes',
+    removed: [
+      'Settings and player names',
+      'The app lock and its PIN',
+      'The reminder',
+      'Dares and questions you wrote',
+      'Favourites, decks and discoveries',
+    ],
+    keptLabel: 'What stays',
+    kept: ['The app itself', "Permissions you gave in the phone's settings"],
+    confirm: 'Clear everything',
+    cancel: 'Cancel',
+    clearing: 'Clearing',
+    failed: 'That did not finish, so some things may still be here. Try again to finish.',
+    retry: 'Try again',
   },
   updateToast: {
     message: "Updated. You're on the latest version.",

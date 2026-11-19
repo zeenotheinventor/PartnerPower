@@ -23,6 +23,9 @@ function allColors(theme: ColorTheme): string[] {
     theme.accentDeep,
     theme.onAccent,
     theme.onAccentSmall,
+    theme.danger,
+    theme.dangerDeep,
+    theme.onDanger,
     ...Object.values(theme.category),
     ...Object.values(theme.onCategory),
   ];
@@ -68,6 +71,17 @@ describe('colorThemes', () => {
     it('should give small text on the accent at least 4.5', () => {
       expect(contrastRatio(theme.onAccentSmall, theme.accent)).toBeGreaterThanOrEqual(4.5);
     });
+
+    it('should give the label on the danger fill at least 4.5, so small text is safe on it', () => {
+      expect(contrastRatio(theme.onDanger, theme.danger)).toBeGreaterThanOrEqual(4.5);
+    });
+
+    it.each(['background', 'surface'] as const)(
+      'should give danger text at least 4.5 against the %s',
+      (ground) => {
+        expect(contrastRatio(theme.danger, theme[ground])).toBeGreaterThanOrEqual(4.5);
+      },
+    );
 
     it.each(categoryIds)('should give the label on category %s at least 4.5', (categoryId) => {
       expect(

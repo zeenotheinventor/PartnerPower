@@ -13,6 +13,12 @@ export type ColorTheme = {
   onAccent: string;
   // The label colour for small text on the accent, which reaches a contrast of 4.5 in both themes.
   onAccentSmall: string;
+  // The destructive fill, its depth edge, and the label colour on the fill. The label reaches a
+  // contrast of 4.5 on the fill in both themes, so it suits small text too. The fill itself is also
+  // the colour of every error line, and reaches 4.5 on the background and on the surface.
+  danger: string;
+  dangerDeep: string;
+  onDanger: string;
   category: CategoryColors;
   // The label colour that sits on each category fill.
   onCategory: CategoryColors;
@@ -28,6 +34,9 @@ const light: ColorTheme = {
   accentDeep: '#C7195A',
   onAccent: '#FFFFFF',
   onAccentSmall: '#3A1730',
+  danger: '#B3261E',
+  dangerDeep: '#7A1912',
+  onDanger: '#FFFFFF',
   category: { c1: '#FFB547', c2: '#FF8A3D', c3: '#FF3D7F', c4: '#C2185B' },
   onCategory: { c1: '#3A1730', c2: '#3A1730', c3: '#3A1730', c4: '#FFFFFF' },
 };
@@ -42,6 +51,9 @@ const dark: ColorTheme = {
   accentDeep: '#C99A00',
   onAccent: '#2A1450',
   onAccentSmall: '#2A1450',
+  danger: '#FF8A80',
+  dangerDeep: '#C2453D',
+  onDanger: '#231340',
   category: { c1: '#FFC857', c2: '#FF9A4D', c3: '#FF5FA2', c4: '#FF4D5E' },
   onCategory: { c1: '#231340', c2: '#231340', c3: '#231340', c4: '#231340' },
 };

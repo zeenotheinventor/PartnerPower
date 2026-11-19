@@ -1,4 +1,5 @@
-export type ButtonVariant = 'primary' | 'secondary';
+/** `danger` is only for the action that destroys data, such as Clear everything. */
+export type ButtonVariant = 'primary' | 'secondary' | 'danger';
 
 /** What a press sounds and feels like. `none` makes the button silent. */
 export type ButtonFeedback = 'tap' | 'done' | 'pass' | 'none';

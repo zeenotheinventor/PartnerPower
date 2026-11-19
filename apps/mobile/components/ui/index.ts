@@ -20,6 +20,8 @@ export { Screen } from './Screen';
 export type { ScreenProps } from './Screen';
 export { SegmentedControl } from './SegmentedControl';
 export type { SegmentedControlOption, SegmentedControlProps } from './SegmentedControl';
+export { SettingsRow } from './SettingsRow';
+export type { SettingsRowProps } from './SettingsRow';
 export { SpeechBubble } from './SpeechBubble';
 export type { SpeechBubbleProps, SpeechBubbleTail } from './SpeechBubble';
 export { TextField } from './TextField';

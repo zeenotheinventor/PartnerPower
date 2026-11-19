@@ -585,7 +585,8 @@ apps/mobile/
     _layout.tsx          root layout: providers and the root navigator with the entry guard
     +not-found.tsx       sends an unknown path to the one screen that is open to the player
     index.tsx            hub
-    settings.tsx         the sound and vibration settings
+    settings.tsx         the settings screen
+    privacy.tsx          the privacy policy
     welcome.tsx          entry confirmation, shown on first launch
     dev/kit.tsx          gallery of the UI kit, development builds only
     games/
@@ -607,7 +608,7 @@ apps/mobile/
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
-  settings/              the settings context, including the remembered player names and the sound and vibration switches
+  settings/              the settings context (state, not the screen), including the remembered player names and the sound and vibration switches
   personal/              the provider that gives screens the encrypted store of a couple's own dares, favourites and decks
   feedback/              the press feedback module: sound and haptic for each moment
   characters/            the art of the cast as pure data, one file for each character, with a README
@@ -617,7 +618,7 @@ apps/mobile/
   tailwind/              turns the tokens into the Tailwind theme
   features/              screen-level components, one folder per game
   features/hub/          the hub: the first screen, with a tile for each game and a Settings button
-  features/settings/     the settings screen
+  features/settings/     the settings screen, its sections, the clear everything dialog and the privacy policy screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
   features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
@@ -988,15 +989,16 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading. An optional `footer` is pinned under the content, outside a scroll view, above the keyboard.                                                                                                                                     |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Button`           | Role `button`, named by its label. Primary, secondary and danger variants. Danger is only for an action that destroys data. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                               |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
+| `SettingsRow`      | One `button` named by its label and value, "App lock, On, PIN". The optional caption is its hint. `tone="danger"` colours the label. `showChevron={false}` drops the chevron for a row that opens a dialog. It sits in a static card that is not grouped.                                                                                                                                                                                                                                                   |
 | `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                              |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
 | `Countdown`        | One `timer` element named by its `label`, whose value is the time left (`secondsText`), with the digits as m:ss and a bar that empties from the right. It runs on real time from `startedAt`. See Countdown below.                                                                                                                                                                                                                                                                                          |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
-| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a primary confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing.                                                                                                                                         |
+| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing. It also takes `children`, an `error` line, `confirmVariant` and `busy`, which stops Android back.                                               |
 | `TextField`        | A labelled text input, found by its label. `multiline` makes it three lines high. `count` with `maxCount` draws "count/maxCount" under it, and `error` draws a message. An error or a count over the maximum takes the accent border, and focus the foreground border. The error and count under the box are hidden from a screen reader, and its hint is the error, then `countHint`.                                                                                                                      |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                           |
@@ -1188,13 +1190,50 @@ Pressing Done or Pass on the turn screen plays a short effect from the button. T
 ## Settings screen
 
 `features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
-and the title, then one static `Card` (not grouped, so each switch is read on its own) holding two
-`Toggle` rows, Sounds and Vibration, with a divider between them. Each caption is the toggle's
-`description`, so it is also the switch's hint. A change is
-stored at once through the settings context. The hub has a secondary Settings button below the game
-tiles, pushed to the bottom by a flexible spacer. The dev kit link stays below it, in development builds only. The route is in the second protected group of `EntryStack`, so it is closed until the player
-has confirmed. Back goes to the hub, and a deep link with nothing behind it replaces the screen with
-the hub. All its text is in `content`.
+and the title, then sections, each a `SettingsSection`: a caption over a static `Card` that is not
+grouped, so each row is read on its own, with a divider between rows. The order is:
+
+1. **While you play**: the Sounds and Vibration `Toggle` rows. Each caption is the toggle's
+   `description`, so it is also the switch's hint. A change is stored at once through the settings
+   context.
+2. **Privacy**: the Privacy policy `SettingsRow`, which opens `/privacy`. The app lock and reminder
+   rows join this section, above the policy.
+3. **Start again**: the Clear everything `SettingsRow`, in the danger tone and with no chevron
+   because it opens a dialog.
+
+The app version sits at the foot, as `Version 1.0.0 (12)`. It is read from `expo-application`
+(`nativeApplicationVersion` and `nativeBuildVersion`), so it matches the store, and an update over
+the air does not change it. Under Jest the module answers "mock". With no build number the line
+reads `Version 1.0.0`, and with no version it is left out. `expo-application` is already in the
+native fingerprint through `expo-notifications`, and `apps/mobile` declares it directly.
+
+A later ticket adds a row by putting one more child in a section. A new section is one more
+`SettingsSection`. A row that is not there (`false`) is skipped, with no stray divider.
+
+Clear everything opens `ClearEverythingDialog`, which is the kit `Dialog` with `confirmVariant`
+`danger`, a "What goes" and a "What stays" `BulletList`, and a `busy` state. It is mounted only while
+open, so each time it opens it asks again. Confirming runs `useClearEverything()` and shows
+"Clearing", with both buttons disabled and Android back doing nothing. On success the root remounts
+and the entry guard shows the 18+ screen with nothing behind it, so the dialog sets no state. On
+failure it shows the error line and "Try again", the player stays in Settings, and Cancel closes it.
+The clear is not behind the lock, because anyone in Settings has already unlocked the app.
+
+`features/settings/PrivacyScreen` is the `/privacy` route. It shows `privacyPolicy` from `content`:
+the title and the date in the `Header`, then each section as a heading with its paragraphs, in a
+scroll view. It makes no network call. Back goes to the previous screen, and a deep link with nothing
+behind it replaces the screen with Settings.
+
+Both routes are in the second protected group of `EntryStack`, so they are closed until the player
+has confirmed. Back from Settings goes to the hub, and a deep link with nothing behind it replaces
+the screen with the hub. The hub has a secondary Settings button below the game tiles, pushed to the
+bottom by a flexible spacer. The dev kit link stays below it, in development builds only. All the
+text is in `content`.
+
+Tests: component tests find rows and buttons by role and name. `settingsRoute.test.tsx` renders the
+real route tree over in-memory storage and runs the real clear everything. It checks that Settings
+opens from the hub, the policy opens and goes back, a cancel changes nothing, a confirm empties both
+stores and shows the 18+ screen with nothing to go back to, and a clear that fails (a keychain delete
+that rejects) stays in Settings and finishes on Try again.
 
 ## Updates
 
@@ -1324,7 +1363,7 @@ error message can hold stored text. The screens get it from `useClearEverything(
 - A test fills a phone with names, settings, 250 player cards and 150 discoveries and checks every
   store is empty afterwards, then fails each step in turn and retries. Another renders the real
   root layout with entry confirmed, runs `useClearEverything()` from a stand-in screen and expects
-  the 18+ confirmation screen.
+  the 18+ confirmation screen. The Settings screen runs the same function, see Settings screen.
 
 ### Personal store
 
@@ -1514,6 +1553,11 @@ The rules are pure and live in `packages/core/src/lock.ts`. The service that kee
 - Text on the accent colour (`on-accent`) is for large bold labels only, such as a button. In the
   light theme its contrast is 3.37, which is not enough for small text. Small text on the accent,
   such as a chip label, uses `on-accent-small`: 4.63 in the light theme and 11.06 in the dark.
+- `danger`, `danger-deep` and `on-danger` are the destructive fill, its depth edge and the label on
+  the fill. `danger` is also the colour of every error line and of the Clear everything row label.
+  Tests hold `on-danger` on `danger` at 4.5 or more, so small text is safe on it, and `danger` on
+  the background and on the surface at 4.5 or more, in both themes. Light is `#B3261E`, `#7A1912`
+  and `#FFFFFF`. Dark is `#FF8A80`, `#C2453D` and `#231340`.
 - Only the token colours exist as colour utilities, plus the keywords `transparent` and `current`.
   Tailwind's default palette is not available, and opacity modifiers such as `bg-accent/50` do not
   work, because the variables hold hex values. Use an `opacity-*` utility for a disabled state.
@@ -1622,8 +1666,8 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
   the crash text, the store privacy answers probably become crash data and a device id, not linked
   to the user, which is an owner decision in FRK-79. `docs/compliance.md` checks every library
   against the answers, and it and the privacy policy now describe the update check.
-- The privacy policy is one export, `privacyPolicy`, in `packages/content`. The settings screen
-  shows it, and the owner hosts the same words at the URL given to the stores.
+- The privacy policy is one export, `privacyPolicy`, in `packages/content`. The privacy screen,
+  opened from Settings, shows it, and the owner hosts the same words at the URL given to the stores.
 - The policy describes the launch build. `docs/compliance.md` lists what must be true before it is
   published: no Android backup, a device-only database key, the PIN hash and install marker, and
   Clear everything.
