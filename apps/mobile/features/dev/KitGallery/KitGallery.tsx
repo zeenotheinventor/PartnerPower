@@ -10,6 +10,7 @@ import {
   CategoryToggle,
   Card,
   Chip,
+  FavouriteToggle,
   Header,
   Screen,
   SegmentedControl,
@@ -43,6 +44,7 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 export function KitGallery() {
   const router = useRouter();
   const [soundOn, setSoundOn] = useState(true);
+  const [favouriteOff, setFavouriteOff] = useState(false);
   const [isToastShowing, setIsToastShowing] = useState(false);
   const [name, setName] = useState('');
   const [option, setOption] = useState('b');
@@ -148,6 +150,22 @@ export function KitGallery() {
             lockedHint="One switch has to stay on."
             onValueChange={() => {}}
           />
+        </Section>
+
+        <Section title="Favourite toggle">
+          <View className="flex-row gap-12">
+            <FavouriteToggle
+              label="Favourite"
+              value={favouriteOff}
+              onValueChange={setFavouriteOff}
+            />
+            <FavouriteToggle
+              label="Favourite"
+              value
+              onValueChange={() => {}}
+              context="A card for the gallery"
+            />
+          </View>
         </Section>
 
         <Section title="Segmented control">

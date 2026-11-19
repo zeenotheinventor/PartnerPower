@@ -616,7 +616,7 @@ apps/mobile/
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
-  features/roundSummary/ the end of round summary screen and the player score block
+  features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
@@ -656,7 +656,7 @@ apps/mobile/
 ### Summary screen
 
 `features/roundSummary/RoundSummaryScreen` shows `summarise` of the round from `useRound()`. Nothing
-on it is stored or logged.
+on it is stored or logged, except that a player can keep a played card as a favourite (below).
 
 - The heading is "Round over!", with a line giving the cards played and the categories reached,
   in the singular for one. Each player has a `PlayerScore` block that reads as one group, such as
@@ -673,6 +673,23 @@ on it is stored or logged.
   level, categories, length and names of the last round. Home goes to the hub with `dismissTo`,
   which leaves the route group and discards the round and `lastStart`. A new visit to the game
   starts setup at its defaults. The names are still remembered, because they are settings.
+- Below the buttons, `PlayedCards` lists the round's cards under the heading "This round's dares",
+  in the order they were played. Each is a static `Card` with `grouped={false}` and the card's
+  category, so the text and the control are read separately. It holds the category `Chip`, the name
+  of the player who played it (a together card has an accent Together chip and no name), the card
+  text and a `FavouriteToggle`. Skipped cards are left out and free pass cards are listed. The text
+  comes from `lastStart.deck`, and a played card the deck no longer has is left out. The list is
+  part of the scrolling `Screen`, because a round is short and the design says so. The three
+  buttons sit above it so they stay in reach on a long round.
+- A favourite is turned on or off at once and written through `usePersonalData().repository`
+  (`setFavourite`). One card's writes run in turn, so two quick presses cannot race. When a card has no
+  write left, its control shows what the store holds, which is the last write that went through. If
+  the favourites cannot be read, every control starts off. A failed write shows "Couldn't save that
+  favourite. Try again." under that card as a polite live region with the alert role, and announces it on iOS with
+  `AccessibilityInfo.announceForAccessibility`. One message shows at a time. It clears when that
+  control next changes. The list reads the favourites once the store has loaded, and a press does
+  nothing before then, because a write to the placeholder store is lost. Only a favourite's card
+  id is kept. The round, the players and the card text are never stored.
 - Going back by the system back button or the iOS swipe goes to setup, as Settings does.
 - The round complete haptic fires when the summary first shows, once for the round. The
   screen guards it, keyed on the finished round object in a module level `WeakSet`, so a render, an
@@ -824,6 +841,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
 | `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
+| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                              |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
@@ -1057,7 +1075,8 @@ interface Storage {
   fails, then reports the first failure, so a retry finishes the job. Tests cover it.
   Any later store (files, secure items) must be added to `clearAll` in the same change.
 - Settings are the keys in `StorageKey`. `questionPreferences` (FRK-38) holds only the
-  keep-discoveries switch. Nothing else from a round is kept.
+  keep-discoveries switch. Nothing else from a round is kept, except the id of a card a player
+  chooses to favourite on the summary, which goes to the personal store.
 
 ### Personal store
 
