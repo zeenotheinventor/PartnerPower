@@ -362,6 +362,32 @@ describe('RoundSummaryScreen', () => {
       expect(dealtIds()).toEqual(['card-1', 'card-2', 'card-3']);
     });
 
+    it('should not start a round with no cards, and send the player to setup, where the hint says why', async () => {
+      await playAgainFromFavourites(async () => {
+        await personalRepository.setFavourite('card-1', false);
+        await personalRepository.setFavourite('card-2', false);
+      });
+
+      expect(latestRound?.lastStart?.deck).toBe(deck);
+      expect(latestRound?.lastStart?.setup.seed).toBe(setup.seed);
+      expect(mockReplace).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/setup');
+    });
+
+    it('should let Play again be pressed again after it sent the player to setup', async () => {
+      await playAgainFromFavourites(async () => {
+        await personalRepository.setFavourite('card-1', false);
+        await personalRepository.setFavourite('card-2', false);
+      });
+      await personalRepository.setFavourite('card-3', true);
+
+      await act(async () => {
+        fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.playAgain }));
+      });
+
+      expect(mockReplace).toHaveBeenLastCalledWith('/games/dares/play');
+    });
+
     it('should keep the settings, take a new seed and open play', async () => {
       await playAgainFromFavourites(async () => {});
 

@@ -8,6 +8,7 @@ import { Button, Character, Screen, SpeechBubble } from '../../../components/ui'
 import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { usePersonalData } from '../../../personal';
 import { buildRoundDeck } from '../../decks/buildRoundDeck';
+import { countCardsInPlay } from '../../decks/countCardsInPlay';
 import { useDeckChoice } from '../../decks/DeckChoiceProvider';
 import { getStarterDeck } from '../../decks/getStarterDeck';
 import { useOwnCards } from '../../ownCards/OwnCardsProvider';
@@ -76,17 +77,22 @@ export function RoundSummaryScreen() {
         (cardIds) => new Set(cardIds),
         () => new Set<string>(),
       )
-      .then((favouriteIds) =>
-        begin(
-          buildRoundDeck({
-            choice: deckChoice,
-            starterDeck: getStarterDeck(),
-            ownCards,
-            mixInOwnCards: false,
-            favouriteIds,
-          }),
-        ),
-      );
+      .then((favouriteIds) => {
+        const deck = buildRoundDeck({
+          choice: deckChoice,
+          starterDeck: getStarterDeck(),
+          ownCards,
+          mixInOwnCards: false,
+          favouriteIds,
+        });
+        // Setup holds Start when nothing is in play, and so does this. Setup says why.
+        if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
+          hasStarted.current = false;
+          router.replace(setupRoute);
+          return;
+        }
+        begin(deck);
+      });
   };
 
   // Going to the hub ends the route group, which discards the round.
