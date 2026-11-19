@@ -1,5 +1,6 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { SettingsRowProps } from './types';
 
 const labelClasses = {
@@ -21,11 +22,10 @@ export function SettingsRow({
   showChevron = true,
 }: SettingsRowProps) {
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="button"
       accessibilityLabel={value ? `${label}, ${value}` : label}
       accessibilityHint={caption}
-      accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
       className={`group -mx-8 ${disabled ? 'opacity-50' : ''}`}
@@ -40,6 +40,6 @@ export function SettingsRow({
           <View className="mr-4 h-12 w-12 rotate-45 border-r-4 border-t-4 border-muted" />
         ) : null}
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

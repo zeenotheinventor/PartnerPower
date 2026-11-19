@@ -129,14 +129,27 @@ describe('Button', () => {
       expect(feedback.pass).not.toHaveBeenCalled();
     });
 
-    it('should ask for nothing when disabled', async () => {
+    it('should ask for the locked feedback and nothing else when disabled', async () => {
+      const onPress = jest.fn();
       const feedback = await renderWithFeedback(
-        <Button label="Continue" disabled onPress={jest.fn()} />,
+        <Button label="Continue" disabled onPress={onPress} />,
       );
 
       fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
 
+      expect(feedback.locked).toHaveBeenCalledTimes(1);
       expect(feedback.tap).not.toHaveBeenCalled();
+      expect(onPress).not.toHaveBeenCalled();
+    });
+
+    it('should stay silent when disabled and the feedback is none', async () => {
+      const feedback = await renderWithFeedback(
+        <Button label="Continue" disabled feedback="none" onPress={jest.fn()} />,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Continue' }));
+
+      expect(feedback.locked).not.toHaveBeenCalled();
     });
 
     it('should ask for the feedback before running the action, and still run it', async () => {

@@ -2,6 +2,7 @@ import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 import { StyleSheet } from 'react-native';
 
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 import { hostViewsInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { SettingsRow } from './SettingsRow';
@@ -153,5 +154,32 @@ describe('SettingsRow', () => {
         color: theme.muted.toLowerCase(),
       });
     });
+  });
+});
+
+describe('SettingsRow feedback', () => {
+  it('should give the tap feedback and run the action when pressed', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <SettingsRow label="Privacy policy" onPress={onPress} />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Privacy policy' }));
+
+    expect(feedback.tap).toHaveBeenCalledTimes(1);
+    expect(onPress).toHaveBeenCalledTimes(1);
+  });
+
+  it('should give the locked feedback and nothing else when disabled', async () => {
+    const onPress = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <SettingsRow label="Restore" disabled onPress={onPress} />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Restore', disabled: true }));
+
+    expect(feedback.locked).toHaveBeenCalledTimes(1);
+    expect(feedback.tap).not.toHaveBeenCalled();
+    expect(onPress).not.toHaveBeenCalled();
   });
 });

@@ -1,7 +1,7 @@
 import { copy } from '@getfreak/content';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
-import { Card, Character, Chip, Screen } from '../../../components/ui';
+import { Card, Character, Chip, FeedbackPressable, Screen } from '../../../components/ui';
 import { ProgressBar } from '../../roundPlay/ProgressBar';
 import { isBoldCategory } from '../isBoldCategory';
 import type { TheoMood, TurnFrameProps } from './types';
@@ -39,13 +39,13 @@ export function TurnFrame({
   return (
     <Screen scroll>
       <View className="flex-row items-center justify-between gap-8">
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onEndRound}
           className="min-h-48 justify-center rounded-pill border-2 border-border bg-surface px-12"
         >
           <Text className="type-caption text-foreground">{copy.roundPlay.endRound}</Text>
-        </Pressable>
+        </FeedbackPressable>
         <Text className="type-caption text-muted">{countLabel}</Text>
       </View>
 
@@ -89,13 +89,13 @@ export function TurnFrame({
       {children}
 
       {onNotThisOne ? (
-        <Pressable
+        <FeedbackPressable
           accessibilityRole="button"
           onPress={onNotThisOne}
           className="min-h-48 items-center justify-center"
         >
           <Text className="type-caption text-muted underline">{copy.roundPlay.notThisOne}</Text>
-        </Pressable>
+        </FeedbackPressable>
       ) : null}
     </Screen>
   );

@@ -1,6 +1,7 @@
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 
 import type { CategoryId } from '@getfreak/core';
+import { FeedbackPressable } from '../FeedbackPressable';
 import type { CategoryToggleProps } from './types';
 
 const rowShape = 'min-h-48 flex-row items-center justify-between gap-8 rounded-lg border-2 px-12';
@@ -67,11 +68,12 @@ export function CategoryToggle({
   const onRowClass = locked ? lockedRowClasses[category] : onRowClasses[category];
 
   return (
-    <Pressable
+    <FeedbackPressable
       accessibilityRole="switch"
-      accessibilityState={{ checked: value, disabled: locked }}
+      accessibilityState={{ checked: value }}
       accessibilityHint={locked ? lockedHint : undefined}
       disabled={locked}
+      feedback={value ? 'toggleOff' : 'toggleOn'}
       onPress={() => onValueChange(!value)}
       className={value ? onRowClass : offRowClasses}
     >
@@ -79,6 +81,6 @@ export function CategoryToggle({
       <View className={value ? onTrackClasses[category] : offTrackClasses}>
         <View className={value ? onKnobClasses[category] : offKnobClasses} />
       </View>
-    </Pressable>
+    </FeedbackPressable>
   );
 }

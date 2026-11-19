@@ -2,6 +2,7 @@ import { colorThemes } from '@getfreak/tokens';
 import { fireEvent, screen } from 'nativewind/test';
 
 import { View } from 'react-native';
+import { renderWithMockFeedback } from '../../../feedback/renderWithMockFeedback';
 
 import { hostViewsInside } from '../../../tailwind/hostViewsInside';
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -94,5 +95,20 @@ describe('Header', () => {
         borderColor: theme.border.toLowerCase(),
       });
     });
+  });
+});
+
+describe('Header press feedback', () => {
+  it('should give the back feedback when the back button is pressed', async () => {
+    const onBack = jest.fn();
+    const feedback = await renderWithMockFeedback(
+      <Header title="Set the round" backLabel="Go back" onBack={onBack} />,
+    );
+
+    fireEvent.press(screen.getByRole('button', { name: 'Go back' }));
+
+    expect(feedback.back).toHaveBeenCalledTimes(1);
+    expect(feedback.tap).not.toHaveBeenCalled();
+    expect(onBack).toHaveBeenCalledTimes(1);
   });
 });

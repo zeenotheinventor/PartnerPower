@@ -13,6 +13,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { Text, View } from 'react-native';
 
 import { Header, Screen } from '../../../components/ui';
+import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { useRound } from '../../round/RoundProvider';
 import { ChoiceView } from '../ChoiceView';
 import { EndRoundDialog } from '../EndRoundDialog';
@@ -176,6 +177,22 @@ export function RoundPlayScreen() {
     (key: number) => setPressEffect((playing) => (playing?.key === key ? undefined : playing)),
     [],
   );
+
+  // Each view that shows has its own sound: the step up sting, which a surprise reveal shares, the
+  // hand over chime, the soft rise of a choice put to the partner, and the deal for a card. The
+  // card id is in the key so that a swapped card is dealt again on the same view.
+  const { stepUp, handover, sheetOpen, deal } = useFeedback();
+  const announce = {
+    steppingUp: stepUp,
+    surprise: stepUp,
+    handoff: handover,
+    choice: sheetOpen,
+    card: deal,
+  }[currentStage];
+  const shownCardId = current?.card.id;
+  useEffect(() => {
+    if (shownCardId !== undefined) announce();
+  }, [shownCardId, announce]);
 
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isSheetOpen, setIsSheetOpen] = useState(false);
