@@ -87,3 +87,22 @@ export type {
   QuestionOption,
   TopicId,
 } from './questionModel';
+export {
+  availableItemCount,
+  minimumItemCount,
+  reduceSecretMatch,
+  secretMatchDiscoveries,
+  secretMatchItemCount,
+  startSecretMatch,
+  viewSecretMatch,
+} from './secretMatch';
+export type {
+  SecretMatch,
+  SecretMatchAction,
+  SecretMatchItem,
+  SecretMatchRating,
+  SecretMatchSetup,
+  SecretMatchState,
+  SecretMatchStrength,
+  SecretMatchView,
+} from './secretMatch';
