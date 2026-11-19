@@ -966,6 +966,22 @@ on it is stored or logged, except that a player can keep a played card as a favo
     the first screen of the next card. It is a live region, announced on iOS when it appears, and it
     goes once the player moves on. If the round ends on that card the summary shows and it is
     dropped.
+- **Vibration card.** A dare with `effect: { type: 'vibrate', seconds }` is not a surprise and has
+  no chip. `TurnView` takes `vibration` and shows a row above the answers: a kit `Countdown` and one
+  `Button` in a third of the width, Go (primary) or Stop (secondary). The countdown shows the full
+  time until Go is pressed. Go calls `startVibration(seconds)` from `features/vibration/vibration.ts`
+  and starts the countdown from that moment. While it runs, Done, Pass, "Not this one", End round
+  and "Use free pass" are disabled and only Stop works, because the phone is held against a body.
+  The vibration stops on Stop, when the countdown ends, when `AppState` is not `active` (a call
+  included) and when the card leaves the screen, which covers leaving it and the round ending. Stop
+  and the app leaving the foreground return to ready with the full time. A countdown that ends stays
+  at 0:00, and Go starts it again from the full time. The haptics setting is not read, because here
+  the vibration is the dare. The effect is React Native's `Vibration`, with no native module of our
+  own: Android vibrates once for the whole time at the default strength, and an iPhone buzzes about
+  every 400 ms, because its `Vibration` is a fixed buzz. An iPad and the web cannot vibrate, and the
+  platform cannot say whether a system setting blocks it, so no blocked line is shown. A phone that
+  cannot vibrate is never dealt the card: `buildRoundDeck` applies `withoutUnsupportedEffects` with
+  `isVibrationSupported()`. Removing the card from the starter deck switches the effect off.
 - A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
   count. An endless round shows only the count.
 - The End round control, and going back by the system back button or the iOS swipe, open a confirm

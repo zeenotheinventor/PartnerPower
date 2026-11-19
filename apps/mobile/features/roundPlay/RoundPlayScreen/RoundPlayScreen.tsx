@@ -363,6 +363,7 @@ export function RoundPlayScreen() {
         }
         freePass={canUseFreePass ? { onUse: useFreePass } : undefined}
         timer={surprise?.type === 'timer' ? { seconds: surprise.seconds } : undefined}
+        vibration={card.effect?.type === 'vibrate' ? { seconds: card.effect.seconds } : undefined}
         {...kindProps}
         onDone={() => dispatch({ type: 'done' })}
         onPass={() => dispatch({ type: 'pass' })}

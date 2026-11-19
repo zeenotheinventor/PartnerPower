@@ -14,6 +14,7 @@ const minimumTogetherCardsPerCategory = 8;
 const minimumTimerCardsPerCategory = 4;
 const shippedCards: Card[] = decks.flatMap((deck) => deck.cards);
 const timerCards = shippedCards.filter((card) => card.effect?.type === 'timer');
+const vibrationCards = shippedCards.filter((card) => card.effect?.type === 'vibrate');
 
 describe('shipped decks', () => {
   it('should pass validation for every deck', () => {
@@ -36,9 +37,21 @@ describe('shipped decks', () => {
     expect(shippedCards.filter((card) => card.source !== 'shipped')).toEqual([]);
   });
 
-  it('should give an effect only to solo cards with a timer', () => {
+  it('should give an effect only to solo cards', () => {
     const offending = shippedCards.filter(
-      (card) => card.effect !== undefined && (card.kind !== 'solo' || card.effect.type !== 'timer'),
+      (card) => card.effect !== undefined && card.kind !== 'solo',
+    );
+
+    expect(offending.map((card) => card.id)).toEqual([]);
+  });
+
+  it('should ship a vibration card in the second category', () => {
+    expect(vibrationCards.map((card) => card.category)).toContain('c2');
+  });
+
+  it('should give every vibration card a time of 5 to 30 seconds', () => {
+    const offending = vibrationCards.filter(
+      (card) => card.effect === undefined || card.effect.seconds < 5 || card.effect.seconds > 30,
     );
 
     expect(offending.map((card) => card.id)).toEqual([]);

@@ -17,6 +17,7 @@ import type { PressEffectKind } from '../pressEffect';
 import { TurnTopBar } from '../TurnTopBar';
 import type { TurnViewProps } from './types';
 import { useCardFlip } from './useCardFlip';
+import { useVibrationRun } from './useVibrationRun';
 
 function countdownSecondsText(count: number) {
   return fillCopy(
@@ -38,6 +39,7 @@ export function TurnView({
   mystery,
   freePass,
   timer,
+  vibration,
   kind,
   togetherNames,
   onDone,
@@ -62,6 +64,10 @@ export function TurnView({
     setIsTimeUp(true);
     timerEnd();
   };
+  // The run is kept even when there is no vibration, so the hook count never changes.
+  const vibrationRun = useVibrationRun(vibration?.seconds ?? 0);
+  // Everything but Stop is left alone while the phone vibrates, because stray touches are likely.
+  const isLockedByVibration = vibrationRun.isRunning;
   const faceDownMystery = mystery && isBackShowing ? mystery : undefined;
   const isFaceDownShowing = faceDownMystery !== undefined;
 
@@ -120,7 +126,12 @@ export function TurnView({
 
   return (
     <Screen scroll>
-      <TurnTopBar countLabel={countLabel} progress={progress} onEndRound={onEndRound} />
+      <TurnTopBar
+        countLabel={countLabel}
+        progress={progress}
+        isEndRoundDisabled={isLockedByVibration}
+        onEndRound={onEndRound}
+      />
 
       <View className="min-h-32 flex-row items-center justify-between gap-8">
         <Text accessibilityRole="header" className="type-body-bold flex-1 text-muted">
@@ -160,6 +171,31 @@ export function TurnView({
         />
       ) : null}
 
+      {vibration ? (
+        <View className="flex-row items-center gap-12">
+          <View className="flex-1">
+            <Countdown
+              seconds={vibration.seconds}
+              startedAt={vibrationRun.startedAt}
+              label={copy.roundPlay.countdownLabel}
+              secondsText={countdownSecondsText}
+              endText={copy.roundPlay.timerDone}
+              onEnd={vibrationRun.end}
+            />
+          </View>
+          <View className="w-1/3">
+            <Button
+              label={
+                vibrationRun.isRunning ? copy.roundPlay.vibrationStop : copy.roundPlay.vibrationGo
+              }
+              variant={vibrationRun.isRunning ? 'secondary' : 'primary'}
+              fullWidth
+              onPress={vibrationRun.isRunning ? vibrationRun.stop : vibrationRun.go}
+            />
+          </View>
+        </View>
+      ) : null}
+
       {faceDownMystery ? (
         <Button label={copy.roundPlay.flip} fullWidth onPress={faceDownMystery.onFlip} />
       ) : (
@@ -171,7 +207,7 @@ export function TurnView({
               <Button
                 label={isTogether ? copy.roundPlay.togetherDone : copy.roundPlay.done}
                 feedback="done"
-                disabled={isDoneLocked}
+                disabled={isDoneLocked || isLockedByVibration}
                 fullWidth
                 onPress={() => answer('done', doneButtonRef, onDone)}
               />
@@ -181,6 +217,7 @@ export function TurnView({
                 label={isTogether ? copy.roundPlay.togetherPass : copy.roundPlay.pass}
                 variant="secondary"
                 feedback="pass"
+                disabled={isLockedByVibration}
                 fullWidth
                 onPress={() => answer('pass', passButtonRef, onPass)}
               />
@@ -195,6 +232,7 @@ export function TurnView({
             <Button
               label={copy.roundPlay.useFreePass}
               variant="secondary"
+              disabled={isLockedByVibration}
               fullWidth
               onPress={freePass.onUse}
             />
@@ -205,6 +243,7 @@ export function TurnView({
       {isFaceDownShowing ? null : (
         <FeedbackPressable
           accessibilityRole="button"
+          disabled={isLockedByVibration}
           onPress={onNotThisOne}
           className="min-h-48 items-center justify-center"
         >

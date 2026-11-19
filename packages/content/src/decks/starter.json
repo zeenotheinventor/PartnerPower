@@ -1217,6 +1217,18 @@
         "type": "timer",
         "seconds": 60
       }
+    },
+    {
+      "id": "starter-c2-37",
+      "category": "c2",
+      "kind": "solo",
+      "text": "Hold the phone against your partner, over their underwear. Press Go and keep it there while it buzzes. They can say stop.",
+      "tags": ["touch", "toys"],
+      "source": "shipped",
+      "effect": {
+        "type": "vibrate",
+        "seconds": 10
+      }
     }
   ]
 }

@@ -74,3 +74,12 @@ jest.mock('@sentry/react-native', () => ({
   setUser: jest.fn(),
   breadcrumbsIntegration: jest.fn(() => ({ name: 'Breadcrumbs' })),
 }));
+
+// A phone that cannot vibrate, so no test deals the vibration card by accident and none touches
+// the real vibrator. A test of the vibration card sets what it needs with `jest.mocked`, and the
+// test of the module itself takes the real one with `jest.requireActual`.
+jest.mock('./features/vibration/vibration', () => ({
+  isVibrationSupported: jest.fn(() => false),
+  startVibration: jest.fn(),
+  stopVibration: jest.fn(),
+}));
