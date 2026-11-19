@@ -28,6 +28,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | App            | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
 | Navigation     | Expo Router, file-based                                                                                                      |
 | Press feedback | `expo-audio` for the button sounds and `expo-haptics` for the haptics. Both are native modules.                              |
+| Characters     | Code-drawn vector art: `react-native-svg` (native) with Reanimated. See Characters below                                     |
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
 | Storage        | `expo-sqlite`, through its key-value store                                                                                   |
@@ -88,7 +89,9 @@ descriptions come from `content`, in `displayNames`, which is keyed by game id a
 
 The hub joins each entry with its names and hands the result to a list component that knows nothing
 about any particular game. An available game's tile opens its `setupRoute`. A coming soon game's
-tile is disabled and carries a marker.
+tile is disabled and carries a marker. Amara waves above the tiles and says the greeting in a speech
+bubble. Each tile can take a decoration, and the hub gives the dares tile Mei and the questions tile
+Theo, as head crops.
 
 Adding a game means adding an entry, its names in `content`, a route group registered behind the
 entry guard, and a core module. The hub layout does not change.
@@ -411,11 +414,12 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx
-  components/ui/         the UI kit
+  components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
   settings/              the settings context, including the remembered player names and the sound and vibration switches
   feedback/              the press feedback module: sound and haptic for each moment
+  characters/            the art of the cast as pure data, one file for each character, with a README
   assets/sounds/         the button sounds, with a README about where they come from
   scripts/               `generateSounds.mjs`, which makes the sounds
   fonts/                 the font files the type scale uses
@@ -424,7 +428,7 @@ apps/mobile/
   features/hub/          the hub: the first screen, with a tile for each game and a Settings button
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
-  features/roundSetup/   the round setup screen
+  features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
   features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
   features/roundSummary/ the end of round summary screen and the player score block
   features/welcome/      the entry confirmation screens
@@ -463,8 +467,8 @@ on it is stored or logged.
 - The heading is "Round over!", with a line giving the cards played and the categories reached,
   in the singular for one. Each player has a `PlayerScore` block that reads as one group, such as
   "Alex, 8 dares done, 2 drinks, boldest". The boldest player's block carries a "Boldest" badge.
-  A tie has no badge, and its line says so. The character line is plain text in a bordered box.
-  There is no art and no confetti yet.
+  A tie has no badge, and its line says so. Tyler stands above the scores, celebrating, or shocked
+  for a tie, with the line as his speech bubble directly above him. There is no confetti yet.
 - The badge is a static `Chip` with the `accent` option, like the Together chip. It fills with the
   accent colour and sets its small text in `on-accent-small`. The boldest block's depth edge stays
   `accent-deep`, since an edge carries no text.
@@ -493,6 +497,8 @@ on it is stored or logged.
   holds the phone is not the one who held it for the previous card, or there was no previous
   card, the pass the phone screen names who receives it. Then the card shows. These screens are
   state of the play screen, kept with the card number they belong to, and are not routes.
+- Nyx says the step up line in a speech bubble on the step up screen. Mei's head peeks over the top
+  edge of the card on the card view. Both are decorative.
 - A `together` card uses the same card view with "Both of you" for the turn and a penalty line that
   says both drink. The card is edged in the accent colour with the accent depth edge, in place of
   the category colour, and has a Together chip above the category chip and a line naming both
@@ -543,6 +549,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
   the first screen, and leaves nothing to go back to.
 - Declining stores nothing. The closing screen is state inside the `welcome` route, not a route of
   its own, and it offers only a way back to the question.
+- Nyx stands on both screens, with her arms crossed on the question and idle on the closing screen.
+  The greeting is her speech bubble.
 - `app/+not-found.tsx` is always available, so it reads the settings and sends an unknown path to
   `welcome` or to the first screen. Without it, Expo Router shows its own unmatched screen outside
   the root layout.
@@ -567,6 +575,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                 |
 | `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                     |
+| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                   |
+| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                    |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -628,6 +638,65 @@ player to confirm they are 18 or over, and its wording is in `content`.
   asked of them mocks them itself. Route tests replace the native device with one recording device,
   `feedbackDevice` in `features/welcome/testing/appEnvironment`.
 
+## Characters
+
+The cast is five characters, addressed in code by role and never by display name, because names have
+changed twice. `core` exports `characterIds` and the `CharacterId` type: `host`, `dealer`, `hype`,
+`gatekeeper` and `shy`. `content` holds each character's display name and a one line personality in
+`characterNames`, typed by the id.
+
+The art is code-drawn vector art, not Rive files. It lives in `apps/mobile/characters/` as pure
+data, with no React, and a README that says how to draw one. A character is an ordered list of
+shapes in a 240 by 240 canvas, split into the parts that move on their own:
+
+- `hairBack`, `body`, `head`, `hairFront`, and for each mood the face (eye whites, irises, lids,
+  a blink shape, brows, mouth, extras) and the two limbs, each with a pivot.
+- A shape is `{ d, fill, stroke, strokeWidth, opacity }`. `d` is a path written out as numbers.
+  `fill` and `stroke` are palette slot names. No colour appears in the art.
+- A mood is a `CharacterMood`. Every character has `idle`, `happy`, `flirty` and `shocked`. The
+  pose moods belong to one character each: `wave` to `host`, `celebrate` to `hype`, `armsCrossed`
+  to `gatekeeper`, and `flustered` and `coverEyes` to `shy`. `MoodsByCharacter` types them, and the
+  `Character` props are generic in the role, so a mood the character cannot show fails typecheck.
+- `composeLayers` lists a mood's layers from back to front. The component and the preview script
+  both use it.
+
+Colours come from `packages/tokens/src/characters.ts`: a light and a dark palette for each
+character, with the same named slots (skin, hair, iris, outfit and so on, plus a `rim` that lifts
+the figure off the grape background in the dark theme). A parity test checks the keys. `tokens`
+imports nothing, so its palette keys are written out, and the app indexes them by `CharacterId`, so
+a character without a palette fails typecheck.
+
+`Character` takes the role, the mood, a `size` (`tile` 64 dp, `medium` 96 dp, `hero` 150 dp), a
+`crop` (`bust` or `head`) and an optional `animated` (true by default). Its props are a union over
+the roles, so the role and the mood are checked as a pair even when the role is only a
+`CharacterId`. An unknown mood at run time draws the idle one. `CharacterOf` is the same component
+generic in the role, for code such as the kit gallery that holds the pair as type parameters. It
+picks the palette from NativeWind's `useColorScheme`, which is what the Tailwind variables follow,
+so the art always matches the theme.
+
+Motion runs on the UI thread. Each moving part is its own `react-native-svg` layer inside an
+animated `View`, and the animated view takes the transform. react-native-svg turns a `transform`
+into a matrix in JavaScript when it renders, so a Reanimated `transform` on an SVG group would not
+reach the native side from the UI thread, and animating the matrix prop directly could not be
+checked without a native build. A transform on a `View` is known to work. Each layer is an `Svg` of
+the full size, so the pivot of a part is an offset from the view centre.
+
+- Idle: breathing (about 3.6 seconds a cycle), a blink of about 120 ms every few seconds with a
+  double blink now and then, the irises glancing, and a small sway of the hair.
+- A mood change plays a reaction of about 400 ms and settles into the mood's idle: a squash and hop
+  for `happy`, `celebrate` and `wave`, a jolt for `shocked`, `flustered` and `coverEyes`, and a head
+  tilt for `flirty` and `armsCrossed`.
+- Poses move their limbs: the wave, the double fist pump, the finger tap and the peek.
+- With reduced motion on (Reanimated's `useReducedMotion`), or `animated={false}`, no loop starts
+  and no reaction plays. The component shows the mood's still pose as one SVG of all the layers,
+  with no animated views, so the resting head tilt of a mood is not applied.
+- The art is decorative. It is hidden with `accessibilityElementsHidden`,
+  `importantForAccessibility="no-hide-descendants"` and `aria-hidden`, and has no role or label.
+
+The preview script `apps/mobile/characters/scripts/renderCastPreview.mjs` draws every character,
+mood, theme and size from the same data into one HTML file. The kit gallery has a Cast section for
+looking at the motion on a device.
+
 ## Settings screen
 
 `features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
@@ -670,7 +739,9 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
   keys, a type scale, a spacing scale and a radius scale. `apps/mobile/tailwind.config.ts` feeds
   them to the Tailwind config that NativeWind reads.
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
-  inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
+  inline `style` objects. The one exception is a Reanimated animated view, which takes its style
+  through the `style` prop because Reanimated writes it from the UI thread. It also takes
+  `StyleSheet.absoluteFill` for its layout. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
   a test does the same for the app's CSS files. Named colours such as `red`, and colours in JSON
   files such as `app.json`, are not checked, so review has to keep those out.
@@ -718,7 +789,12 @@ SQLCipher build that `expo-sqlite` supports through its config plugin, with the 
 - The entry guard is tested against the real route tree with Expo Router's testing library, over
   an in-memory key-value store. `features/welcome/testing/appEnvironment` holds that setup, and any
   test that renders the route tree should use it.
-- Every UI kit component has an accessible role and name.
+- Every UI kit component has an accessible role and name, except `Character`, which is decorative
+  and hidden from screen readers. Its tests read the drawn paths from the SVG tree.
+- Reanimated runs under Jest through its own mock, set up in `jest.setup.js`, with a resolver in
+  `jest.resolver.js` that loads the plain JavaScript worklets. The mock has no reduced motion hook,
+  so the setup file adds one that returns false. It and `withRepeat` are `jest.fn`, so a test can
+  turn reduced motion on or count the loops.
 - `apps/mobile` tests have a 30 second limit, set once in `jest.config.js`. The first test in a file
   that renders loads React Native, compiles the Tailwind config, and for route tests loads every
   screen, and that work is several times slower on a loaded machine or with a cold cache. Do not
@@ -839,3 +915,12 @@ and pnpm 9.11.0, and the README has the steps.
 | Error reporting and analytics              | None at launch. No SDK for either in the app. Crash data comes only from what Apple and Google collect from players who opt in.                                                                                                                                                                                                                   | FRK-56 |
 | Encryption export answer                   | `ITSAppUsesNonExemptEncryption` is `NO` until SQLCipher ships, then `YES` as an industry standard algorithm not provided by the operating system. `docs/compliance.md` gives the reasons.                                                                                                                                                         | FRK-56 |
 | Alternative forfeit mode                   | None at launch: no drink cap and no non-alcoholic mode, decided by the owner on 2026-11-18. `docs/compliance.md` lists the options if a store objects to the drink forfeit.                                                                                                                                                                       | FRK-16 |
+| Characters are code-drawn vector art       | The cast is drawn by us as vector art in code, rendered with `react-native-svg` and animated with Reanimated, instead of Rive files from an illustrator. Decided by the owner on 2026-11-19, so the cast ships without waiting on an illustrator.                                                                                                 | FRK-18 |
+| Neutral role ids for the cast              | `host`, `dealer`, `hype`, `gatekeeper` and `shy`, because a display name changed twice. Names and personality lines are in `characterNames` in `content`. The id type is in `core`, which `content` may import.                                                                                                                                   | FRK-18 |
+| Palettes in tokens, as named slots         | Each character has a light and a dark palette of the same slots in `packages/tokens`. The art names a slot and never a colour, so one drawing serves both themes. A `rim` slot separates the figure from the dark background.                                                                                                                     | FRK-18 |
+| react-native-svg, a new native module      | Installed with `expo install` for SDK 57. It needs a new native build, and an existing development client cannot show a character until it is rebuilt.                                                                                                                                                                                            | FRK-18 |
+| Animated views, not animated SVG groups    | Each moving part is a full-size `Svg` layer in a Reanimated `View`. react-native-svg converts `transform` to a matrix in JavaScript, so a transform on an SVG group from the UI thread is unreliable. A `View` transform is known to work.                                                                                                        | FRK-18 |
+| Reanimated animated styles may be inline   | An animated view takes its style through the `style` prop and `StyleSheet.absoluteFill`, because Reanimated writes it on the UI thread. Everything else keeps to classes.                                                                                                                                                                         | FRK-18 |
+| Mood moves with the character              | A mood a character cannot show is a compile error, through `MoodsByCharacter` and a `Character` that is generic in the role, instead of a runtime fallback.                                                                                                                                                                                       | FRK-18 |
+| Character art is data, not screen code     | The art is plain data files in `apps/mobile/characters`, with the layer order in one `composeLayers` that the component and the preview script share. The four placeholder characters are replaced file by file.                                                                                                                                  | FRK-18 |
+| Reanimated under Jest                      | The official mock, a resolver that loads the plain JavaScript worklets only for Reanimated and worklets, and a `useReducedMotion` that returns false. A broader resolver broke packages whose pnpm path names the worklets as a peer.                                                                                                             | FRK-18 |

@@ -1,7 +1,7 @@
 import { copy } from '@getfreak/content';
 import { Pressable, Text, View } from 'react-native';
 
-import { Button, Card, Chip, Screen } from '../../../components/ui';
+import { Button, Card, Character, Chip, Screen } from '../../../components/ui';
 import { ProgressBar } from '../ProgressBar';
 import type { TurnViewProps } from './types';
 
@@ -41,6 +41,15 @@ export function TurnView({
       <Text accessibilityRole="header" className="type-body-bold text-muted">
         {turnLabel}
       </Text>
+
+      {/* Mei's head peeks over the top edge of the card. This view has no height and cancels its own
+          gap, so the card stays where it was. It sits above the card so the head draws over it. */}
+      <View className="z-10 -mb-16 h-0 items-end pr-16">
+        {/* 46 is tuned to the proportions of the head crop at tile size, so the chin sits 18 over the card. */}
+        <View className="-mt-[46px]">
+          <Character character="dealer" mood="flirty" size="tile" crop="head" />
+        </View>
+      </View>
 
       <Card category={category} accent={isTogether} grouped={false}>
         <View className="gap-12">

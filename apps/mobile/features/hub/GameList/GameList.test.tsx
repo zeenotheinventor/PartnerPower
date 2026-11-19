@@ -1,5 +1,6 @@
 import { copy } from '@getfreak/content';
 import { fireEvent, screen } from 'nativewind/test';
+import { Text } from 'react-native';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { GameList } from './GameList';
@@ -72,6 +73,16 @@ describe('GameList', () => {
     await renderThemed(<GameList games={madeUpGames} onOpen={onOpen} />);
 
     expect(screen.getAllByText(copy.hub.comingSoon)).toHaveLength(1);
+  });
+
+  it('should show the decoration of a game inside its tile and leave the tile name alone', async () => {
+    const decorated: ListedGame[] = [
+      { ...madeUpGames[0]!, decoration: <Text>Sample decoration</Text> },
+    ];
+    await renderThemed(<GameList games={decorated} onOpen={onOpen} />);
+
+    expect(screen.getByText('Sample decoration')).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: 'First game' })).toBeOnTheScreen();
   });
 
   it('should show no tiles for an empty list', async () => {

@@ -16,6 +16,7 @@ import { StyleSheet } from 'react-native';
 import { useEffect, type ReactNode } from 'react';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { RoundProvider, useRound } from '../../round/RoundProvider';
 import { RoundPlayScreen } from './RoundPlayScreen';
 
@@ -253,6 +254,19 @@ describe('RoundPlayScreen', () => {
       ).not.toBeOnTheScreen();
     });
 
+    it('should have Mei peek over the card, hidden from screen readers', async () => {
+      await renderPlay(twoCategories);
+
+      takeThePhone();
+
+      expect(drawnCharacters()).toEqual([
+        {
+          props: { character: 'dealer', mood: 'flirty', size: 'tile', crop: 'head' },
+          isHiddenFromScreenReaders: true,
+        },
+      ]);
+    });
+
     it('should show the penalty for passing the category of the card', async () => {
       await renderPlay(middleCategoryOnly);
 
@@ -324,6 +338,20 @@ describe('RoundPlayScreen', () => {
         screen.getByText(fillCopy(copy.roundPlay.stepUpCost, { penalty: 2 })),
       ).toBeOnTheScreen();
       expect(screen.queryByRole('button', { name: copy.roundPlay.done })).not.toBeOnTheScreen();
+    });
+
+    it('should have Nyx say the line, hidden from screen readers', async () => {
+      await renderPlay(twoCategories);
+      playUntilCard(5);
+
+      pressDone();
+
+      expect(drawnCharacters()).toEqual([
+        {
+          props: { character: 'gatekeeper', mood: 'flirty', size: 'hero' },
+          isHiddenFromScreenReaders: true,
+        },
+      ]);
     });
 
     it('should show the card straight after Bring it when the same player holds the phone', async () => {
