@@ -373,6 +373,9 @@ policy or gives its URL to a store:
 - FRK-41 stores the database key in `expo-secure-store` with device-only keychain accessibility
   (`WHEN_UNLOCKED_THIS_DEVICE_ONLY`), so the key is never in a backup and a backup of the encrypted
   store cannot be read on another phone.
+- FRK-41 has merged, so the encrypted store exists and the policy's "If you write your own dares"
+  line is accurate once a screen writes to it. SQLCipher also makes the export answer `YES`, which
+  FRK-58 sets, with the French declaration filed or France left out of the launch countries.
 - FRK-53 keeps the PIN only as a salted hash in secure storage, and its install marker clears
   secure storage on the first launch after a reinstall.
 - FRK-63 ships Clear everything in Settings, as the policy describes it.
@@ -465,9 +468,8 @@ What the app uses:
 
 The answer:
 
-- **Until SQLCipher ships: `NO`.** Everything the app uses is the operating system's own encryption
-  or hashing.
-- **Once SQLCipher ships: `YES`,** and in App Store Connect choose "an industry standard algorithm,
+- **`YES`, now that SQLCipher ships (FRK-41).** Before it, everything the app used was the operating
+  system's own encryption or hashing, which would have been `NO`. In App Store Connect choose "an industry standard algorithm,
   not provided within the Apple operating system". SQLCipher uses standard AES, but its encryption
   scheme is its own layer above the operating system's primitives, so the exemption for encryption
   "limited to that within the Apple operating system" is not safe to claim. This needs no CCATS,
@@ -475,8 +477,7 @@ The answer:
   It needs the French encryption declaration only if the app is offered in France. The owner either
   files that declaration or leaves France out of the launch countries.
 
-FRK-58 sets the key. If FRK-41 has not merged when FRK-58 lands, FRK-58 sets `NO` and FRK-41 changes
-it to `YES` in the same pull request that turns SQLCipher on.
+FRK-58 sets the flag to `YES` in the iOS config. FRK-41 does not touch `app.json` for it.
 
 Not settled, for the owner to take advice on:
 
@@ -702,7 +703,7 @@ CONTENT and THE VIBRATION CARD paragraphs above.
 | Contests and profanity answers      | Infrequent for both. Neither changes the 18+ result.                                                                                                                                                                                                    |
 | Apple Age assurance control         | No at launch, Yes once Declared Age Range ships.                                                                                                                                                                                                        |
 | IARC category                       | Game.                                                                                                                                                                                                                                                   |
-| `ITSAppUsesNonExemptEncryption`     | `NO` until SQLCipher ships, then `YES` with "industry standard algorithm". The owner files the French declaration or leaves France out.                                                                                                                 |
+| `ITSAppUsesNonExemptEncryption`     | `YES` now that SQLCipher ships (FRK-41), with "industry standard algorithm". FRK-58 sets it in the iOS config. The owner files the French declaration or leaves France out.                                                                             |
 | Store name                          | "Get Freak: Couples Game" in both stores. The home screen name stays "Get Freak".                                                                                                                                                                       |
 | Store category                      | Entertainment on both stores, as proposed.                                                                                                                                                                                                              |
 | Privacy policy scope                | Written for the launch build. Features that may not have shipped yet are described with "if", and a list says what must be true before it is published, so the text stays true either way. Change it if a decision in FRK-41, FRK-53 or FRK-58 changes. |
