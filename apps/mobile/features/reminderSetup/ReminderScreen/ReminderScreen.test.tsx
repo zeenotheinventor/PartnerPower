@@ -128,6 +128,36 @@ describe('ReminderScreen', () => {
     });
   });
 
+  describe('opening it when it was set before', () => {
+    it('should schedule it again, so a reminder the phone dropped comes back', async () => {
+      const { reminder, scheduled } = createTestReminder();
+      await reminder.turnOn({ day: 2, hour: 22 });
+      scheduled.length = 0;
+      await renderThemed(
+        <ReminderServiceContext.Provider value={reminder}>
+          <ReminderScreen />
+        </ReminderServiceContext.Provider>,
+      );
+      await act(async () => {});
+
+      expect(scheduled).toEqual([{ day: 2, hour: 22 }]);
+    });
+
+    it('should show it off when scheduling again fails, because the setting is cleared', async () => {
+      const { reminder, device } = createTestReminder();
+      await reminder.turnOn({ day: 2, hour: 22 });
+      device.schedule = () => Promise.reject(new Error('The phone failed'));
+      await renderThemed(
+        <ReminderServiceContext.Provider value={reminder}>
+          <ReminderScreen />
+        </ReminderServiceContext.Provider>,
+      );
+      await act(async () => {});
+
+      expect(toggle()).not.toBeChecked();
+    });
+  });
+
   describe('when permission is refused', () => {
     it('should keep the switch off, schedule nothing and show how to allow it', async () => {
       const { scheduled, backend } = await renderScreen({ willAllow: false });
@@ -236,6 +266,20 @@ describe('ReminderScreen', () => {
       await act(async () => fireEvent.press(chip('Wednesday')));
 
       expect(scheduled).toEqual([{ day: 3, hour: 22 }]);
+    });
+
+    it('should build quick changes on each other, a day then a time', async () => {
+      const { scheduled } = await renderScreen();
+      await turnOn();
+
+      await act(async () => {
+        fireEvent.press(chip('Monday'));
+        fireEvent.press(timeOption('18:00'));
+      });
+
+      expect(scheduled).toEqual([{ day: 1, hour: 18 }]);
+      expect(chip('Monday')).toBeSelected();
+      expect(timeOption('18:00')).toBeChecked();
     });
 
     it('should not ask again for permission', async () => {

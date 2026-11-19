@@ -171,6 +171,28 @@ describe('createReminderService', () => {
     });
   });
 
+  describe('when the phone fails to schedule a change', () => {
+    it('should read as off, with nothing scheduled and nothing stored', async () => {
+      const { reminder, scheduled, backend, device } = createTestReminder();
+      await reminder.turnOn(friday);
+      device.schedule = () => Promise.reject(new Error('The phone failed'));
+
+      await expect(reminder.turnOn(mondayEarly)).rejects.toThrow();
+
+      expect(scheduled).toEqual([]);
+      expect(backend.entries.has('reminder')).toBe(false);
+      expect(await reminder.read()).toEqual({ status: 'off' });
+    });
+
+    it('should still fail, and not hang, when the clean up fails too', async () => {
+      const { reminder, device } = createTestReminder();
+      device.schedule = () => Promise.reject(new Error('The schedule failed'));
+      device.cancelAll = () => Promise.reject(new Error('The cancel failed'));
+
+      await expect(reminder.turnOn(friday)).rejects.toThrow('The cancel failed');
+    });
+  });
+
   describe('when the setting cannot be stored', () => {
     it('should cancel what it scheduled, so nothing runs that the app does not know about', async () => {
       const { scheduled, device } = createTestReminder();

@@ -5,7 +5,7 @@ import {
   reminderHours,
   type ReminderSchedule,
 } from '@getfreak/core';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { AppState, Linking, Text, View } from 'react-native';
 
 import {
@@ -47,7 +47,35 @@ export function ReminderScreen() {
   const goBack = useGoBack(settingsRoute);
   const { state, setState, reload } = useReminderState();
 
-  useEffect(reload, [reload]);
+  // The day and time the next change starts from. A change sets it at once, so two quick taps (a
+  // day, then a time) build on each other, and the state follows once nothing is pending.
+  const latestSchedule = useRef<ReminderSchedule>(defaultReminder);
+  const pendingCount = useRef(0);
+  useEffect(() => {
+    if (state?.status === 'on' && pendingCount.current === 0)
+      latestSchedule.current = state.schedule;
+  }, [state]);
+
+  // Opening the screen also schedules the reminder again if it is on, which changes nothing when
+  // it is already there and brings it back if the phone dropped it. If that fails the setting is
+  // cleared, and the read shows what is true.
+  useEffect(() => {
+    let isCurrent = true;
+    reminder
+      .read()
+      .then((read) => (read.status === 'on' ? reminder.turnOn(read.schedule) : read))
+      .then(
+        (next) => {
+          if (isCurrent) setState(next);
+        },
+        () => {
+          if (isCurrent) reload();
+        },
+      );
+    return () => {
+      isCurrent = false;
+    };
+  }, [reminder, setState, reload]);
 
   useEffect(() => {
     const subscription = AppState.addEventListener('change', (appState) => {
@@ -58,20 +86,30 @@ export function ReminderScreen() {
 
   // If the phone fails, the screen shows what the reminder really is.
   const apply = async (change: () => Promise<ReminderState>) => {
+    pendingCount.current += 1;
     try {
       setState(await change());
     } catch {
       reload();
+    } finally {
+      pendingCount.current -= 1;
     }
   };
 
-  const turnOn = () => apply(() => reminder.turnOn(defaultReminder));
+  const turnOn = () => {
+    latestSchedule.current = defaultReminder;
+    return apply(() => reminder.turnOn(defaultReminder));
+  };
   const turnOff = () =>
     apply(async () => {
       await reminder.turnOff();
       return { status: 'off' };
     });
-  const change = (schedule: ReminderSchedule) => apply(() => reminder.turnOn(schedule));
+  const change = (changes: Partial<ReminderSchedule>) => {
+    const schedule = { ...latestSchedule.current, ...changes };
+    latestSchedule.current = schedule;
+    return apply(() => reminder.turnOn(schedule));
+  };
 
   if (!state) {
     return (
@@ -103,7 +141,7 @@ export function ReminderScreen() {
                   label={label}
                   accessibilityLabel={longName}
                   selected={day === state.schedule.day}
-                  onPress={() => change({ day, hour: state.schedule.hour })}
+                  onPress={() => change({ day })}
                 />
               ))}
             </View>
@@ -112,7 +150,7 @@ export function ReminderScreen() {
             label={copy.reminder.timeLabel}
             options={timeOptions}
             value={state.schedule.hour}
-            onValueChange={(hour) => change({ day: state.schedule.day, hour })}
+            onValueChange={(hour) => change({ hour })}
           />
           <Card>
             <Text className="type-caption uppercase text-muted">{copy.reminder.previewLabel}</Text>

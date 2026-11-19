@@ -7,8 +7,8 @@ const hubRoute = '/';
 
 /**
  * Takes the player to the hub when they open the app from the reminder, whether the app was
- * running or not. It draws nothing. The app lock covers the screen above the navigator, so with
- * the lock on the hub waits behind it.
+ * in the background or not. It draws nothing. Once the lock screen overlay (FRK-66) lands, it
+ * covers the hub when the lock is on, so the hub waits behind it.
  */
 export function ReminderTapHost(): null {
   const reminder = useReminderService();

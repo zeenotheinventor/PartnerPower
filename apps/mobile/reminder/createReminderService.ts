@@ -42,13 +42,14 @@ export function createReminderService({
           await clear();
           return { status: 'denied' };
         }
-        await device.cancelAll();
-        await device.schedule(schedule);
         try {
+          await device.cancelAll();
+          await device.schedule(schedule);
           await storage.set('reminder', schedule);
         } catch (error) {
-          // Without the stored setting the app would not know the reminder is there.
-          await device.cancelAll();
+          // The old reminder may already be cancelled, and the app must not keep a setting that
+          // has nothing scheduled behind it, so it clears both, as well as it can, and then fails.
+          await clear().catch(() => undefined);
           throw error;
         }
         return { status: 'on', schedule };

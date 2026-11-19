@@ -1,7 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { ScreenCrashBoundary } from '../../monitoring';
-import { ReminderTapHost } from '../../reminder/ReminderTapHost';
+import { ReminderTapHost } from '../../reminder';
 import { useSettings } from '../../settings';
 import { SplashReveal } from '../SplashReveal';
 

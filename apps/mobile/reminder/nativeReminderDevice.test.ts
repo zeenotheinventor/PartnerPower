@@ -17,6 +17,8 @@ import { nativeReminderDevice } from './nativeReminderDevice';
 
 // The enums are plain values, so the real ones are used. The functions are native, so they are
 // stand-ins that a test reads.
+// The `as never` casts below stand in for the parts of expo-notifications' large result types that
+// the adapter never reads, so a test gives only the field it needs.
 jest.mock('expo-notifications', () => ({
   ...jest.requireActual('expo-notifications/build/NotificationChannelManager.types'),
   ...jest.requireActual('expo-notifications/build/Notifications.types'),

@@ -41,7 +41,8 @@ export type ReminderService = {
    * Turns the reminder on, or changes its day and time. It asks for permission, which is the only
    * place the app does. It replaces any reminder already scheduled, so there is only ever one.
    * When notifications are not allowed it schedules nothing and clears the setting, and the state
-   * is denied. It rejects when the phone fails, and then no reminder is stored.
+   * is denied. It rejects when the phone fails, and then it has cleared the reminder and the
+   * setting as well as it could, so the app shows it as off and not as the one it replaced.
    */
   turnOn: (schedule: ReminderSchedule) => Promise<ReminderState>;
   /** Cancels the reminder and clears the setting. */

@@ -83,7 +83,7 @@ export const nativeReminderDevice: ReminderDevice = {
   cancelAll: () => cancelAllScheduledNotificationsAsync(),
 
   // A start from the reminder is not told. The app starts at the hub, which is where the reminder
-  // goes, and the lock covers it, so there is nothing to do.
+  // goes, and the lock (FRK-66's overlay, once it lands) covers the hub, so there is nothing to do.
   onOpened: (listener) => {
     const subscription = addNotificationResponseReceivedListener(() => listener());
     return () => subscription.remove();
