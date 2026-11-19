@@ -15,6 +15,7 @@ import { Text, View } from 'react-native';
 import {
   Button,
   CategoryToggle,
+  Character,
   Header,
   Screen,
   SegmentedControl,
@@ -23,6 +24,7 @@ import {
 } from '../../../components/ui';
 import { useSettings } from '../../../settings';
 import { useRound } from '../../round/RoundProvider';
+import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { randomSeed } from '../randomSeed';
 
 const maxNameLength = 20;
@@ -58,6 +60,8 @@ export function RoundSetupScreen() {
     categoriesForLevel(defaultLevel),
   );
   const [length, setLength] = useState<RoundLength>(defaultLength);
+  // Not remembered, like the level and the length. It is on each time setup opens.
+  const [surprisesOn, setSurprisesOn] = useState(true);
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
@@ -100,6 +104,7 @@ export function RoundSetupScreen() {
         enabledCategories,
         length,
         seed: randomSeed(),
+        surprises: surprisesOn ? playableSurprises : [],
       },
       firstDeck,
     );
@@ -110,7 +115,19 @@ export function RoundSetupScreen() {
 
   return (
     <Screen scroll avoidKeyboard>
-      <Header title={copy.roundSetup.title} backLabel={copy.roundSetup.backLabel} onBack={goBack} />
+      <Header
+        title={copy.roundSetup.title}
+        backLabel={copy.roundSetup.backLabel}
+        onBack={goBack}
+        trailing={
+          // Mei deals the cards. With one category left on, Nyx takes her place.
+          isLastCategoryOn ? (
+            <Character character="gatekeeper" mood="happy" size="tile" crop="head" />
+          ) : (
+            <Character character="dealer" mood="flirty" size="tile" crop="head" />
+          )
+        }
+      />
 
       <View className="flex-row gap-8">
         <View className="flex-1">
@@ -169,8 +186,13 @@ export function RoundSetupScreen() {
         onValueChange={setLength}
       />
 
-      <View className="rounded-lg border-2 border-dashed border-border px-12">
-        <Toggle label={copy.roundSetup.surprises} value={false} disabled onValueChange={() => {}} />
+      <View className="rounded-lg border-2 border-border bg-surface px-12 pb-12">
+        <Toggle
+          label={copy.roundSetup.surprises}
+          value={surprisesOn}
+          onValueChange={setSurprisesOn}
+        />
+        <Text className="type-caption text-muted">{copy.roundSetup.surprisesCaption}</Text>
       </View>
 
       <View className="flex-1" />

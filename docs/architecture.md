@@ -28,6 +28,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | App            | Expo SDK 57, React Native 0.86, React 19, TypeScript in strict mode                                                          |
 | Navigation     | Expo Router, file-based                                                                                                      |
 | Press feedback | `expo-audio` for the button sounds and `expo-haptics` for the haptics. Both are native modules.                              |
+| Characters     | Code-drawn vector art: `react-native-svg` (native) with Reanimated. See Characters below                                     |
 | Press effects  | `react-native-reanimated`, with plain views for every shape. No other native module.                                         |
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
@@ -80,7 +81,7 @@ type GameId = 'dares' | 'questions';
 interface GameEntry {
   id: GameId;
   status: 'available' | 'comingSoon';
-  setupRoute: string;
+  entryRoute: string;
 }
 ```
 
@@ -89,8 +90,10 @@ descriptions come from `content`, in `displayNames`, which is keyed by game id a
 `GameId`, so a registered game without a title and description fails typecheck.
 
 The hub joins each entry with its names and hands the result to a list component that knows nothing
-about any particular game. An available game's tile opens its `setupRoute`. A coming soon game's
-tile is disabled and carries a marker.
+about any particular game. An available game's tile opens its `entryRoute`: Freak or Drink opens
+its setup, and Drink If opens its own home. A coming soon game's tile is disabled and carries a
+marker. Amara waves above the tiles and says the greeting in a speech bubble. Each tile can take a
+decoration, and the hub gives the dares tile Mei and the questions tile Theo, as head crops.
 
 Adding a game means adding an entry, its names in `content`, a route group registered behind the
 entry guard, and a core module. The hub layout does not change.
@@ -126,6 +129,7 @@ interface Card {
   kind: CardKind;
   text: string;
   effect?: CardEffect;
+  tags?: string[]; // 1 to 3 interest tags, shipped dares only
   source: 'shipped' | 'player';
 }
 
@@ -154,7 +158,8 @@ schema and checks that card ids are unique across all decks.
 A card's `effect` is a typed union. A value that does not match fails `parseDeck` with a message
 that names the card, for example `cards[2] (id "card-3"): timer seconds must be a whole number from
 5 to 120`. `source` is required: every shipped card carries `shipped`, and a card a player wrote
-carries `player`.
+carries `player`. `tags` is optional, so player cards and stored data stay valid, and it holds 1 to 3
+plain strings, because `core` cannot import the vocabulary from `content`.
 
 ### Player-written cards
 
@@ -254,6 +259,36 @@ Names are content, typed by id so a missing one fails typecheck. `topicNames` an
 you rather") are in `copy` as `questionLeads`, so question text holds only the clause after the
 lead. The topics are t1 favourites, t2 turn-ons and turn-offs, t3 fantasies, t4 kinks and fetishes,
 t5 history and t6 wishlist.
+
+## Dare suggestions
+
+A couple's secret match results suggest dares, all on the device. A shared vocabulary of interest
+tags links the two sides. `content` holds it as `interestTags` in `src/interestTags.ts`, 29 short
+lowercase words and hyphenated phrases covering activities, kit, places, roles and pace. Every
+shipped dare carries 1 to 3 of these tags, every `secretMatch` item carries 1 to 3, and every tag
+sits on at least 2 dares. `decks.ts` and `questions.ts` check each tag against the vocabulary at
+import time through `findUnknownTags`, so an unknown tag fails loudly, and tests repeat the checks.
+Player-written dares have no tags and are never suggested.
+
+`core` takes tags as plain strings and does the ranking in `suggestions.ts`:
+
+```ts
+type MatchedItem = { strength: 'yes' | 'maybe'; tags: readonly string[] };
+
+suggestDares(matches: MatchedItem[], cards: Card[], options?: { limit?: number; categories?: CategoryId[] }): Card[];
+buildMatchesDeck(cards: Card[]): Deck; // id 'matches', version 1, at most 20 cards
+canOfferMatchesDeck(suggestions: Card[]): boolean; // 5 or more
+```
+
+- Each tag takes the strength of the strongest match that carries it: 2 for `yes`, 1 for `maybe`.
+- A dare scores the sum over its distinct tags. A dare that scores 0, or has no tags, is left out.
+- Ranking is score high to low, then category c1 to c4, then id.
+- `limit` defaults to 10. `categories`, when given, is applied before the limit.
+- The function takes match tags, not discoveries. The caller looks up each match's item in the
+  current content and passes its tags, so retagging content changes suggestions without touching
+  stored data.
+- The matches deck is built when needed and never stored. It holds the first 20 suggestions in
+  rank order, and the screen offers it when there are at least 5 suggestions.
 
 ## Round engine
 
@@ -559,12 +594,18 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx
-  components/ui/         the UI kit
+      questions/
+        _layout.tsx      holds the question round for this route group
+        index.tsx        the Drink If home
+        setup.tsx
+        play.tsx         a stand-in until the play ticket replaces it
+  components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
   settings/              the settings context, including the remembered player names and the sound and vibration switches
   personal/              the provider that gives screens the encrypted store of a couple's own dares, favourites and decks
   feedback/              the press feedback module: sound and haptic for each moment
+  characters/            the art of the cast as pure data, one file for each character, with a README
   assets/sounds/         the button sounds, with a README about where they come from
   scripts/               `generateSounds.mjs`, which makes the sounds
   fonts/                 the font files the type scale uses
@@ -573,9 +614,13 @@ apps/mobile/
   features/hub/          the hub: the first screen, with a tile for each game and a Settings button
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
-  features/roundSetup/   the round setup screen
-  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog, the press effects
+  features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
+  features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen and the player score block
+  features/questionRound/  the question round context for the questions route group
+  features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
+  features/questionsSetup/ the Drink If round setup screen
+  features/questionsPlay/  the Drink If play stand-in
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -592,6 +637,10 @@ apps/mobile/
   The provider also keeps `lastStart`, the setup and deck the last round was started from, in
   memory only, so the summary can start another round like it. It goes with the round when the
   route group is left.
+- **Question round state** works the same way for `questions`. The layout renders
+  `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
+  `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
+  for a `QuestionRoundAction`. It holds the question list it was started from in place of a deck.
 - **Settings**, such as the entry confirmation and the remembered player names, are read from
   storage once at launch and exposed through a small settings context, `settings`. Saving the names
   never rejects: a failed write is ignored and the names still count for that session. The
@@ -613,8 +662,8 @@ on it is stored or logged.
 - The heading is "Round over!", with a line giving the cards played and the categories reached,
   in the singular for one. Each player has a `PlayerScore` block that reads as one group, such as
   "Alex, 8 dares done, 2 drinks, boldest". The boldest player's block carries a "Boldest" badge.
-  A tie has no badge, and its line says so. The character line is plain text in a bordered box.
-  There is no art and no confetti yet.
+  A tie has no badge, and its line says so. Tyler stands above the scores, celebrating, or shocked
+  for a tie, with the line as his speech bubble directly above him. There is no confetti yet.
 - The badge is a static `Chip` with the `accent` option, like the Together chip. It fills with the
   accent colour and sets its small text in `on-accent-small`. The boldest block's depth edge stays
   `accent-deep`, since an edge carries no text.
@@ -638,17 +687,56 @@ on it is stored or logged.
 `features/roundPlay/RoundPlayScreen` reads the round from `useRound()` and sends `done`, `pass`,
 `removeCard`, `disableCategory` and `end`. The card number is `history.length + 1`, and the penalty is the category's `penalty`.
 
-- Each card can come with two screens before it, in this order. If `current.steppingUp` is true,
-  the step up screen names the new category and what passing now costs. Then, if the player who
-  holds the phone is not the one who held it for the previous card, or there was no previous
-  card, the pass the phone screen names who receives it. Then the card shows. These screens are
-  state of the play screen, kept with the card number they belong to, and are not routes.
+- Each card can come with three screens before it, in this order. If `current.steppingUp` is true,
+  the step up screen names the new category and what passing now costs. Then, if the card carries a
+  surprise, the `SurpriseView` reveal names it. Then, if the player who holds the phone is not the
+  one who held it for the previous card, or there was no previous card, the pass the phone screen
+  names who receives it. Then the card shows. A category jump's reveal takes the place of the step
+  up screen, and so does the reveal of a mystery dare that is still face down. These screens are state of the play screen, kept with the card number they belong to,
+  and are not routes.
+- Nyx says the step up line in a speech bubble on the step up screen. Mei's head peeks over the top
+  edge of the card on the card view, outside the flip of a mystery dare. Both are decorative.
 - A `together` card uses the same card view with "Both of you" for the turn and a penalty line that
   says both drink. The card is edged in the accent colour with the accent depth edge, in place of
   the category colour, and has a Together chip above the category chip and a line naming both
   players. The buttons read "We did it" and "We drink", and send the same `done` and `pass`
   actions. The core already charges both players on a pass and keeps the turn order. The accent
   edge and chip are the `accent` option of `Card` and `Chip`.
+- **Surprises.** Setup has a "Surprises" `Toggle`, on each time setup opens and not remembered. When
+  it is on, Start passes `playableSurprises` as `RoundSetup.surprises`, and when it is off it passes
+  an empty list. `playableSurprises` (`features/roundPlay/playableSurprises.ts`) is the list of
+  types this screen can show, `mystery`, `jump`, `swap` and `freePass`. The play screen owns it, so a
+  type is added there when the screen learns to show it and setup does not change. A card carrying a
+  type that is not on the list plays as a plain card. With surprises off, nothing below shows.
+  - **Reveal.** `SurpriseView` is a full screen state like `SteppingUpView`. It shows "Surprise!",
+    the surprise's name from `surpriseNames` as a heading in an accent pill, the rule line from
+    `copy.roundPlay.surpriseRule` filled with the name of the player the card is for, the category
+    and its cost, and the turn line. Only a category jump adds the step up markers
+    (`CategoryMarkers`, shared with `SteppingUpView`). Its button is "Bring it".
+  - **Role swap.** `current.player` is the partner who now plays, so the reveal, the pass the phone
+    screen, the turn line and the penalty all name that partner. If they already hold the phone,
+    there is no pass the phone screen.
+  - **Surprise chip.** A category jump, a role swap and a flipped mystery dare carry an accent `Chip`
+    with the surprise's name, above the category chip where the Together chip goes. A free pass has
+    no chip, because the pass belongs to the player.
+  - **Mystery dare.** `TurnView` shows `Card` in its face down state, named by
+    `copy.roundPlay.faceDownLabel`, with no card text and no category, and under it only "Flip it",
+    which sends `flip`. "Not this one" is not shown, and "End round" stays. The card turns over in
+    280 ms (see below) and then shows as a normal card with the chip. Its penalty line reads
+    `flippedPenalty` with the category's penalty plus one, which is what `summarise` charges, in the
+    main text colour. Screen reader focus moves to the card text after the flip.
+  - **The flip.** `useCardFlip` turns the card edge on over 120 ms, swaps the back for the card at
+    90 degrees, and turns it back over 160 ms, with Reanimated and an animated style. The swap is
+    driven by the animation's finish callback. With reduce motion on it fades out over 80 ms and in
+    over 120 ms. The back stays up until the swap, so the card text is not in the tree before then.
+  - **Free pass.** While the player holding the phone has a pass, their solo cards show an accent
+    `Chip` marker, "Free pass ready", at the end of the turn line, and a full width secondary
+    "Use free pass" button under Done and Pass. It sends `useFreePass`. It is not shown on a together
+    card, on another player's card, or on a mystery card before its flip, which is when the engine
+    would ignore it. The confirmation, "Pass used. Nobody drinks.", is a `NoticeBox` at the top of
+    the first screen of the next card. It is a live region, announced on iOS when it appears, and it
+    goes once the player moves on. If the round ends on that card the summary shows and it is
+    dropped.
 - A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
   count. An endless round shows only the count.
 - The End round control, and going back by the system back button or the iOS swipe, open a confirm
@@ -675,6 +763,26 @@ on it is stored or logged.
   phone screen, even when it is in a higher category. Its cost is in the penalty line.
 - The summary route shows the end of round summary. See the Summary screen section.
 
+### Drink If home and setup
+
+`games/questions` has a home, unlike Freak or Drink, because it has four places to go. The hub tile
+opens it (`entryRoute` is `/games/questions`).
+
+- `features/questionsHome` shows Theo's line as text in a bordered box, with his resting head beside it,
+  and one `Card` button for each item in `homeEntries`. An entry
+  with a `route` is on. An entry whose `route` is null shows as coming soon, disabled and named
+  "title, Coming soon", so a ticket switches its entry on by giving it a route.
+- `features/questionsSetup` is the Freak or Drink setup with two more groups: four format switches
+  and six topic switches, each in one `Card` with `grouped={false}` of `Toggle` rows. The last format
+  and the last topic left on are locked. The categories come from the level, as for dares. Only the
+  names are remembered, through the settings provider, so they are shared with Freak or Drink.
+- `availableQuestionCount` from `core` gives the number of questions the choices leave, so the
+  screen holds no rules. When that is below a numeric length, a message says so. Start stays on and
+  the round ends when the questions run out.
+- Start builds the `QuestionRoundSetup`, starts the round with the shipped questions of every deck
+  and the player's own (an empty list until the device stores them), saves the names and opens the
+  play route.
+
 ### Entry guard
 
 Until the player has confirmed on the `welcome` screen, no other screen exists. The screen asks the
@@ -686,7 +794,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
   only after. A deep link to a closed route, on a cold start or with the app already open, ends at
   `welcome`, and the closed screen never renders.
 - A protected group only covers the routes listed in it, so every new route must be added to the
-  second group in `EntryStack`. A route group with its own layout, such as `games/dares`, is one
+  second group in `EntryStack`. A route group with its own layout, such as `games/dares` or `games/questions`, is one
   screen in that group and its routes sit inside it. A test walks the real route files under
   `app/` and fails if any of them can be opened before confirming.
   The same test fails if `app/` holds a test file or any other file that is not a route or layout,
@@ -696,6 +804,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
   the first screen, and leaves nothing to go back to.
 - Declining stores nothing. The closing screen is state inside the `welcome` route, not a route of
   its own, and it offers only a way back to the question.
+- Nyx stands on both screens, with her arms crossed on the question and idle on the closing screen.
+  The greeting is her speech bubble.
 - `app/+not-found.tsx` is always available, so it reads the settings and sends an unknown path to
   `welcome` or to the first screen. Without it, Expo Router shows its own unmatched screen outside
   the root layout.
@@ -709,18 +819,20 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                 |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                        |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                              |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.       |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                        |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.     |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                  |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                     |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                    |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                         |
-| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches. |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                                                                                                                                  |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                           |
+| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                 |
+| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                                                                                                                                  |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -795,6 +907,65 @@ player to confirm they are 18 or over, and its wording is in `content`.
   asked of them mocks them itself. Route tests replace the native device with one recording device,
   `feedbackDevice` in `features/welcome/testing/appEnvironment`.
 
+## Characters
+
+The cast is five characters, addressed in code by role and never by display name, because names have
+changed twice. `core` exports `characterIds` and the `CharacterId` type: `host`, `dealer`, `hype`,
+`gatekeeper` and `shy`. `content` holds each character's display name and a one line personality in
+`characterNames`, typed by the id.
+
+The art is code-drawn vector art, not Rive files. It lives in `apps/mobile/characters/` as pure
+data, with no React, and a README that says how to draw one. A character is an ordered list of
+shapes in a 240 by 240 canvas, split into the parts that move on their own:
+
+- `hairBack`, `body`, `head`, `hairFront`, and for each mood the face (eye whites, irises, lids,
+  a blink shape, brows, mouth, extras) and the two limbs, each with a pivot.
+- A shape is `{ d, fill, stroke, strokeWidth, opacity }`. `d` is a path written out as numbers.
+  `fill` and `stroke` are palette slot names. No colour appears in the art.
+- A mood is a `CharacterMood`. Every character has `idle`, `happy`, `flirty` and `shocked`. The
+  pose moods belong to one character each: `wave` to `host`, `celebrate` to `hype`, `armsCrossed`
+  to `gatekeeper`, and `flustered` and `coverEyes` to `shy`. `MoodsByCharacter` types them, and the
+  `Character` props are generic in the role, so a mood the character cannot show fails typecheck.
+- `composeLayers` lists a mood's layers from back to front. The component and the preview script
+  both use it.
+
+Colours come from `packages/tokens/src/characters.ts`: a light and a dark palette for each
+character, with the same named slots (skin, hair, iris, outfit and so on, plus a `rim` that lifts
+the figure off the grape background in the dark theme). A parity test checks the keys. `tokens`
+imports nothing, so its palette keys are written out, and the app indexes them by `CharacterId`, so
+a character without a palette fails typecheck.
+
+`Character` takes the role, the mood, a `size` (`tile` 64 dp, `medium` 96 dp, `hero` 150 dp), a
+`crop` (`bust` or `head`) and an optional `animated` (true by default). Its props are a union over
+the roles, so the role and the mood are checked as a pair even when the role is only a
+`CharacterId`. An unknown mood at run time draws the idle one. `CharacterOf` is the same component
+generic in the role, for code such as the kit gallery that holds the pair as type parameters. It
+picks the palette from NativeWind's `useColorScheme`, which is what the Tailwind variables follow,
+so the art always matches the theme.
+
+Motion runs on the UI thread. Each moving part is its own `react-native-svg` layer inside an
+animated `View`, and the animated view takes the transform. react-native-svg turns a `transform`
+into a matrix in JavaScript when it renders, so a Reanimated `transform` on an SVG group would not
+reach the native side from the UI thread, and animating the matrix prop directly could not be
+checked without a native build. A transform on a `View` is known to work. Each layer is an `Svg` of
+the full size, so the pivot of a part is an offset from the view centre.
+
+- Idle: breathing (about 3.6 seconds a cycle), a blink of about 120 ms every few seconds with a
+  double blink now and then, the irises glancing, and a small sway of the hair.
+- A mood change plays a reaction of about 400 ms and settles into the mood's idle: a squash and hop
+  for `happy`, `celebrate` and `wave`, a jolt for `shocked`, `flustered` and `coverEyes`, and a head
+  tilt for `flirty` and `armsCrossed`.
+- Poses move their limbs: the wave, the double fist pump, the finger tap and the peek.
+- With reduced motion on (Reanimated's `useReducedMotion`), or `animated={false}`, no loop starts
+  and no reaction plays. The component shows the mood's still pose as one SVG of all the layers,
+  with no animated views, so the resting head tilt of a mood is not applied.
+- The art is decorative. It is hidden with `accessibilityElementsHidden`,
+  `importantForAccessibility="no-hide-descendants"` and `aria-hidden`, and has no role or label.
+
+The preview script `apps/mobile/characters/scripts/renderCastPreview.mjs` draws every character,
+mood, theme and size from the same data into one HTML file. The kit gallery has a Cast section for
+looking at the motion on a device.
+
 ## Press effects
 
 Pressing Done or Pass on the turn screen plays a short effect from the button. They live in
@@ -804,7 +975,7 @@ Pressing Done or Pass on the turn screen plays a short effect from the button. T
   the top edge of the button, in the colour of the card's category (together cards too). **Pass** is
   a splash of 700 ms: a muted ring and six drops that jump and fall back under gravity. They differ
   in shape, direction and colour, so they can be told apart with the sound off.
-- Every shape is a plain view in token classes, because the app has no svg library. A star is two
+- Every shape is a plain view in token classes, because the effect needs no svg. A star is two
   stretched squares, a diamond is a turned square and a dot is a pill.
 - `motion.ts` holds every duration, easing, angle and distance in typed constants, with the per
   particle tables from the design. `effectDuration` is derived from them.
@@ -1130,7 +1301,9 @@ The rules are pure and live in `packages/core/src/lock.ts`. The service that kee
   keys, a type scale, a spacing scale and a radius scale. `apps/mobile/tailwind.config.ts` feeds
   them to the Tailwind config that NativeWind reads.
 - Screens and components use utility classes only. No raw colour values outside `tokens`, and no
-  inline `style` objects. An ESLint rule fails on a hex colour or a colour function, such as
+  inline `style` objects. The one exception is a Reanimated animated view, which takes its style
+  through the `style` prop because Reanimated writes it from the UI thread. It also takes
+  `StyleSheet.absoluteFill` for its layout. An ESLint rule fails on a hex colour or a colour function, such as
   `rgb()`, `hsl()` or `oklch()`, in JavaScript and TypeScript source outside `packages/tokens`, and
   a test does the same for the app's CSS files. Named colours such as `red` are not checked, so
   review has to keep those out. The one allowed `style` prop is an animated style on a Reanimated
@@ -1193,7 +1366,12 @@ The rules are pure and live in `packages/core/src/lock.ts`. The service that kee
 - The entry guard is tested against the real route tree with Expo Router's testing library, over
   an in-memory key-value store. `features/welcome/testing/appEnvironment` holds that setup, and any
   test that renders the route tree should use it.
-- Every UI kit component has an accessible role and name.
+- Every UI kit component has an accessible role and name, except `Character`, which is decorative
+  and hidden from screen readers. Its tests read the drawn paths from the SVG tree.
+- Reanimated runs under Jest through its own mock, set up in `jest.setup.js`, with a resolver in
+  `jest.resolver.js` that loads the plain JavaScript worklets. The mock has no reduced motion hook,
+  so the setup file adds one that returns false. It and `withRepeat` are `jest.fn`, so a test can
+  turn reduced motion on or count the loops.
 - `apps/mobile` tests have a 30 second limit, set once in `jest.config.js`. The first test in a file
   that renders loads React Native, compiles the Tailwind config, and for route tests loads every
   screen, and that work is several times slower on a loaded machine or with a cold cache. Do not

@@ -127,6 +127,30 @@ describe('parseDeck', () => {
     expect(parseDeck(deckWith({ ...validCard, effect })).success).toBe(true);
   });
 
+  it.each([1, 3])('should accept a card with %i tags', (count) => {
+    const tags = Array.from({ length: count }, (_, index) => `tag-${index}`);
+
+    expect(parseDeck(deckWith({ ...validCard, tags })).success).toBe(true);
+  });
+
+  it('should accept a card without tags', () => {
+    expect(parseDeck(deckWith(validCard)).success).toBe(true);
+  });
+
+  it.each([0, 4])('should name the card when it has %i tags', (count) => {
+    const tags = Array.from({ length: count }, (_, index) => `tag-${index}`);
+
+    expect(errorsFor(deckWith({ ...validCard, tags }))).toEqual([
+      'cards[0] (id "card-1"): tags must have 1 to 3 entries',
+    ]);
+  });
+
+  it('should name the card when a tag is blank', () => {
+    expect(errorsFor(deckWith({ ...validCard, tags: [' '] }))).toEqual([
+      'cards[0] (id "card-1"): tag must not be empty',
+    ]);
+  });
+
   it.each([
     [{ type: 'timer', seconds: 4 }, 'timer seconds must be a whole number from 5 to 120'],
     [{ type: 'timer', seconds: 121 }, 'timer seconds must be a whole number from 5 to 120'],
@@ -358,6 +382,12 @@ describe('playerCardSchema', () => {
     const effect = { type: 'timer', seconds: 10 };
 
     expect(playerCardSchema.safeParse({ ...validPlayerCard, effect }).success).toBe(false);
+  });
+
+  it('should reject tags', () => {
+    expect(playerCardSchema.safeParse({ ...validPlayerCard, tags: ['tag-one'] }).success).toBe(
+      false,
+    );
   });
 
   it('should reject an unknown category', () => {

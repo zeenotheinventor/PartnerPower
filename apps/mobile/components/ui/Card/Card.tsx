@@ -1,7 +1,7 @@
-import { Pressable, View } from 'react-native';
+import { Pressable, Text, View } from 'react-native';
 
 import type { CategoryId } from '@getfreak/core';
-import type { CardProps } from './types';
+import type { CardProps, ShownCardProps } from './types';
 
 type CardTone = CategoryId | 'plain' | 'accent';
 
@@ -51,7 +51,32 @@ const pressableFaceClasses: Record<CardTone, string> = {
  * without an accessibility element of its own, so its children are read separately. With onPress it is one button named by its
  * label.
  */
-export function Card({
+export function Card(props: CardProps) {
+  if (props.faceDown) {
+    return <FaceDownCard mark={props.mark} title={props.title} label={props.label} />;
+  }
+  return <ShownCard {...props} />;
+}
+
+function FaceDownCard({ mark, title, label }: { mark: string; title: string; label: string }) {
+  return (
+    <View
+      accessible
+      role="img"
+      accessibilityLabel={label}
+      className="rounded-xl bg-accent-deep pb-4"
+    >
+      <View className="rounded-xl border-2 border-accent bg-accent p-16">
+        <View className="items-center gap-4 rounded-lg border-2 border-dashed border-on-accent px-16 py-32">
+          <Text className="type-display text-on-accent">{mark}</Text>
+          <Text className="type-heading text-on-accent">{title}</Text>
+        </View>
+      </View>
+    </View>
+  );
+}
+
+function ShownCard({
   children,
   category,
   accent = false,
@@ -59,7 +84,7 @@ export function Card({
   label,
   disabled = false,
   grouped = true,
-}: CardProps) {
+}: ShownCardProps) {
   const tone: CardTone = accent ? 'accent' : (category ?? 'plain');
 
   if (!onPress) {

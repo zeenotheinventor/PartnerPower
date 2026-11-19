@@ -21,9 +21,34 @@ type PressableCardProps = {
   grouped?: undefined;
 };
 
-export type CardProps = {
+export type ShownCardProps = {
+  faceDown?: false;
+  title?: undefined;
+  mark?: undefined;
   children: ReactNode;
   category?: CategoryId;
   /** Edges the card in the accent colour in place of the category colour. */
   accent?: boolean;
 } & (StaticCardProps | PressableCardProps);
+
+/**
+ * The back of a card, with no card text and no category, because the category is hidden too. It
+ * draws its own back from a mark and a title. It is static and is one image named by `label`.
+ */
+export type FaceDownCardProps = {
+  faceDown: true;
+  /** The large mark in the middle of the back. */
+  mark: string;
+  /** What the card is, such as the name of the surprise, set under the mark. */
+  title: string;
+  /** The accessible name of the card. The mark and the title are not read separately. */
+  label: string;
+  children?: undefined;
+  category?: undefined;
+  accent?: undefined;
+  onPress?: undefined;
+  disabled?: undefined;
+  grouped?: undefined;
+};
+
+export type CardProps = ShownCardProps | FaceDownCardProps;

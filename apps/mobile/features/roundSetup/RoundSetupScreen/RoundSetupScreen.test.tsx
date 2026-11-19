@@ -10,7 +10,9 @@ import { createStorage } from '../../../storage/createStorage';
 import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { RoundProvider } from '../../round/RoundProvider';
+import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { RoundSetupScreen } from './RoundSetupScreen';
 
 const mockPush = jest.fn();
@@ -135,15 +137,22 @@ describe('RoundSetupScreen', () => {
       expect(screen.UNSAFE_getByType(KeyboardAvoidingView)).toBeTruthy();
     });
 
-    it('should show a disabled placeholder for the surprises that arrive later', async () => {
+    it('should show the surprises switch on, with its caption', async () => {
       await renderSetup();
 
       expect(
-        screen.getByRole('switch', {
-          name: copy.roundSetup.surprises,
-          checked: false,
-          disabled: true,
-        }),
+        screen.getByRole('switch', { name: copy.roundSetup.surprises, checked: true }),
+      ).toBeOnTheScreen();
+      expect(screen.getByText(copy.roundSetup.surprisesCaption)).toBeOnTheScreen();
+    });
+
+    it('should turn the surprises switch off when it is pressed', async () => {
+      await renderSetup();
+
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.surprises, checked: false }),
       ).toBeOnTheScreen();
     });
   });
@@ -246,7 +255,8 @@ describe('RoundSetupScreen', () => {
     it('should show the categories of the first two levels for the second level', async () => {
       await renderSetup();
 
-      expect(screen.getAllByRole('switch', { checked: true, name: /./ })).toHaveLength(2);
+      // The surprises switch is on too, so the two category switches make three.
+      expect(screen.getAllByRole('switch', { checked: true, name: /./ })).toHaveLength(3);
       expect(screen.getByRole('switch', { name: categoryNames.c1 })).toBeOnTheScreen();
       expect(screen.getByRole('switch', { name: categoryNames.c2 })).toBeOnTheScreen();
       expect(screen.queryByRole('switch', { name: categoryNames.c3 })).not.toBeOnTheScreen();
@@ -280,6 +290,40 @@ describe('RoundSetupScreen', () => {
       expect(
         screen.getByRole('switch', { name: categoryNames.c2, checked: true }),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe('the character in the header', () => {
+    const mei = {
+      props: { character: 'dealer', mood: 'flirty', size: 'tile', crop: 'head' },
+      isHiddenFromScreenReaders: true,
+    };
+    const nyx = {
+      props: { character: 'gatekeeper', mood: 'happy', size: 'tile', crop: 'head' },
+      isHiddenFromScreenReaders: true,
+    };
+
+    it('should show Mei while more than one category is on', async () => {
+      await renderSetup();
+
+      expect(drawnCharacters()).toEqual([mei]);
+    });
+
+    it('should give the spot to Nyx when one category is left on', async () => {
+      await renderSetup();
+
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      expect(drawnCharacters()).toEqual([nyx]);
+    });
+
+    it('should give the spot back to Mei when another category is switched on', async () => {
+      await renderSetup();
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      expect(drawnCharacters()).toEqual([mei]);
     });
   });
 
@@ -400,10 +444,45 @@ describe('RoundSetupScreen', () => {
           enabledCategories: ['c1', 'c2'],
           length: 20,
           seed: seedFromHalf,
+          surprises: playableSurprises,
         },
         testDeck,
       );
       expect(mockPush).toHaveBeenCalledWith('/games/dares/play');
+    });
+
+    it('should start the round with the surprises the play screen can show when the switch is on', async () => {
+      await renderSetup();
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      expect(startRound).toHaveBeenCalledWith(
+        expect.objectContaining({ surprises: playableSurprises }),
+        testDeck,
+      );
+    });
+
+    it('should start the round with no surprises when the switch is off', async () => {
+      await renderSetup();
+      enterNames('Player A', 'Player B');
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
+
+      await pressStart();
+
+      expect(startRound).toHaveBeenCalledWith(expect.objectContaining({ surprises: [] }), testDeck);
+    });
+
+    it('should have the surprises switch on again each time the screen opens', async () => {
+      await renderSetup();
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
+      screen.unmount();
+
+      await renderSetup();
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.surprises, checked: true }),
+      ).toBeOnTheScreen();
     });
 
     it('should start the round with the level, categories and length that were chosen', async () => {

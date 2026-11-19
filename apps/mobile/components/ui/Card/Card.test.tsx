@@ -212,4 +212,50 @@ describe('Card', () => {
       });
     });
   });
+  describe('when it is face down', () => {
+    const faceDown = <Card faceDown title="Hidden card" mark="?" label="Hidden card, face down" />;
+
+    it('should be one image named by its label, with its mark and title not read separately', async () => {
+      await renderThemed(faceDown);
+
+      expect(screen.getByRole('img', { name: 'Hidden card, face down' })).toBeOnTheScreen();
+    });
+
+    it('should draw its mark and its title', async () => {
+      await renderThemed(faceDown);
+
+      expect(screen.getByText('?')).toBeOnTheScreen();
+      expect(screen.getByText('Hidden card')).toBeOnTheScreen();
+    });
+
+    it('should not be pressable', async () => {
+      await renderThemed(faceDown);
+
+      expect(screen.queryByRole('button')).not.toBeOnTheScreen();
+    });
+
+    describe.each(themeNames)('with the device in %s mode', (themeName) => {
+      const theme = colorThemes[themeName];
+
+      it('should draw the deep accent colour as its edge and the accent as its back', async () => {
+        await renderThemed(faceDown, themeName);
+
+        const card = screen.getByRole('img', { name: 'Hidden card, face down' });
+        expect(card).toHaveStyle({ backgroundColor: theme.accentDeep.toLowerCase() });
+        expect(hostViewInside(card, 0)).toHaveStyle({
+          backgroundColor: theme.accent.toLowerCase(),
+          borderColor: theme.accent.toLowerCase(),
+        });
+      });
+
+      it('should set its mark and title in the colour that sits on the accent', async () => {
+        await renderThemed(faceDown, themeName);
+
+        expect(screen.getByText('?')).toHaveStyle({ color: theme.onAccent.toLowerCase() });
+        expect(screen.getByText('Hidden card')).toHaveStyle({
+          color: theme.onAccent.toLowerCase(),
+        });
+      });
+    });
+  });
 });

@@ -58,6 +58,8 @@ async function startTenCardRound() {
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerOneLabel), 'Player A');
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerTwoLabel), 'Player B');
   fireEvent.press(screen.getByRole('radio', { name: copy.roundSetup.lengthTen }));
+  // Surprises are on by default. This round is the plain one.
+  fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
   fireEvent.press(screen.getByRole('button', { name: copy.roundSetup.start }));
   // Saving the names finishes after the press, so the test waits for that to settle.
   await act(async () => {});

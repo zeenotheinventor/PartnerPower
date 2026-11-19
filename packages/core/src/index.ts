@@ -1,3 +1,5 @@
+export { characterIds, isCharacterId } from './characters';
+export type { CharacterId } from './characters';
 export { gameEntries, gameIds, isGameId } from './games';
 export type { GameEntry, GameId, GameStatus } from './games';
 export {
@@ -146,3 +148,12 @@ export type {
   SecretMatchStrength,
   SecretMatchView,
 } from './secretMatch';
+export {
+  buildMatchesDeck,
+  canOfferMatchesDeck,
+  defaultSuggestionLimit,
+  maximumMatchesDeckCards,
+  minimumMatchesDeckCards,
+  suggestDares,
+} from './suggestions';
+export type { MatchedItem, MatchStrength, SuggestOptions } from './suggestions';
