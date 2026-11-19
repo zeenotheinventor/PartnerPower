@@ -7,6 +7,7 @@
     "feedback/sounds.test.ts",
     "storage/**/*.node.test.ts",
     "lock/**/*.node.test.ts",
+    "reminder/**/*.node.test.ts",
     "feedback/pressablesUseFeedback.test.ts",
     "nativewind-env.d.ts",
     "assets.d.ts"

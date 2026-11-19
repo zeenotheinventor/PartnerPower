@@ -1,6 +1,7 @@
 import { Stack } from 'expo-router';
 
 import { ScreenCrashBoundary } from '../../monitoring';
+import { ReminderTapHost } from '../../reminder';
 import { useSettings } from '../../settings';
 import { SplashReveal } from '../SplashReveal';
 
@@ -19,6 +20,8 @@ export function EntryStack() {
 
   return (
     <SplashReveal>
+      {/* Opening the app from the reminder goes to the hub, so it waits for the entry confirmation. */}
+      {hasConfirmedEntry ? <ReminderTapHost /> : null}
       <Stack
         screenOptions={{ headerShown: false }}
         screenLayout={({ children }) => <ScreenCrashBoundary>{children}</ScreenCrashBoundary>}
@@ -31,6 +34,7 @@ export function EntryStack() {
           <Stack.Screen name="settings" />
           <Stack.Screen name="privacy" />
           <Stack.Screen name="app-lock" />
+          <Stack.Screen name="reminder" />
           {/* Each game's route group has a layout, so it is one screen here and its routes sit inside it. */}
           <Stack.Screen name="games/dares" />
           <Stack.Screen name="games/questions" />

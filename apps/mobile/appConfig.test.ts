@@ -124,17 +124,15 @@ describe('app.json native settings', () => {
   });
 
   // Each is a permission that a library of the lock or the reminder adds and the app never uses.
-  // The screenshot listener of expo-screen-capture needs READ_EXTERNAL_STORAGE, READ_MEDIA_IMAGES
-  // and DETECT_SCREEN_CAPTURE, so a lock screen that listens for screenshots must take them off
-  // this list. The badge ones come from the badge
-  // library inside expo-notifications, and the last is for push notifications, which the app
-  // does not use.
+  // Below Android 14, the screenshot listener of expo-screen-capture checks READ_EXTERNAL_STORAGE
+  // or READ_MEDIA_IMAGES before it reads anything, so a lock screen that listens for screenshots
+  // must take them off this list. The badge ones come from the badge library inside
+  // expo-notifications, and the last is for push notifications, which the app does not use.
   it.each([
     'android.permission.READ_EXTERNAL_STORAGE',
     'android.permission.WRITE_EXTERNAL_STORAGE',
     'android.permission.SYSTEM_ALERT_WINDOW',
     'android.permission.READ_MEDIA_IMAGES',
-    'android.permission.DETECT_SCREEN_CAPTURE',
     'com.google.android.c2dm.permission.RECEIVE',
     'android.permission.READ_APP_BADGE',
     'com.anddoes.launcher.permission.UPDATE_COUNT',
@@ -154,6 +152,15 @@ describe('app.json native settings', () => {
     'me.everything.badger.permission.BADGE_COUNT_WRITE',
   ])('should block %s, which the app never uses', (permission) => {
     expect(appConfig.expo.android.blockedPermissions).toContain(permission);
+  });
+
+  // On Android 14 and later the expo-screen-capture module registers its screen capture callback
+  // when it loads, whether or not any JavaScript uses it. That call needs this permission, so
+  // blocking it throws a SecurityException and the app crashes at launch.
+  it('should not block android.permission.DETECT_SCREEN_CAPTURE, which Android 14 needs at launch', () => {
+    expect(appConfig.expo.android.blockedPermissions).not.toContain(
+      'android.permission.DETECT_SCREEN_CAPTURE',
+    );
   });
 
   it('should block nothing twice', () => {

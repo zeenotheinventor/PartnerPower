@@ -12,6 +12,7 @@ export type StorageKey =
   | 'hapticsOn'
   | 'questionPreferences'
   | 'lastShownUpdateId'
+  | 'reminder'
   | 'installMarker';
 
 export type StorageBackend = {
