@@ -1,0 +1,211 @@
+{
+  "id": "eitherOr",
+  "version": 1,
+  "questions": [
+    {
+      "id": "eitherOr-c1-01",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A sunrise walk together"
+        },
+        {
+          "id": "o2",
+          "text": "A sunset walk together"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-02",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t1",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Breakfast in bed"
+        },
+        {
+          "id": "o2",
+          "text": "Dinner by candlelight"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c1-03",
+      "format": "eitherOr",
+      "category": "c1",
+      "topic": "t1",
+      "text": "Pick a treat for tonight",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Something sweet"
+        },
+        {
+          "id": "o2",
+          "text": "Something salty"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-01",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Be kissed on the neck"
+        },
+        {
+          "id": "o2",
+          "text": "Be kissed on the shoulder"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-02",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Slow dance in the kitchen"
+        },
+        {
+          "id": "o2",
+          "text": "Share a bath"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c2-03",
+      "format": "eitherOr",
+      "category": "c2",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Whispered compliments"
+        },
+        {
+          "id": "o2",
+          "text": "Long loving looks"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-01",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Be teased all evening"
+        },
+        {
+          "id": "o2",
+          "text": "Be surprised at the very end"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-02",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A weekend away, just us"
+        },
+        {
+          "id": "o2",
+          "text": "A night in a fancy hotel nearby"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c3-03",
+      "format": "eitherOr",
+      "category": "c3",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Take your time"
+        },
+        {
+          "id": "o2",
+          "text": "Go with the moment"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-01",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t3",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Plan every detail"
+        },
+        {
+          "id": "o2",
+          "text": "See where the night goes"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-02",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t6",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Try something new once a month"
+        },
+        {
+          "id": "o2",
+          "text": "Keep a favourite and perfect it"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "eitherOr-c4-03",
+      "format": "eitherOr",
+      "category": "c4",
+      "topic": "t2",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Lights on"
+        },
+        {
+          "id": "o2",
+          "text": "Lights low"
+        }
+      ],
+      "source": "shipped"
+    }
+  ]
+}

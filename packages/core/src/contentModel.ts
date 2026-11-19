@@ -42,13 +42,16 @@ export function categoriesForLevel(levelId: LevelId): readonly CategoryId[] {
   return levels.find((level) => level.id === levelId)?.categories ?? [];
 }
 
-type ErrorContext = { code: string; input?: unknown };
+export type ErrorContext = { code: string; input?: unknown };
 
-function showValue(input: unknown): string {
+export function showValue(input: unknown): string {
   return typeof input === 'string' ? input : JSON.stringify(input);
 }
 
-function oneOf<const Values extends readonly [string, ...string[]]>(field: string, values: Values) {
+export function oneOf<const Values extends readonly [string, ...string[]]>(
+  field: string,
+  values: Values,
+) {
   const expected = values.length === 2 ? values.join(' or ') : `one of ${values.join(', ')}`;
   return z.enum(values, {
     error: (issue) =>
@@ -58,7 +61,7 @@ function oneOf<const Values extends readonly [string, ...string[]]>(field: strin
   });
 }
 
-function text(field: string) {
+export function text(field: string) {
   return z
     .string({
       error: (issue: ErrorContext) =>
@@ -68,7 +71,7 @@ function text(field: string) {
     .min(1, `${field} must not be empty`);
 }
 
-function objectError(issue: ErrorContext & { keys?: string[] }) {
+export function objectError(issue: ErrorContext & { keys?: string[] }) {
   if (issue.code === 'unrecognized_keys') {
     return `unrecognised field "${(issue.keys ?? []).join('", "')}"`;
   }

@@ -133,4 +133,17 @@ describe('copy', () => {
     );
     expectEveryValueToBeText(copy.welcomeDeclined);
   });
+
+  it('should give the three leads as non-empty text, with none for the other formats', () => {
+    expect(Object.keys(copy.questionLeads).sort()).toEqual(['eitherOr', 'ifYou', 'neverHave']);
+    expectEveryValueToBeText(copy.questionLeads);
+  });
+
+  it('should word the leads as the game shows them', () => {
+    expect(copy.questionLeads).toEqual({
+      ifYou: 'Drink if',
+      neverHave: 'Never have I ever',
+      eitherOr: 'Would you rather',
+    });
+  });
 });

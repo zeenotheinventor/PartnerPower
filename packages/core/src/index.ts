@@ -63,3 +63,25 @@ export type {
   RoundState,
   RoundSummary,
 } from './round';
+export {
+  customQuestionSchema,
+  discoverySchema,
+  findDuplicateQuestionIds,
+  newDiscoverySchema,
+  parseQuestionDeck,
+  questionDeckSchema,
+  questionFormats,
+  questionSchema,
+  topicIds,
+} from './questionModel';
+export type {
+  CustomQuestion,
+  Discovery,
+  NewDiscovery,
+  ParseQuestionDeckResult,
+  Question,
+  QuestionDeck,
+  QuestionFormat,
+  QuestionOption,
+  TopicId,
+} from './questionModel';
