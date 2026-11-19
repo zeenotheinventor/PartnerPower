@@ -64,11 +64,19 @@ The app checks at launch and downloads the update in the background. It runs fro
 app is opened from closed, never in the middle of a round, and a short toast says it has updated.
 CI never publishes.
 
-An update only reaches builds with the same `version` in `app.json`, which is the runtime version.
-Anything native needs a new build: adding or changing a native module, or changing `app.json`
-settings that become native config. Raise `version` in the same change so that older builds do not
-receive JavaScript they cannot run. The first build with updates in it has to be installed by hand,
-and every update after that arrives over the air.
+An update only reaches builds whose native fingerprint matches. The fingerprint is the runtime
+version, and it is computed automatically from the native parts of the project, so a new native
+module, plugin, permission or native config changes it with no extra step. Anything native needs a
+new build. The first build with updates in it has to be installed by hand, and every update after
+that arrives over the air.
+
+Publish from a checkout with the same lockfile and config as the build. If they differ, the
+fingerprint differs and the update simply does not reach the phone, which fails safe. To print the
+current value, from `apps/mobile`:
+
+```
+env -u NODE_PATH node node_modules/expo-updates/bin/cli.js fingerprint:generate --platform android
+```
 
 iPhone builds need a paid Apple Developer account and are not set up yet.
 

@@ -6,7 +6,7 @@
     "scheme": "getfreak",
     "version": "1.0.0",
     "runtimeVersion": {
-      "policy": "appVersion"
+      "policy": "fingerprint"
     },
     "updates": {
       "url": "https://u.expo.dev/1834f7be-5756-4b68-a1d7-222025529b22",
