@@ -8,6 +8,8 @@ export const playableSurprises = [
   'mystery',
   'jump',
   'swap',
+  'choice',
+  'timer',
   'freePass',
 ] as const satisfies readonly SurpriseId[];
 

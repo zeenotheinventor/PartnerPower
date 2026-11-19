@@ -28,8 +28,9 @@ const androidEffect = (effect: Haptics.AndroidHaptics) => () =>
 const { ImpactFeedbackStyle, NotificationFeedbackType, AndroidHaptics } = Haptics;
 
 // iOS taps and notifications are its own system patterns, and they follow the System Haptics
-// setting. A press is one pulse, done and pass are two different notification patterns, and the end
-// of a round is a longer run of pulses, so none of them can be mistaken for another.
+// setting. A press is one pulse, done and pass are two different notification patterns, the end
+// of a round is a longer run of pulses and the end of a timer is one heavy knock, so none of them
+// can be mistaken for another.
 const iosPlans: Record<FeedbackMoment, HapticStep[]> = {
   tap: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Light) }],
   done: [{ afterMilliseconds: 0, fire: notification(NotificationFeedbackType.Success) }],
@@ -40,6 +41,8 @@ const iosPlans: Record<FeedbackMoment, HapticStep[]> = {
     { afterMilliseconds: 340, fire: impact(ImpactFeedbackStyle.Heavy) },
     { afterMilliseconds: 480, fire: notification(NotificationFeedbackType.Success) },
   ],
+  // One heavy knock, which no press uses, so the end of a timer is not taken for one.
+  timerEnd: [{ afterMilliseconds: 0, fire: impact(ImpactFeedbackStyle.Heavy) }],
 };
 
 // Android uses the view haptic effects, not the vibrator, because those follow the phone's touch
@@ -54,6 +57,7 @@ const androidPlans: Record<FeedbackMoment, HapticStep[]> = {
     { afterMilliseconds: 340, fire: androidEffect(AndroidHaptics.Confirm) },
     { afterMilliseconds: 480, fire: androidEffect(AndroidHaptics.Long_Press) },
   ],
+  timerEnd: [{ afterMilliseconds: 0, fire: androidEffect(AndroidHaptics.Long_Press) }],
 };
 
 function playOnce(player: AudioPlayer) {

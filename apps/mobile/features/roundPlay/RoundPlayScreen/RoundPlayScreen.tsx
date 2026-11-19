@@ -4,6 +4,7 @@ import {
   isRoundOver,
   type CategoryId,
   type CurrentCard,
+  type PlayerIndex,
   type RoundState,
 } from '@getfreak/core';
 import { useRouter } from 'expo-router';
@@ -13,6 +14,7 @@ import { Text, View } from 'react-native';
 
 import { Header, Screen } from '../../../components/ui';
 import { useRound } from '../../round/RoundProvider';
+import { ChoiceView } from '../ChoiceView';
 import { EndRoundDialog } from '../EndRoundDialog';
 import { HandoffView } from '../HandoffView';
 import { NotThisOneSheet } from '../NotThisOneSheet';
@@ -30,7 +32,7 @@ import { TurnView } from '../TurnView';
 const setupRoute = '/games/dares/setup';
 const summaryRoute = '/games/dares/summary';
 
-type Stage = 'steppingUp' | 'surprise' | 'handoff' | 'card';
+type Stage = 'steppingUp' | 'surprise' | 'handoff' | 'choice' | 'card';
 
 function penaltyOf(category: string) {
   return categories.find((candidate) => candidate.id === category)?.penalty ?? 0;
@@ -59,23 +61,51 @@ function stageAfterStepUp(round: RoundState): Stage {
   return shownSurpriseOf(round.current) ? 'surprise' : stageAfterSurprise(round);
 }
 
+// A partner's choice goes to the chooser, who is passed the phone only when they do not hold it. The
+// player is passed it after the pick, always, because the chooser has seen the dare that was not
+// picked.
 function stageAfterSurprise(round: RoundState): Stage {
-  return phoneChanges(round) ? 'handoff' : 'card';
+  const { surprise } = round.current ?? {};
+  if (surprise?.type === 'choice' && surprise.chosen === null) {
+    return phoneChangesTo(round, surprise.chooser) ? 'handoff' : 'choice';
+  }
+  return phoneChangesTo(round, round.current?.player) ? 'handoff' : 'card';
 }
 
 function previousPlayerOf(round: RoundState) {
   return round.history.at(-1)?.player;
 }
 
-function phoneChanges(round: RoundState) {
+function phoneChangesTo(round: RoundState, receiver: PlayerIndex | undefined) {
   const previousPlayer = previousPlayerOf(round);
-  return previousPlayer === undefined || previousPlayer !== round.current?.player;
+  return previousPlayer === undefined || previousPlayer !== receiver;
+}
+
+type Handoff = {
+  receiver: PlayerIndex;
+  /** The player who is told to look away. Nobody holds the phone before the first card. */
+  lookingAway: PlayerIndex | undefined;
+  next: Stage;
+};
+
+/**
+ * Who the phone goes to on the pass the phone screen. Before a partner's choice is picked it goes
+ * to the chooser, and after it to the player, with the chooser told to look away.
+ */
+function handoffOf(round: RoundState, current: CurrentCard): Handoff {
+  const { surprise } = current;
+  if (surprise?.type === 'choice') {
+    return surprise.chosen === null
+      ? { receiver: surprise.chooser, lookingAway: previousPlayerOf(round), next: 'choice' }
+      : { receiver: current.player, lookingAway: surprise.chooser, next: 'card' };
+  }
+  return { receiver: current.player, lookingAway: previousPlayerOf(round), next: 'card' };
 }
 
 /** The rule line of a surprise, filled with the name of the player it is for, the category and the cost. */
 function surpriseRuleOf(
   surprise: PlayableSurpriseId,
-  values: { name: string; category: string; penalty: number },
+  values: { name: string; chooser: string; category: string; penalty: number },
 ) {
   switch (surprise) {
     case 'mystery':
@@ -87,6 +117,13 @@ function surpriseRuleOf(
       });
     case 'swap':
       return fillCopy(copy.roundPlay.surpriseRule.swap, { name: values.name });
+    case 'choice':
+      return fillCopy(copy.roundPlay.surpriseRule.choice, {
+        chooser: values.chooser,
+        name: values.name,
+      });
+    case 'timer':
+      return copy.roundPlay.surpriseRule.timer;
     case 'freePass':
       return fillCopy(copy.roundPlay.surpriseRule.freePass, { name: values.name });
   }
@@ -205,6 +242,14 @@ export function RoundPlayScreen() {
       }
     : { kind: 'solo' as const };
   const shownSurprise = shownSurpriseOf(current);
+  const { surprise } = current;
+  const chooserName = surprise?.type === 'choice' ? round.players[surprise.chooser] : '';
+  const countLabel =
+    round.length === 'endless'
+      ? fillCopy(copy.roundPlay.cardCountEndless, { number: cardNumber })
+      : fillCopy(copy.roundPlay.cardCount, { number: cardNumber, length: round.length });
+  const progress =
+    round.length === 'endless' ? undefined : { number: cardNumber, length: round.length };
   const isFaceDown = current.surprise?.type === 'mystery' && !current.surprise.flipped;
   // A free pass is for the player who holds it, on their own solo card, once the card is face up.
   const canUseFreePass = round.freePasses[current.player] && !isTogether && !isFaceDown;
@@ -233,7 +278,12 @@ export function RoundPlayScreen() {
     view = (
       <SurpriseView
         surprise={shownSurprise}
-        rule={surpriseRuleOf(shownSurprise, { name: holderName, category: categoryName, penalty })}
+        rule={surpriseRuleOf(shownSurprise, {
+          name: holderName,
+          chooser: chooserName,
+          category: categoryName,
+          penalty,
+        })}
         turnLine={fillCopy(copy.roundPlay.turnOf, { name: holderName })}
         reachedCategory={shownSurprise === 'jump' ? card.category : undefined}
         notice={notice}
@@ -241,13 +291,29 @@ export function RoundPlayScreen() {
       />
     );
   } else if (currentStage === 'handoff') {
-    const previousPlayer = previousPlayerOf(round);
+    const { receiver, lookingAway, next } = handoffOf(round, current);
     view = (
       <HandoffView
-        name={holderName}
-        previousName={previousPlayer === undefined ? undefined : round.players[previousPlayer]}
+        name={round.players[receiver]}
+        previousName={lookingAway === undefined ? undefined : round.players[lookingAway]}
         notice={notice}
-        onContinue={() => showStage('card')}
+        onContinue={() => showStage(next)}
+      />
+    );
+  } else if (currentStage === 'choice' && surprise?.type === 'choice') {
+    view = (
+      <ChoiceView
+        prompt={fillCopy(copy.roundPlay.choicePrompt, { name: holderName })}
+        countLabel={countLabel}
+        progress={progress}
+        category={card.category}
+        categoryName={categoryName}
+        options={[surprise.options[0].text, surprise.options[1].text]}
+        onChoose={(index) => {
+          dispatch({ type: 'choose', index });
+          showStage('handoff');
+        }}
+        onEndRound={() => setIsDialogOpen(true)}
       />
     );
   } else {
@@ -258,14 +324,8 @@ export function RoundPlayScreen() {
             ? copy.roundPlay.bothOfYou
             : fillCopy(copy.roundPlay.turnOf, { name: holderName })
         }
-        countLabel={
-          round.length === 'endless'
-            ? fillCopy(copy.roundPlay.cardCountEndless, { number: cardNumber })
-            : fillCopy(copy.roundPlay.cardCount, { number: cardNumber, length: round.length })
-        }
-        progress={
-          round.length === 'endless' ? undefined : { number: cardNumber, length: round.length }
-        }
+        countLabel={countLabel}
+        progress={progress}
         category={card.category}
         categoryName={categoryName}
         text={card.text}
@@ -284,6 +344,7 @@ export function RoundPlayScreen() {
             : undefined
         }
         freePass={canUseFreePass ? { onUse: useFreePass } : undefined}
+        timer={surprise?.type === 'timer' ? { seconds: surprise.seconds } : undefined}
         {...kindProps}
         onDone={() => dispatch({ type: 'done' })}
         onPass={() => dispatch({ type: 'pass' })}

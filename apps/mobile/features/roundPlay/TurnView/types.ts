@@ -21,6 +21,11 @@ type TurnViewBaseProps = {
   mystery?: { isFaceDown: boolean; onFlip: () => void };
   /** Set when the player holding the phone has a free pass that can be used on this card. */
   freePass?: { onUse: () => void };
+  /**
+   * Set for a timer card. The countdown starts when the view first shows, and Done is locked until
+   * it reaches zero. Pass and Not this one stay open at any time.
+   */
+  timer?: { seconds: number };
   onDone: () => void;
   onPass: () => void;
   onEndRound: () => void;

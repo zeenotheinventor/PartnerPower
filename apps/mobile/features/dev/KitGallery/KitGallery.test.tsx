@@ -94,6 +94,36 @@ describe('KitGallery', () => {
     expect(screen.getByRole('img', { name: 'Face down card' })).toBeOnTheScreen();
   });
 
+  describe('the countdowns', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('should show one that has not started and one that has ended', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getByRole('timer', { name: 'Countdown, idle' })).toHaveAccessibilityValue({
+        text: '60 seconds',
+      });
+      expect(screen.getByRole('timer', { name: 'Countdown, ended' })).toHaveAccessibilityValue({
+        text: '0 seconds',
+      });
+    });
+
+    it('should run a live one from ten seconds when it is started, and again when started again', async () => {
+      jest.useFakeTimers();
+      await renderThemed(<KitGallery />);
+      const live = () => screen.getByRole('timer', { name: 'Countdown, live' });
+      expect(live()).toHaveAccessibilityValue({ text: '10 seconds' });
+
+      fireEvent.press(screen.getByRole('button', { name: 'Start the live countdown' }));
+      await act(async () => jest.advanceTimersByTime(4_000));
+      expect(live()).toHaveAccessibilityValue({ text: '6 seconds' });
+
+      fireEvent.press(screen.getByRole('button', { name: 'Start the live countdown' }));
+      await act(async () => jest.advanceTimersByTime(1_000));
+      expect(live()).toHaveAccessibilityValue({ text: '9 seconds' });
+    });
+  });
+
   it('should show a toast when asked, and not before', async () => {
     await renderThemed(<KitGallery />);
     expect(screen.queryByRole('button', { name: 'Toast message' })).not.toBeOnTheScreen();

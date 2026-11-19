@@ -62,6 +62,26 @@ describe('createFeedback', () => {
     });
   });
 
+  describe('the timerEnd moment', () => {
+    it('should fire its own haptic and play no sound', () => {
+      const { device } = createFakeDevice();
+
+      createFeedback(device, allOn).timerEnd();
+
+      expect(device.triggerHaptic).toHaveBeenCalledTimes(1);
+      expect(device.triggerHaptic).toHaveBeenCalledWith('timerEnd');
+      expect(device.playSound).not.toHaveBeenCalled();
+    });
+
+    it('should fire nothing when haptics are off', () => {
+      const { device } = createFakeDevice();
+
+      createFeedback(device, { soundOn: true, hapticsOn: false }).timerEnd();
+
+      expect(device.triggerHaptic).not.toHaveBeenCalled();
+    });
+  });
+
   it('should ask the device to drop pending haptics', () => {
     const { device } = createFakeDevice();
 
@@ -74,8 +94,8 @@ describe('createFeedback', () => {
     const { device } = createFakeDevice();
     const feedback = createFeedback(device, { soundOn: false, hapticsOn: false });
 
-    (['tap', 'done', 'pass', 'roundComplete'] satisfies FeedbackMoment[]).forEach((moment) =>
-      feedback[moment](),
+    (['tap', 'done', 'pass', 'roundComplete', 'timerEnd'] satisfies FeedbackMoment[]).forEach(
+      (moment) => feedback[moment](),
     );
 
     expect(device.playSound).not.toHaveBeenCalled();

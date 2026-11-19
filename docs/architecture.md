@@ -721,14 +721,38 @@ on it is stored or logged, except that a player can keep a played card as a favo
 - **Surprises.** Setup has a "Surprises" `Toggle`, on each time setup opens and not remembered. When
   it is on, Start passes `playableSurprises` as `RoundSetup.surprises`, and when it is off it passes
   an empty list. `playableSurprises` (`features/roundPlay/playableSurprises.ts`) is the list of
-  types this screen can show, `mystery`, `jump`, `swap` and `freePass`. The play screen owns it, so a
-  type is added there when the screen learns to show it and setup does not change. A card carrying a
+  types this screen can show, which is all six: `mystery`, `jump`, `swap`, `choice`, `timer` and
+  `freePass`. The play screen owns it, so a type is added there when the screen learns to show it
+  and setup does not change. A card carrying a
   type that is not on the list plays as a plain card. With surprises off, nothing below shows.
   - **Reveal.** `SurpriseView` is a full screen state like `SteppingUpView`. It shows "Surprise!",
     the surprise's name from `surpriseNames` as a heading in an accent pill, the rule line from
     `copy.roundPlay.surpriseRule` filled with the name of the player the card is for, the category
     and its cost, and the turn line. Only a category jump adds the step up markers
     (`CategoryMarkers`, shared with `SteppingUpView`). Its button is "Bring it".
+  - **Partner's choice.** `current.player` is the player and `surprise.chooser` is their partner. The
+    order is step up, reveal, pass the phone to the chooser, `ChoiceView`, pass the phone to the
+    player, card. The first pass is skipped when the chooser held the phone for the last card, which
+    is the same `phoneChanges` rule as every other pass. The second always shows, even if it should
+    not be needed, because it is what keeps the dare that was not picked from the player. The reveal
+    rule line names the chooser and the player. `ChoiceView` has the same top bar as the card view
+    (`TurnTopBar`: End round, the count and the progress bar), a heading that says whose dare it is,
+    and the two dares as pressable `Card`s in the category colour, stacked. Each is one `button`
+    named by its text, with the category chip and no penalty line. Pressing one sends `choose` with
+    its index, which makes it the card in play, and the screen goes on to the second pass. That
+    screen tells the chooser to look away. The chosen card then plays as normal, with the surprise
+    chip and its category's penalty, and the other dare stays in the deal. The card text of the dare
+    that was not picked is never in the tree after the pick. "Not this one" and Done and Pass do not
+    show while a dare is being picked, and End round does.
+  - **Timer.** A timer card shows a kit `Countdown` between the card and the buttons, started when
+    the card view first shows, so not on the reveal or the pass the phone screen. `TurnView` takes
+    the clock's start from `Date.now()` when it mounts. A timer card always comes after its reveal,
+    which unmounts the card view, so each one has its own clock. Done is disabled until the countdown ends, with
+    "Keep going" in muted caption text under the buttons. At zero Done opens, the hint reads "Time's
+    up" and `timerEnd` is called once. Pass and "Not this one" work at any time, and answering or
+    skipping takes the card away, which stops the clock. Cancelling the End round dialog or the sheet
+    does not stop it. The clock runs on real time, so the background and a locked screen do not
+    pause it.
   - **Role swap.** `current.player` is the partner who now plays, so the reveal, the pass the phone
     screen, the turn line and the penalty all name that partner. If they already hold the phone,
     there is no pass the phone screen.
@@ -844,6 +868,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                              |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
+| `Countdown`        | One `timer` element named by its `label`, whose value is the time left (`secondsText`), with the digits as m:ss and a bar that empties from the right. It runs on real time from `startedAt`. See Countdown below.                                                                                                                                                                                                                                                                                          |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
 | `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                                                                                                                              |
 | `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
@@ -851,6 +876,20 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                 |
 | `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                                                                                                                                  |
 
+- **Countdown.** Props are `seconds`, `startedAt` (a wall clock time in milliseconds, or null before
+  it starts), `label`, `secondsText`, `endText` and `onEnd`. It holds no copy and no haptic. The
+  digits are `Math.ceil` of the time left, refreshed with a timeout set for the next whole second.
+  While the app is not in the foreground the timeout is dropped, and coming back works the time left
+  out again from the clock, so a locked screen does not pause it and nothing runs unseen. `onEnd`
+  and the announcement at zero happen once, when the time left reaches zero, which may be when the
+  app comes back. The unmount cleanup clears the timeout, removes the app state listener and cancels
+  the bar's animation. Starting it again (a new `startedAt`) is a new run. Before it starts it shows
+  the full time and an unmoved bar, and at zero its border turns to the accent colour. A screen
+  reader finds one timer element, and its value changes silently. It is announced only when 30 and
+  10 seconds are left, if the countdown is longer than that, and at zero with `endText`. The bar is
+  a fill, as wide as the track, that Reanimated slides left with a linear timing over the real time
+  left, and starts again from the real time left when the app comes back. With reduce motion on there
+  is no timing and the bar steps once a second. The vibration card reuses it.
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
   shadow. Pressing a button or a pressable card sinks its face onto the edge.
@@ -882,9 +921,9 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `apps/mobile/feedback` gives a press a sound and a haptic in one call. It sits beside `settings` and
 `storage`, not under `features`, because the UI kit `Button` uses it.
 
-- There are four moments: `tap`, `done`, `pass` and `roundComplete`. `useFeedback()` returns one call
-  for each. A call plays the moment's sound first and then fires its haptic, in the same call, so
-  they land together. `roundComplete` has a haptic and no sound.
+- There are five moments: `tap`, `done`, `pass`, `roundComplete` and `timerEnd`. `useFeedback()`
+  returns one call for each. A call plays the moment's sound first and then fires its haptic, in the
+  same call, so they land together. `roundComplete` and `timerEnd` have a haptic and no sound.
 - `Button` takes `feedback`, which is `tap` unless it says `done`, `pass` or `none`. A press asks for
   its feedback and then runs `onPress`. Nothing waits on the feedback, so the action is never
   delayed. A disabled button gives none. The turn's Done and Pass use `done` and `pass`, and so do the
@@ -915,7 +954,8 @@ player to confirm they are 18 or over, and its wording is in `content`.
 - Each moment has its own feel. On iOS a tap is a light impact, done is a success notification and
   pass is a warning notification. On Android they are the virtual key, confirm and reject effects.
   The round complete haptic is a run of four pulses over about half a second on both platforms, so it
-  cannot be taken for a press.
+  cannot be taken for a press. The timer end haptic is one heavy impact on iOS and one long press
+  effect on Android, which no press uses. The timer card plays it when its countdown ends.
 - The sounds are in `assets/sounds` and are original. `scripts/generateSounds.mjs` makes them, and
   the folder README says so and lists the alternatives. A test reads the shipped files and checks
   they are short, mono, 16-bit and quiet.
