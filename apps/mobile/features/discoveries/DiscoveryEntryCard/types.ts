@@ -2,7 +2,9 @@ import type { DiscoveryKey } from '../../../storage';
 
 export type DiscoveryEntryCardProps = {
   /** Which stored discovery the remove control removes. */
-  discoveryKey: DiscoveryKey;
+  kind: DiscoveryKey['kind'];
+  questionId: string;
+  answererName?: string;
   topicName: string;
   /** The words that lead the question, in the accent colour, such as "Would you rather". */
   lead?: string;
@@ -16,5 +18,5 @@ export type DiscoveryEntryCardProps = {
   removeLabel: string;
   /** The visible word on the remove control. */
   removeText: string;
-  onRemove: (key: DiscoveryKey) => void;
+  onRemove: (kind: DiscoveryKey['kind'], questionId: string, answererName?: string) => void;
 };

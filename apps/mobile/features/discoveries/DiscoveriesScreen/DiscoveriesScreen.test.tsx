@@ -8,6 +8,7 @@ import {
 } from '@getfreak/core';
 import { waitFor } from '@testing-library/react-native';
 import { act, fireEvent, screen, within } from 'nativewind/test';
+import { AccessibilityInfo } from 'react-native';
 
 import { PersonalDataProvider } from '../../../personal';
 import type { PersonalDataSource } from '../../../personal';
@@ -584,6 +585,82 @@ describe('DiscoveriesScreen', () => {
       await renderScreen([]);
 
       expect(screen.getByText(copy.discoveries.savingOffNotice)).toBeOnTheScreen();
+    });
+  });
+
+  describe('while the player questions load', () => {
+    // The discoveries are read, and the player's own questions are not yet.
+    async function renderWithSlowPlayerQuestions() {
+      const store = makeRepository();
+      const saved = await store.savePlayerQuestion({
+        format: 'guess',
+        category: 'c3',
+        topic: 't5',
+        text: 'Written question',
+        options: ['First', 'Second'],
+      });
+      if (!saved.ok) throw new Error('The question should save');
+      await store.addDiscoveries([
+        { kind: 'answer', questionId: saved.saved.id, optionId: 'o2', answererName: 'Player A' },
+      ]);
+      const listPlayerQuestions = store.listPlayerQuestions.bind(store);
+      let finish: () => void = () => {};
+      const isHeld = new Promise<void>((resolve) => (finish = resolve));
+      jest.spyOn(store, 'listPlayerQuestions').mockImplementation(async () => {
+        await isHeld;
+        return listPlayerQuestions();
+      });
+      const { openStore } = await renderWithStore(store);
+      await openStore();
+      return { finish: () => act(async () => finish()) };
+    }
+
+    it('should not flash the empty screen, or show the switch, before they are read', async () => {
+      const { finish } = await renderWithSlowPlayerQuestions();
+
+      expect(screen.queryByText(copy.discoveries.emptyTitle)).not.toBeOnTheScreen();
+      expect(screen.queryByRole('switch')).not.toBeOnTheScreen();
+      await finish();
+      expect(screen.getByText('Written question')).toBeOnTheScreen();
+    });
+
+    it('should still ask what to do with what is saved when it is only about a written question', async () => {
+      const { finish } = await renderWithSlowPlayerQuestions();
+      await finish();
+
+      fireEvent.press(saveSwitch());
+
+      expect(await screen.findByLabelText(copy.discoveries.offTitle)).toBeOnTheScreen();
+    });
+  });
+
+  describe('announcements', () => {
+    it('should announce a removal, and a failed one', async () => {
+      const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+      announce.mockClear();
+      await renderScreen();
+      const [first] = removeButtons();
+      if (!first) throw new Error('There should be entries');
+
+      fireEvent.press(first);
+      await waitFor(() => expect(announce).toHaveBeenCalledWith(copy.discoveries.removeDone));
+      jest.spyOn(repository, 'removeDiscovery').mockRejectedValue(new Error('no'));
+      const [next] = removeButtons();
+      if (!next) throw new Error('There should be entries');
+      fireEvent.press(next);
+
+      await waitFor(() => expect(announce).toHaveBeenCalledWith(copy.discoveries.removeFailed));
+    });
+
+    it('should announce the saving-off notice', async () => {
+      const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+      announce.mockClear();
+      await renderScreen();
+      expect(announce).not.toHaveBeenCalledWith(copy.discoveries.savingOffNotice);
+
+      fireEvent.press(saveSwitch());
+
+      await waitFor(() => expect(announce).toHaveBeenCalledWith(copy.discoveries.savingOffNotice));
     });
   });
 

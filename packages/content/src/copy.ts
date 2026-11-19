@@ -167,6 +167,8 @@ export const copy = {
     aboutAnswer: '{name} picked: {option}',
     remove: 'Remove',
     removeLabel: 'Remove, {text}',
+    removeDone: 'Removed.',
+    removeFailed: "Couldn't remove that. Try again.",
     clearAll: 'Clear all',
     clearTitle: 'Clear all discoveries?',
     clearBody: "Everything here goes. This can't be undone.",

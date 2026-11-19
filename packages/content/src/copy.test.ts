@@ -232,6 +232,8 @@ describe('copy', () => {
         'offConfirm',
         'offTitle',
         'remove',
+        'removeDone',
+        'removeFailed',
         'removeLabel',
         'saveToggle',
         'saveToggleCaption',

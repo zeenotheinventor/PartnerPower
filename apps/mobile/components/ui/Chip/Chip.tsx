@@ -79,6 +79,7 @@ export function Chip({
   accent = false,
   onPress,
   accessibilityLabel,
+  feedback = 'select',
   selected,
 }: ChipProps) {
   const tone: ChipTone = accent ? 'accent' : (category ?? 'neutral');
@@ -99,7 +100,7 @@ export function Chip({
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityState={{ selected }}
-      feedback="select"
+      feedback={feedback}
       onPress={onPress}
       className={`${containerClasses[tone][look]} ${pressablePadding}`}
     >

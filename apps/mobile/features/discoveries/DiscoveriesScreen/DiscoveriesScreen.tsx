@@ -1,8 +1,8 @@
 import { copy, fillCopy, questionDecks, topicNames } from '@getfreak/content';
 import { useRouter } from 'expo-router';
-import { useCallback, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useState } from 'react';
 import type { TopicId } from '@getfreak/core';
-import { Text, View } from 'react-native';
+import { AccessibilityInfo, Text, View } from 'react-native';
 
 import { Button, Card, Character, Header, Screen, Toggle } from '../../../components/ui';
 import { useCustomQuestions, useDiscoveries } from '../../../personal';
@@ -26,14 +26,17 @@ function GroupLabel({ children }: { children: string }) {
 export function DiscoveriesScreen() {
   const router = useRouter();
   const {
-    isLoading,
+    isLoading: areDiscoveriesLoading,
     discoveries,
     saveDiscoveries,
     setSaveDiscoveries,
     removeDiscovery,
     clearDiscoveries,
   } = useDiscoveries();
-  const { questions: playerQuestions } = useCustomQuestions();
+  const { questions: playerQuestions, isLoading: arePlayerQuestionsLoading } = useCustomQuestions();
+  // Discoveries about a question the player wrote are dropped until those questions are read, so
+  // nothing shows, and nothing is decided, before both lists are.
+  const isLoading = areDiscoveriesLoading || arePlayerQuestionsLoading;
   const [openDialog, setOpenDialog] = useState<ClearDiscoveriesVariant | undefined>(undefined);
 
   const shippedQuestions = useMemo(() => questionDecks.flatMap((deck) => deck.questions), []);
@@ -45,13 +48,27 @@ export function DiscoveriesScreen() {
   // A deep link can open this screen with nothing behind it, so it falls back to the home.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(questionsHomeRoute));
 
-  // A failed removal leaves the entry where it is, which is all the player needs to see.
+  // The control that was pressed goes away, so the result is announced. A failed removal leaves the
+  // entry where it is.
   const removeEntry = useCallback(
-    (key: DiscoveryKey) => {
-      removeDiscovery(key).catch(() => {});
+    (kind: DiscoveryKey['kind'], questionId: string, answererName?: string) => {
+      const key: DiscoveryKey =
+        answererName === undefined ? { kind, questionId } : { kind, questionId, answererName };
+      removeDiscovery(key).then(
+        () => AccessibilityInfo.announceForAccessibility(copy.discoveries.removeDone),
+        () => AccessibilityInfo.announceForAccessibility(copy.discoveries.removeFailed),
+      );
     },
     [removeDiscovery],
   );
+
+  // A live region is not read when it first appears, so the notice is also announced.
+  const isSavingOffNoticeShown = !isLoading && !saveDiscoveries;
+  useEffect(() => {
+    if (isSavingOffNoticeShown) {
+      AccessibilityInfo.announceForAccessibility(copy.discoveries.savingOffNotice);
+    }
+  }, [isSavingOffNoticeShown]);
 
   // The switch flips first. When something is saved, a question follows, to clear it or keep it.
   const changeSaving = (isSaving: boolean) => {
@@ -127,7 +144,9 @@ export function DiscoveriesScreen() {
                   {groups.matches.map((row) => (
                     <DiscoveryEntryCard
                       key={row.key.questionId}
-                      discoveryKey={row.key}
+                      kind={row.key.kind}
+                      questionId={row.key.questionId}
+                      answererName={row.key.answererName}
                       topicName={topicNameOf(row.topic)}
                       text={row.text}
                       strengthLabel={
@@ -154,7 +173,9 @@ export function DiscoveriesScreen() {
                     return (
                       <DiscoveryEntryCard
                         key={row.key.questionId}
-                        discoveryKey={row.key}
+                        kind={row.key.kind}
+                        questionId={row.key.questionId}
+                        answererName={row.key.answererName}
                         topicName={topicNameOf(row.topic)}
                         lead={copy.questionLeads.eitherOr}
                         text={row.text}
@@ -185,7 +206,9 @@ export function DiscoveriesScreen() {
                     return (
                       <DiscoveryEntryCard
                         key={row.key.questionId}
-                        discoveryKey={row.key}
+                        kind={row.key.kind}
+                        questionId={row.key.questionId}
+                        answererName={row.key.answererName}
                         topicName={topicNameOf(row.topic)}
                         text={row.text}
                         answerLine={answerLine}

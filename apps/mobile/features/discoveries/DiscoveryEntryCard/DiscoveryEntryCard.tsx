@@ -8,7 +8,9 @@ import type { DiscoveryEntryCardProps } from './types';
 // It is memoised, since the list can hold hundreds of entries and a change elsewhere on the screen
 // should not draw them all again. Nothing here logs.
 export const DiscoveryEntryCard = memo(function DiscoveryEntryCard({
-  discoveryKey,
+  kind,
+  questionId,
+  answererName,
   topicName,
   lead,
   text,
@@ -29,7 +31,8 @@ export const DiscoveryEntryCard = memo(function DiscoveryEntryCard({
           <Chip
             label={removeText}
             accessibilityLabel={removeLabel}
-            onPress={() => onRemove(discoveryKey)}
+            feedback="tap"
+            onPress={() => onRemove(kind, questionId, answererName)}
           />
         </View>
         <Text className="type-body-bold text-foreground">
