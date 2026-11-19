@@ -54,6 +54,7 @@ export {
 } from './round';
 export type {
   CurrentCard,
+  CurrentSurprise,
   PlayedCard,
   PlayerIndex,
   PlayerSummary,
@@ -62,6 +63,7 @@ export type {
   RoundSetup,
   RoundState,
   RoundSummary,
+  SurprisePlan,
 } from './round';
 export {
   customQuestionSchema,

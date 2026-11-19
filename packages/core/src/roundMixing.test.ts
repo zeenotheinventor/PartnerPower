@@ -73,8 +73,12 @@ const unchangedActions: RoundAction[] = [
 ];
 
 /** The card and generator state at each step of a round, played with a fixed set of actions. */
-function transcript(seed: number, length: RoundLength): string[] {
-  let state = startRound(setupWith({ seed, length }), deckOf(...shippedCards(12, 4)));
+function transcript(
+  seed: number,
+  length: RoundLength,
+  overrides: Partial<RoundSetup> = {},
+): string[] {
+  let state = startRound(setupWith({ seed, length, ...overrides }), deckOf(...shippedCards(12, 4)));
   const steps: string[] = [];
   for (let step = 0; step < 200 && !isRoundOver(state); step += 1) {
     steps.push(`${currentCard(state).id}@${state.randomState}`);
@@ -94,6 +98,13 @@ describe('a deck with no player cards', () => {
     'should deal a %s card round for seed %s exactly as it did before player cards existed',
     (length, seed) => {
       expect(transcript(seed, length)).toEqual(baseline[`${length}/${seed}`]);
+    },
+  );
+
+  it.each(lengths.flatMap((length) => seeds.map((seed) => [length, seed] as const)))(
+    'should deal a %s card round for seed %s exactly as the baseline with surprises set to an empty list',
+    (length, seed) => {
+      expect(transcript(seed, length, { surprises: [] })).toEqual(baseline[`${length}/${seed}`]);
     },
   );
 });
