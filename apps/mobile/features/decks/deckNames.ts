@@ -14,5 +14,6 @@ export function deckNameOf(
 ): string | undefined {
   if (choice === 'starter') return copy.decks.starter;
   if (choice === 'favourites') return copy.decks.favourites;
+  if (choice === 'matches') return copy.decks.matches;
   return customDecks?.find((deck) => deck.id === customDeckIdOf(choice))?.name;
 }

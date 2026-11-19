@@ -4,6 +4,7 @@ import {
   summarise,
   type CustomDeck,
   type Deck,
+  type MatchedItem,
   type RoundState,
 } from '@getfreak/core';
 import { useRouter } from 'expo-router';
@@ -14,6 +15,7 @@ import { Button, Character, Screen, SpeechBubble } from '../../../components/ui'
 import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { usePersonalData } from '../../../personal';
 import { buildRoundDeck } from '../../decks/buildRoundDeck';
+import { matchedItemsOf } from '../../decks/matchedItems';
 import { countCardsInPlay } from '../../decks/countCardsInPlay';
 import { useDeckChoice } from '../../decks/DeckChoiceProvider';
 import { getStarterDeck } from '../../decks/getStarterDeck';
@@ -75,15 +77,16 @@ export function RoundSummaryScreen() {
       begin(lastStart.deck);
       return;
     }
-    // Favourites and a custom deck are built from what is stored now, so a card turned on or off,
-    // or a deck changed, counts. A list that cannot be read counts as empty.
+    // Favourites, a custom deck and Your matches are built from what is stored now, so a card turned
+    // on or off, a deck changed or a new match counts. A list that cannot be read counts as empty.
     Promise.all([
       repository.listFavourites().then(
         (cardIds) => new Set(cardIds),
         () => new Set<string>(),
       ),
       repository.listDecks().catch((): CustomDeck[] => []),
-    ]).then(([favouriteIds, customDecks]) => {
+      repository.listDiscoveries().then(matchedItemsOf, (): MatchedItem[] => []),
+    ]).then(([favouriteIds, customDecks, matchedItems]) => {
       const deck = buildRoundDeck({
         choice: deckChoice,
         starterDeck: getStarterDeck(),
@@ -91,6 +94,7 @@ export function RoundSummaryScreen() {
         mixInOwnCards: false,
         favouriteIds,
         customDecks,
+        matchedItems,
       });
       // Setup holds Start when nothing is in play, and so does this. Setup says why.
       if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {

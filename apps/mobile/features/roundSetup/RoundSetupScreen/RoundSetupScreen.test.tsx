@@ -1,5 +1,5 @@
 import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
-import { startRound, type Deck } from '@getfreak/core';
+import { startRound, type Deck, type QuestionDeck } from '@getfreak/core';
 import { act, waitFor } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo, KeyboardAvoidingView } from 'react-native';
@@ -25,6 +25,7 @@ import { RoundSetupScreen } from './RoundSetupScreen';
 
 const mockFocusSetters = new Set<(isFocused: boolean) => void>();
 const mockPush = jest.fn();
+let mockSearchParams: { deck?: string } = {};
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = true;
@@ -40,6 +41,7 @@ jest.mock('expo-router', () => ({
     }, []);
     useEffect(() => (isFocused ? callback() : undefined), [callback, isFocused]);
   },
+  useLocalSearchParams: () => mockSearchParams,
   useRouter: () => ({
     push: mockPush,
     back: mockBack,
@@ -49,10 +51,18 @@ jest.mock('expo-router', () => ({
 }));
 
 const mockDecks: Deck[] = [];
-// The decks are read when they are used, because this factory runs before the array above exists.
+const mockQuestionDecks: QuestionDeck[] = [];
+// The decks are read when they are used, because this factory runs before the arrays above exist.
 jest.mock('@getfreak/content', () => {
   const actual = jest.requireActual<typeof import('@getfreak/content')>('@getfreak/content');
-  return Object.defineProperty({ ...actual }, 'decks', { get: () => mockDecks, enumerable: true });
+  const withDecks = Object.defineProperty({ ...actual }, 'decks', {
+    get: () => mockDecks,
+    enumerable: true,
+  });
+  return Object.defineProperty(withDecks, 'questionDecks', {
+    get: () => mockQuestionDecks,
+    enumerable: true,
+  });
 });
 
 jest.mock('@getfreak/core', () => {
@@ -146,6 +156,8 @@ const consoleMethods = ['log', 'info', 'warn', 'error', 'debug'] as const;
 describe('RoundSetupScreen', () => {
   beforeEach(() => {
     mockDecks.splice(0, mockDecks.length, testDeck);
+    mockQuestionDecks.splice(0, mockQuestionDecks.length);
+    mockSearchParams = {};
     jest.spyOn(Math, 'random').mockReturnValue(0.5);
   });
 
@@ -1242,6 +1254,236 @@ describe('RoundSetupScreen', () => {
 
         expect(startButton()).not.toBeDisabled();
       });
+    });
+  });
+
+  describe('Your matches', () => {
+    const matchItemId = 'm-1';
+    // A starter deck of tagged dares, three mild and three bolder, and one secret match item that
+    // matches all of them. With the item stored as a match, the matches deck holds all six.
+    const taggedDeck: Deck = {
+      id: 'tagged-deck',
+      version: 1,
+      cards: Array.from({ length: 6 }, (_, index) => ({
+        id: `card-${index + 1}`,
+        category: index < 3 ? ('c1' as const) : ('c2' as const),
+        kind: 'solo' as const,
+        text: `Tagged card ${index + 1}`,
+        source: 'shipped' as const,
+        tags: ['tag-a'],
+      })),
+    };
+    const matchesRow = () =>
+      screen.getByRole('button', {
+        name: fillCopy(copy.roundSetup.deckRowName, {
+          label: copy.roundSetup.deckLabel,
+          value: copy.decks.matches,
+        }),
+      });
+    const countLine = (count: number) =>
+      fillCopy(count === 1 ? copy.roundSetup.inPlayOne : copy.roundSetup.inPlay, { count });
+    // The picker opens over setup, and closes again, which gives setup focus once more.
+    const setFocus = (isFocused: boolean) =>
+      act(async () => mockFocusSetters.forEach((set) => set(isFocused)));
+
+    beforeEach(() => {
+      mockDecks.splice(0, mockDecks.length, taggedDeck);
+      mockQuestionDecks.splice(0, mockQuestionDecks.length, {
+        id: 'secretMatch',
+        version: 1,
+        questions: [
+          {
+            id: matchItemId,
+            format: 'secretMatch',
+            category: 'c1',
+            topic: 't1',
+            source: 'shipped',
+            text: 'Item one',
+            tags: ['tag-a'],
+          },
+        ],
+      });
+    });
+
+    async function renderWithMatches({
+      storeMatch = true,
+      dareCount = 0,
+    }: { storeMatch?: boolean; dareCount?: number } = {}) {
+      const fixture = makeOwnCardsFixture({
+        shippedTexts: taggedDeck.cards.map((card) => card.text),
+        shippedMatchItemIds: [matchItemId],
+      });
+      if (storeMatch) {
+        await fixture.repository.addDiscoveries([
+          { kind: 'match', questionId: matchItemId, strength: 'yes' },
+        ]);
+      }
+      for (let number = 1; number <= dareCount; number += 1) {
+        await fixture.repository.savePlayerCard({
+          category: 'c1',
+          kind: 'solo',
+          text: `Placeholder dare ${number}`,
+        });
+      }
+      const { ChoiceProbe, held } = makeChoiceProbe();
+      await renderSetup(undefined, fixture, <ChoiceProbe />);
+      enterNames('Player A', 'Player B');
+      return { held, fixture };
+    }
+
+    it('should show the name of the deck on the Deck row when it is chosen', async () => {
+      const { held } = await renderWithMatches();
+
+      act(() => held.current?.chooseDeck('matches'));
+
+      expect(matchesRow()).toBeOnTheScreen();
+    });
+
+    it('should open with Your matches chosen when it comes in the route, once the matches are read', async () => {
+      mockSearchParams = { deck: 'matches' };
+
+      await renderWithMatches();
+
+      expect(await screen.findByText(countLine(6))).toBeOnTheScreen();
+      expect(matchesRow()).toBeOnTheScreen();
+    });
+
+    it('should leave the starter deck chosen when the route names a deck that is not offered', async () => {
+      mockSearchParams = { deck: 'something-else' };
+
+      const { held } = await renderWithMatches();
+
+      expect(held.current?.choice).toBe('starter');
+    });
+
+    it('should not choose Your matches again from the route once another deck has been chosen', async () => {
+      mockSearchParams = { deck: 'matches' };
+      const { held } = await renderWithMatches();
+      await screen.findByText(countLine(6));
+
+      act(() => held.current?.chooseDeck('starter'));
+      await setFocus(false);
+      await setFocus(true);
+
+      expect(held.current?.choice).toBe('starter');
+    });
+
+    it('should deal the suggested dares best first, and not the dares the player wrote', async () => {
+      const { held } = await renderWithMatches({ dareCount: 2 });
+      await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+
+      await pressStart();
+
+      const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+      expect(deck?.id).toBe('matches');
+      expect(deck?.cards.map((card) => card.text)).toEqual([
+        'Tagged card 1',
+        'Tagged card 2',
+        'Tagged card 3',
+        'Tagged card 4',
+        'Tagged card 5',
+        'Tagged card 6',
+      ]);
+    });
+
+    it('should not show the mix switch for Your matches', async () => {
+      const { held } = await renderWithMatches({ dareCount: 1 });
+      await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+
+      act(() => held.current?.chooseDeck('matches'));
+
+      expect(
+        screen.queryByRole('switch', { name: copy.roundSetup.mixInMyDares }),
+      ).not.toBeOnTheScreen();
+    });
+
+    it('should apply the level and the categories to it, as to any deck', async () => {
+      const { held } = await renderWithMatches();
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+
+      fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+
+      expect(await screen.findByText(countLine(3))).toBeOnTheScreen();
+    });
+
+    it('should start with the surprises the round has, as it does for any deck', async () => {
+      const { held } = await renderWithMatches();
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+
+      await pressStart();
+
+      expect(jest.mocked(startRound).mock.calls[0]?.[0].surprises).toEqual(playableSurprises);
+    });
+
+    it('should hold Start, with no count and no hint, until the matches have been read', async () => {
+      const fixture = makeOwnCardsFixture({
+        shippedTexts: taggedDeck.cards.map((card) => card.text),
+        shippedMatchItemIds: [matchItemId],
+      });
+      jest.spyOn(fixture.repository, 'listDiscoveries').mockReturnValue(new Promise(() => {}));
+      const { ChoiceProbe, held } = makeChoiceProbe();
+      await renderSetup(undefined, fixture, <ChoiceProbe />);
+      enterNames('Player A', 'Player B');
+
+      act(() => held.current?.chooseDeck('matches'));
+
+      expect(startButton()).toBeDisabled();
+      expect(screen.queryByText(/cards at this level/)).not.toBeOnTheScreen();
+      expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      expect(held.current?.choice).toBe('matches');
+    });
+
+    it('should hold Start while the matches are read again on focus, though they were read before', async () => {
+      const { held, fixture } = await renderWithMatches();
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+      await setFocus(false);
+      jest.spyOn(fixture.repository, 'listDiscoveries').mockReturnValue(new Promise(() => {}));
+
+      await setFocus(true);
+
+      expect(startButton()).toBeDisabled();
+      expect(held.current?.choice).toBe('matches');
+    });
+
+    it('should fall back to the starter deck when the matches drop under the floor, and let Start work', async () => {
+      const { held, fixture } = await renderWithMatches();
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+      await fixture.repository.clearDiscoveries();
+
+      await setFocus(false);
+      await setFocus(true);
+
+      await waitFor(() => expect(held.current?.choice).toBe('starter'));
+      expect(startButton()).not.toBeDisabled();
+      expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+    });
+
+    it('should fall back to the starter deck when the matches cannot be read', async () => {
+      const { held, fixture } = await renderWithMatches();
+      act(() => held.current?.chooseDeck('matches'));
+      await screen.findByText(countLine(6));
+      jest.spyOn(fixture.repository, 'listDiscoveries').mockRejectedValue(new Error('unreadable'));
+
+      await setFocus(false);
+      await setFocus(true);
+
+      await waitFor(() => expect(held.current?.choice).toBe('starter'));
+      expect(startButton()).not.toBeDisabled();
+    });
+
+    it('should fall back from the route when there are too few matches to offer', async () => {
+      mockSearchParams = { deck: 'matches' };
+
+      const { held } = await renderWithMatches({ storeMatch: false });
+
+      await waitFor(() => expect(held.current?.choice).toBe('starter'));
+      expect(startButton()).not.toBeDisabled();
     });
   });
 

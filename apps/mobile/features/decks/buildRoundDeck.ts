@@ -1,8 +1,15 @@
-import type { CustomDeck, Deck, PlayerCard } from '@getfreak/core';
+import {
+  buildMatchesDeck,
+  type CustomDeck,
+  type Deck,
+  type MatchedItem,
+  type PlayerCard,
+} from '@getfreak/core';
 
 import { withOwnCards } from '../ownCards/withOwnCards';
 import { customDeckIdOf } from './customDeckChoice';
 import { favouriteCards } from './favouriteCards';
+import { matchSuggestions } from './matchSuggestions';
 import type { DeckChoice } from './types';
 
 type RoundDeckInput = {
@@ -14,6 +21,8 @@ type RoundDeckInput = {
   favouriteIds: ReadonlySet<string>;
   /** The stored custom decks, which a custom choice is looked up in. */
   customDecks: readonly CustomDeck[];
+  /** What the stored matches say, which Your matches is suggested from. */
+  matchedItems: readonly MatchedItem[];
 };
 
 /**
@@ -27,7 +36,13 @@ export function buildRoundDeck({
   mixInOwnCards,
   favouriteIds,
   customDecks,
+  matchedItems,
 }: RoundDeckInput): Deck {
+  if (choice === 'matches') {
+    // Only the shipped dares carry tags, so a dare the player wrote is never suggested. The deck is
+    // built from the matches each time and never stored.
+    return buildMatchesDeck(matchSuggestions(starterDeck.cards, matchedItems));
+  }
   if (choice === 'favourites') {
     return {
       id: 'favourites',

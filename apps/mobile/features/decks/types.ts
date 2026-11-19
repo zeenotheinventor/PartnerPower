@@ -2,4 +2,4 @@
 export type CustomDeckChoice = `custom:${string}`;
 
 /** The decks a round can be played from. */
-export type DeckChoice = 'starter' | 'favourites' | CustomDeckChoice;
+export type DeckChoice = 'starter' | 'favourites' | 'matches' | CustomDeckChoice;

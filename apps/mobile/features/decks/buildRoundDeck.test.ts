@@ -1,4 +1,11 @@
-import type { Card, CustomDeck, Deck, PlayerCard } from '@getfreak/core';
+import {
+  maximumMatchesDeckCards,
+  type Card,
+  type CustomDeck,
+  type Deck,
+  type MatchedItem,
+  type PlayerCard,
+} from '@getfreak/core';
 
 import { buildRoundDeck } from './buildRoundDeck';
 import { customDeckChoice } from './customDeckChoice';
@@ -37,6 +44,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: false,
         favouriteIds: new Set(),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(deck).toBe(starterDeck);
@@ -50,6 +58,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: true,
         favouriteIds: new Set(['card-1']),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(deck.cards).toEqual([...starterDeck.cards, ...ownCards]);
@@ -65,6 +74,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: true,
         favouriteIds: new Set(['card-2', 'p-1']),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(deck.cards.map((card) => card.id)).toEqual(['card-2', 'p-1']);
@@ -78,6 +88,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: false,
         favouriteIds: new Set(['card-1', 'removed-card', 'p-deleted']),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(deck.cards.map((card) => card.id)).toEqual(['card-1']);
@@ -91,6 +102,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: false,
         favouriteIds: new Set(['p-2']),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(withoutMix.cards.map((card) => card.id)).toEqual(['p-2']);
@@ -104,6 +116,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards: true,
         favouriteIds: new Set(),
         customDecks: [],
+        matchedItems: [],
       });
 
       expect(deck.cards).toEqual([]);
@@ -124,6 +137,7 @@ describe('buildRoundDeck', () => {
         mixInOwnCards,
         favouriteIds: new Set(['card-1']),
         customDecks,
+        matchedItems: [],
       });
 
     it('should hold only the cards the deck lists, whether or not dares are mixed in', () => {
@@ -152,6 +166,71 @@ describe('buildRoundDeck', () => {
       const deck = build([other, customDeck(['card-2'])]);
 
       expect(deck.cards.map((card) => card.id)).toEqual(['card-2']);
+    });
+  });
+
+  describe('for your matches', () => {
+    const taggedCard = (id: string, tags: string[], category: Card['category'] = 'c1'): Card => ({
+      ...shippedCard(id, category),
+      tags,
+    });
+    const taggedDeck: Deck = {
+      id: 'tagged-deck',
+      version: 1,
+      cards: [
+        taggedCard('t-1', ['tag-a']),
+        taggedCard('t-2', ['tag-a', 'tag-b']),
+        taggedCard('t-3', ['tag-z']),
+        shippedCard('untagged'),
+      ],
+    };
+    const yesOnA: MatchedItem = { strength: 'yes', tags: ['tag-a'] };
+    const build = (matchedItems: MatchedItem[], deck: Deck = taggedDeck, mixInOwnCards = true) =>
+      buildRoundDeck({
+        choice: 'matches',
+        starterDeck: deck,
+        ownCards,
+        mixInOwnCards,
+        favouriteIds: new Set(['t-3']),
+        customDecks: [],
+        matchedItems,
+      });
+
+    it('should hold the dares the matches suggest, best first', () => {
+      const deck = build([yesOnA, { strength: 'maybe', tags: ['tag-b'] }]);
+
+      expect(deck.cards.map((card) => card.id)).toEqual(['t-2', 't-1']);
+    });
+
+    it('should be the matches deck with its own id', () => {
+      expect(build([yesOnA]).id).toBe('matches');
+    });
+
+    it('should hold up to the most the matches deck holds', () => {
+      const manyCards = Array.from({ length: maximumMatchesDeckCards + 5 }, (_, index) =>
+        taggedCard(`many-${String(index).padStart(2, '0')}`, ['tag-a']),
+      );
+
+      const deck = build([yesOnA], { id: 'many', version: 1, cards: manyCards });
+
+      expect(deck.cards).toHaveLength(maximumMatchesDeckCards);
+    });
+
+    it('should never hold a dare the player wrote, however it is mixed in', () => {
+      const deck = build([yesOnA], taggedDeck, true);
+
+      expect(deck.cards.map((card) => card.id).filter((id) => id.startsWith('p-'))).toEqual([]);
+    });
+
+    it('should be an empty deck when nothing is matched', () => {
+      expect(build([]).cards).toEqual([]);
+    });
+
+    it('should follow the matches it is given, because it is built each time', () => {
+      expect(build([yesOnA]).cards.map((card) => card.id)).toEqual(['t-1', 't-2']);
+      expect(build([{ strength: 'yes', tags: ['tag-z'] }]).cards.map((card) => card.id)).toEqual([
+        't-3',
+      ]);
     });
   });
 });

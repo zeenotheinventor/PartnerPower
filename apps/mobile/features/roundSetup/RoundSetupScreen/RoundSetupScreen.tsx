@@ -1,14 +1,16 @@
 import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
 import {
+  canOfferMatchesDeck,
   categoriesForLevel,
   levelIds,
   type CategoryId,
   type CustomDeck,
   type LevelId,
+  type MatchedItem,
   type PlayerNames,
   type RoundLength,
 } from '@getfreak/core';
-import { useFocusEffect, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 
@@ -28,10 +30,11 @@ import { countCardsInPlay } from '../../decks/countCardsInPlay';
 import { useDeckChoice } from '../../decks/DeckChoiceProvider';
 import { deckNameOf } from '../../decks/deckNames';
 import { getStarterDeck } from '../../decks/getStarterDeck';
-import { deckPickerRoute } from '../../decks/routes';
+import { deckPickerRoute, matchesDeckParam } from '../../decks/routes';
 import { customDeckIdOf } from '../../decks/customDeckChoice';
 import { useCustomDecks } from '../../decks/useCustomDecks';
 import { useFavouriteIds } from '../../decks/useFavouriteIds';
+import { useMatchedItems } from '../../decks/useMatchedItems';
 import { useOwnCards } from '../../ownCards/OwnCardsProvider';
 import { myDaresRoute } from '../../ownCards/routes';
 import { useRound } from '../../round/RoundProvider';
@@ -47,6 +50,7 @@ const playRoute = '/games/dares/play';
 // Before the favourites have been read, no card counts as one.
 const noFavouriteIds: ReadonlySet<string> = new Set();
 const noCustomDecks: readonly CustomDeck[] = [];
+const noMatchedItems: readonly MatchedItem[] = [];
 
 const levelOptions = levelIds.map((levelId) => ({ value: levelId, label: levelNames[levelId] }));
 
@@ -66,6 +70,8 @@ export function RoundSetupScreen() {
   const { choice: deckChoice, chooseDeck } = useDeckChoice();
   const favouriteIds = useFavouriteIds();
   const { customDecks, isReadOnFocus: isCustomDecksReadOnFocus } = useCustomDecks();
+  const { matchedItems, isReadOnFocus: isMatchedItemsReadOnFocus } = useMatchedItems();
+  const { deck: deckParam } = useLocalSearchParams<{ deck?: string }>();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -91,27 +97,11 @@ export function RoundSetupScreen() {
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  // Start waits for the dares to be read, so a round never starts without the dares it should mix.
-  // It waits for the favourites only when they are the deck. It waits for the custom decks only when
-  // one is, until they have been read on this focus and the deck is in them, so a deck saved a
-  // moment ago is never missed. The starter deck never needs them.
-  const customDeckId = customDeckIdOf(deckChoice);
-  const isCustomDeckStored =
-    customDeckId !== undefined &&
-    customDecks?.some((stored) => stored.id === customDeckId) === true;
-  const isDeckReady =
-    !isOwnCardsLoading &&
-    (deckChoice === 'starter' ||
-      (deckChoice === 'favourites'
-        ? favouriteIds !== undefined
-        : isCustomDeckStored && isCustomDecksReadOnFocus));
-  // A chosen deck that is not stored once the decks have been read, because it was deleted or the
-  // read failed, gives way to the starter deck, as deleting the chosen deck does.
-  const isCustomDeckMissing =
-    customDeckId !== undefined && isCustomDecksReadOnFocus && !isCustomDeckStored;
+  // The route can open setup with Your matches chosen. The effect runs once, when the screen opens,
+  // so a deck chosen afterwards is not overridden by a param that is still on the route.
   useEffect(() => {
-    if (isCustomDeckMissing) chooseDeck('starter');
-  }, [isCustomDeckMissing, chooseDeck]);
+    if (deckParam === matchesDeckParam) chooseDeck('matches');
+  }, [deckParam, chooseDeck]);
   const deck = buildRoundDeck({
     choice: deckChoice,
     starterDeck: getStarterDeck(),
@@ -119,7 +109,36 @@ export function RoundSetupScreen() {
     mixInOwnCards: mixOn,
     favouriteIds: favouriteIds ?? noFavouriteIds,
     customDecks: customDecks ?? noCustomDecks,
+    matchedItems: matchedItems ?? noMatchedItems,
   });
+  // Start waits for the dares to be read, so a round never starts without the dares it should mix.
+  // It waits for the favourites only when they are the deck. It waits for the custom decks only when
+  // one is, until they have been read on this focus and the deck is in them, so a deck saved a
+  // moment ago is never missed. It waits for the matches only when they are the deck, until they
+  // have been read on this focus and are enough to offer. The starter deck never needs any of them.
+  const customDeckId = customDeckIdOf(deckChoice);
+  const isCustomDeckStored =
+    customDeckId !== undefined &&
+    customDecks?.some((stored) => stored.id === customDeckId) === true;
+  const isMatchesDeckOffered = isMatchedItemsReadOnFocus && canOfferMatchesDeck(deck.cards);
+  const isDeckReady =
+    !isOwnCardsLoading &&
+    (deckChoice === 'starter' ||
+      (deckChoice === 'favourites'
+        ? favouriteIds !== undefined
+        : deckChoice === 'matches'
+          ? isMatchesDeckOffered
+          : isCustomDeckStored && isCustomDecksReadOnFocus));
+  // A chosen deck that is not stored once the decks have been read, because it was deleted or the
+  // read failed, gives way to the starter deck, as deleting the chosen deck does. Your matches does
+  // the same once they have been read and are too few to offer.
+  const isCustomDeckMissing =
+    customDeckId !== undefined && isCustomDecksReadOnFocus && !isCustomDeckStored;
+  const isMatchesDeckTooSmall =
+    deckChoice === 'matches' && isMatchedItemsReadOnFocus && !isMatchesDeckOffered;
+  useEffect(() => {
+    if (isCustomDeckMissing || isMatchesDeckTooSmall) chooseDeck('starter');
+  }, [isCustomDeckMissing, isMatchesDeckTooSmall, chooseDeck]);
   const cardsInPlay = countCardsInPlay(deck, enabledCategories);
   const hasNoCardsInPlay = isDeckReady && cardsInPlay === 0;
   const canStart = isDeckReady && cardsInPlay > 0 && names.every((name) => tidyName(name) !== '');

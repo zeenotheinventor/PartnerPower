@@ -1,5 +1,5 @@
 import { copy, fillCopy } from '@getfreak/content';
-import { limits } from '@getfreak/core';
+import { canOfferMatchesDeck, limits } from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { Text, View } from 'react-native';
 
@@ -13,14 +13,18 @@ import { favouriteCards } from '../favouriteCards';
 import { getStarterDeck } from '../getStarterDeck';
 import { customDeckRoute, favouritesRoute, newDeckRoute } from '../routes';
 import type { DeckChoice } from '../types';
+import { buildRoundDeck } from '../buildRoundDeck';
 import { useCustomDecks } from '../useCustomDecks';
 import { useFavouriteIds } from '../useFavouriteIds';
+import { useMatchedItems } from '../useMatchedItems';
 
 type PickerDeck = {
   choice: DeckChoice;
   name: string;
   /** Undefined until the count can be known. */
   count: number | undefined;
+  /** A line under the name that says what the deck is. */
+  body?: string;
   /** The route the deck's own button opens, with the name a screen reader gives the button. */
   action?: { label: string; name: string; route: string };
 };
@@ -36,6 +40,7 @@ export function DeckPickerScreen() {
   const { cards: ownCards } = useOwnCards();
   const favouriteIds = useFavouriteIds();
   const { customDecks } = useCustomDecks();
+  const { matchedItems } = useMatchedItems();
 
   // A deep link can open this screen with nothing behind it, so it falls back to setup.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(setupRoute));
@@ -52,6 +57,32 @@ export function DeckPickerScreen() {
       ? undefined
       : favouriteCards(starterDeck, ownCards, favouriteIds).length;
 
+  // Your matches is built from the stored matches each time, and listed only once it can be played
+  // as a round, with at least as many cards as the matches deck needs.
+  const matchesDeck =
+    matchedItems === undefined
+      ? undefined
+      : buildRoundDeck({
+          choice: 'matches',
+          starterDeck,
+          ownCards,
+          mixInOwnCards: false,
+          favouriteIds: new Set(),
+          customDecks: [],
+          matchedItems,
+        });
+  const matchesPickerDecks: PickerDeck[] =
+    matchesDeck !== undefined && canOfferMatchesDeck(matchesDeck.cards)
+      ? [
+          {
+            choice: 'matches',
+            name: copy.decks.matches,
+            body: copy.decks.matchesBody,
+            count: matchesDeck.cards.length,
+          },
+        ]
+      : [];
+
   const decks: PickerDeck[] = [
     { choice: 'starter', name: copy.decks.starter, count: starterDeck.cards.length },
     {
@@ -64,6 +95,7 @@ export function DeckPickerScreen() {
         route: favouritesRoute,
       },
     },
+    ...matchesPickerDecks,
     ...(customDecks ?? []).map((deck) => ({
       choice: customDeckChoice(deck.id),
       name: deck.name,
@@ -82,7 +114,7 @@ export function DeckPickerScreen() {
       <Header title={copy.decks.pickerTitle} backLabel={copy.decks.backLabel} onBack={goBack} />
 
       <View className="gap-12">
-        {decks.map(({ choice: deckChoice, name, count, action }) => (
+        {decks.map(({ choice: deckChoice, name, body, count, action }) => (
           <View key={deckChoice} className="flex-row items-center gap-8">
             <View className="flex-1">
               <Card
@@ -96,6 +128,7 @@ export function DeckPickerScreen() {
               >
                 <View className="items-start gap-4">
                   <Text className="type-heading text-foreground">{name}</Text>
+                  {body === undefined ? null : <Text className="type-body text-muted">{body}</Text>}
                   {count === undefined ? null : <Chip label={deckCountText(count)} />}
                 </View>
               </Card>

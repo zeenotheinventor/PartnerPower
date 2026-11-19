@@ -5,6 +5,8 @@ import { copy, displayNames, fillCopy } from '@getfreak/content';
 import { act, fireEvent, screen, waitFor, within } from 'expo-router/testing-library';
 import { router } from 'expo-router';
 
+import { storage } from '../../storage';
+
 const homeRoute = '/games/questions';
 const matchRoute = '/games/questions/match';
 const discoveriesRoute = '/games/questions/discoveries';
@@ -89,13 +91,19 @@ describe('secret match in the route tree', () => {
     await waitFor(() => expect(currentPathname()).toBe(homeRoute));
   });
 
-  it('should open Discoveries from the dares for you two card on the reveal', async () => {
+  it('should open the dares for you two section from the card on the reveal', async () => {
+    // Saving is off, so the screen is not the empty one and shows the section. The route store of
+    // these tests holds no shipped questions, so it could not keep a match to suggest from.
+    await storage.set('questionPreferences', { saveDiscoveries: false });
     await playToReveal();
 
     pressButton(copy.secretMatch.daresTitle);
     await waitFor(() => expect(currentPathname()).toBe(discoveriesRoute));
 
     expect(screen.getByRole('header', { name: copy.discoveries.title })).toBeOnTheScreen();
+    expect(
+      await screen.findByRole('header', { name: copy.discoveries.daresTitle }),
+    ).toBeOnTheScreen();
   });
 
   it('should open the stop dialog from the system back, and return to the home on confirming', async () => {

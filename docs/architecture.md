@@ -293,6 +293,15 @@ canOfferMatchesDeck(suggestions: Card[]): boolean; // 5 or more
 - The matches deck is built when needed and never stored. It holds the first 20 suggestions in
   rank order, and the screen offers it when there are at least 5 suggestions.
 
+The app uses this in two places, both over the shipped dares only, so a dare the player wrote is
+never suggested. `matchedItemsOf` (`features/decks`) turns the stored `match` discoveries into
+`MatchedItem`s, taking each item's tags from the shipped secret match items now, and an item that
+has gone is left out. `matchSuggestions` ranks the shipped dares by them, up to 20.
+
+- **Dares for you two** is a section of the Discoveries screen (see Discoveries screen).
+  `useMatchSuggestions` gives it up to 5 dares, best first, and whether there are enough to play.
+- **Your matches** is a built deck at setup, like Favourites (see Round setup and decks).
+
 ## Round engine
 
 A round of the `dares` game is a reducer in `core`, in `round.ts`. It is pure: no React and no I/O.
@@ -768,6 +777,19 @@ dares` is on. The switch shows only for the starter deck. The My dares row stays
   the categories, the together cards and the surprises. `useFavouriteIds` reads the ids from the
   repository each time a screen gains focus, so a change made on another screen shows when the
   setup is back.
+- **Your matches.** A deck the app builds from the stored matches each time it is used, never
+  stored, so it follows the latest matches and content. `buildRoundDeck` gives `buildMatchesDeck`
+  the first 20 suggestions of `matchSuggestions`, over the shipped dares only. The mix switch does
+  not apply and every deal rule does, the level, the categories, the together cards and the
+  surprises. `useMatchedItems` reads the matches each time a screen gains focus, with
+  `isReadOnFocus` as `useCustomDecks` has. The deck is offered, in the picker and at setup, only
+  with at least 5 cards (`canOfferMatchesDeck`). Setup waits for a fresh read before it counts the
+  deck, and once the read is done and the deck is under 5 cards (matches removed, content changed,
+  or the read failed) it chooses the starter deck, as it does for a custom deck that has gone.
+  Setup can open with it chosen: `/games/dares/setup?deck=matches` (`matchesSetupRoute`). The
+  `DeckChoiceProvider` sits in the dares layout, which Discoveries is outside of, so setup reads the
+  param when it opens and chooses the deck, and a deck chosen later is not overridden by
+  the param that stays on the route. Any other value of the param is ignored.
 - **Custom decks.** A deck the player made and named, stored through the repository as a list of
   card ids (`saveDeck`, `listDecks`, `deleteDeck`). `buildRoundDeck` gives the cards of the starter
   deck and the player's dares whose ids the stored deck lists, so a card that has gone is left out
@@ -787,11 +809,13 @@ dares` is on. The switch shows only for the starter deck. The My dares row stays
 - **Picker** (`decks`). The starter deck and Favourites, each a pressable `Card` with `selected`,
   holding the name and a count chip. A tap chooses the deck and goes back to setup. Favourites has a
   `View` button beside it that opens the Favourites view without choosing it. Favourites can be
-  chosen with no cards. Each custom deck follows them, newest last, as a card with its name and
+  chosen with no cards. Your matches follows Favourites, with its line "Dares picked from your
+  secret matches." under the name and its count chip, and shows only with at least 5 cards. It has
+  no view or edit button. Each custom deck follows them, newest last, as a card with its name and
   count, and an `Edit` button beside it that opens the editor without choosing the deck. `New deck`
   ends the list. At 20 decks it is disabled and the reason sits under it.
-- **Play again** on the summary rebuilds a Favourites or custom deck round from what is stored when
-  it is pressed, through `buildRoundDeck`, so a card turned on or off on the summary, or a deck
+- **Play again** on the summary rebuilds a Favourites, Your matches or custom deck round from what
+  is stored when it is pressed, through `buildRoundDeck`, so a card turned on or off on the summary, or a deck
   changed since, counts. A starter deck round replays the deck it started with, which keeps the mix
   switch as it was. With nothing in play the player is sent to setup, which says why.
 - **Deck editor** (`decks/new`, `decks/[id]`). A name field (1 to 30 characters, with a count), the
@@ -1079,8 +1103,7 @@ starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them
   (`useSaveMatches`), and says "Saved to discoveries" when saving is on, or that matches go when
   they leave when it is off. It says nothing while the save is under way and nothing if it failed.
   The "dares for you two" card shows only when the Discoveries entry on the home has a route, and
-  opens that screen. It is shown now that Discoveries exists, and opens it until the dares section
-  has a screen of its own.
+  opens that screen, whose Dares for you two section sits at the top under the saving switch.
 - Stop, the system back button and the iOS swipe open the kit `Dialog` while a pass or the handoff
   is showing, through `usePreventRemove`. Confirming sends `stop`, which wipes both passes, and the
   screen goes back to the home, or replaces itself with it when it was opened by a deep link. The
@@ -1160,8 +1183,16 @@ logged, because every line is personal.
 - With nothing to show the screen has Theo at rest, a line, "Nothing here yet", and two buttons:
   Play a round (`/games/questions/setup`) and Secret match (`/games/questions/match`). The switch
   still shows.
-- The dares for you two section goes between the switch (and its line) and the groups, where the
-  screen marks its place. Its ticket adds it, so the frame's room is kept and nothing is drawn.
+- **Dares for you two** (`DaresForYouTwo`) goes between the switch (and its line) and the groups.
+  `useMatchSuggestions` takes the screen's own list of discoveries, so a removed match changes the
+  suggestions at once, and gives up to 5 dares, best first, and whether there are enough to play.
+  With at least 5 suggestions the section shows a heading, "Picked from what you matched on.", a
+  static `Card` in its category for each dare with a category `Chip`, and a primary "Play these in
+  Freak or Drink" `Button`, which opens `/games/dares/setup?deck=matches`. With fewer it shows no
+  dares and no play button, only the line box "Play a secret match, and dares picked for you two
+  show up here." and a secondary "Start a secret match" `Button` that opens the intro. The section
+  shows whenever the screen is not the empty one, and with saving off even when nothing is stored,
+  as the hint. With saving on and nothing saved the empty screen shows without it, as drawn.
 - The copy is in `copy.discoveries`, and the home count lines are in `copy.questionsHome`.
 
 ### Entry guard
