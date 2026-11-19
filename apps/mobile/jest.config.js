@@ -26,6 +26,7 @@ const testTimeoutMilliseconds = 30_000;
 /** @type {import('jest').Config} */
 module.exports = {
   preset: 'jest-expo',
+  setupFiles: ['<rootDir>/jest.setup.js'],
   testTimeout: testTimeoutMilliseconds,
   transformIgnorePatterns: [withNativewind, ...otherPatterns],
 };

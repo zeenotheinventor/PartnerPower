@@ -140,7 +140,9 @@ describe('the entry guard', () => {
 
       expect(readSpy.mock.calls.map(([key]) => key).sort()).toEqual([
         'entryConfirmation',
+        'hapticsOn',
         'playerNames',
+        'soundOn',
       ]);
     });
 

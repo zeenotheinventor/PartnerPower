@@ -4,7 +4,9 @@
   "include": [
     "tailwind/rawColorGuard.test.ts",
     "features/welcome/routeCoverage.test.tsx",
-    "nativewind-env.d.ts"
+    "feedback/sounds.test.ts",
+    "nativewind-env.d.ts",
+    "assets.d.ts"
   ],
   "exclude": []
 }

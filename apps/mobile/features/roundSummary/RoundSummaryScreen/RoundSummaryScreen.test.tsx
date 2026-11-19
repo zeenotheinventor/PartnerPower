@@ -3,6 +3,8 @@ import type { Deck, RoundAction, RoundSetup } from '@getfreak/core';
 import { fireEvent, screen } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
+import { createMockFeedback } from '../../../feedback/createMockFeedback';
+import { FeedbackContext } from '../../../feedback/FeedbackProvider';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { RoundProvider, useRound, type RoundContextValue } from '../../round/RoundProvider';
 import { RoundSummaryScreen } from './RoundSummaryScreen';
@@ -69,14 +71,25 @@ function PlayedRound({ actions, children }: { actions: RoundAction[]; children: 
   return children;
 }
 
-async function renderSummary(actions: RoundAction[] = aBoldest) {
-  await renderThemed(
-    <RoundProvider>
-      <PlayedRound actions={actions}>
-        <RoundSummaryScreen />
-      </PlayedRound>
-    </RoundProvider>,
+function summaryTree(
+  actions: RoundAction[],
+  feedback: ReturnType<typeof createMockFeedback>,
+  { screenKey = 0, showScreen = true } = {},
+) {
+  return (
+    <FeedbackContext.Provider value={feedback}>
+      <RoundProvider>
+        <PlayedRound actions={actions}>
+          {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
+        </PlayedRound>
+      </RoundProvider>
+    </FeedbackContext.Provider>
   );
+}
+
+async function renderSummary(actions: RoundAction[] = aBoldest, feedback = createMockFeedback()) {
+  const view = await renderThemed(summaryTree(actions, feedback));
+  return { view, feedback };
 }
 
 describe('RoundSummaryScreen', () => {
@@ -86,6 +99,62 @@ describe('RoundSummaryScreen', () => {
     mockDismissTo.mockClear();
     mockCanGoBack = true;
     latestRound = undefined;
+  });
+
+  describe('the round complete feedback', () => {
+    it('should ask for the round complete feedback once when the summary shows', async () => {
+      const { feedback } = await renderSummary();
+
+      expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should ask for nothing else, since the press feedback is the buttons own', async () => {
+      const { feedback } = await renderSummary();
+
+      expect(feedback.tap).not.toHaveBeenCalled();
+      expect(feedback.done).not.toHaveBeenCalled();
+      expect(feedback.pass).not.toHaveBeenCalled();
+    });
+
+    it('should not ask again when the screen renders again with new feedback functions', async () => {
+      const { view, feedback } = await renderSummary();
+      const laterFeedback = createMockFeedback();
+
+      view.rerender(summaryTree(aBoldest, laterFeedback));
+
+      expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
+      expect(laterFeedback.roundComplete).not.toHaveBeenCalled();
+    });
+
+    it('should not ask again when the screen mounts again for the same round', async () => {
+      const { view, feedback } = await renderSummary();
+
+      view.rerender(summaryTree(aBoldest, feedback, { screenKey: 1 }));
+
+      expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should drop the rest of the buzz when the screen is left', async () => {
+      const { view, feedback } = await renderSummary();
+      expect(feedback.cancelHaptics).not.toHaveBeenCalled();
+
+      view.rerender(summaryTree(aBoldest, feedback, { showScreen: false }));
+
+      expect(feedback.cancelHaptics).toHaveBeenCalled();
+    });
+
+    it('should ask for nothing when there is no round to celebrate', async () => {
+      const feedback = createMockFeedback();
+      await renderThemed(
+        <FeedbackContext.Provider value={feedback}>
+          <RoundProvider>
+            <RoundSummaryScreen />
+          </RoundProvider>
+        </FeedbackContext.Provider>,
+      );
+
+      expect(feedback.roundComplete).not.toHaveBeenCalled();
+    });
   });
 
   it('should show the title as a heading', async () => {

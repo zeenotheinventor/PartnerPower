@@ -45,7 +45,7 @@ describe('HubScreen', () => {
       await renderThemed(<HubScreen />);
 
       const tileNames = screen.getAllByRole('button').map((tile) => tile.props.accessibilityLabel);
-      expect(tileNames).toEqual(gameEntries.map(expectedTileName));
+      expect(tileNames.slice(0, gameEntries.length)).toEqual(gameEntries.map(expectedTileName));
     });
 
     it.each(gameEntries.map((entry) => [entry.id, entry] as const))(
@@ -87,6 +87,26 @@ describe('HubScreen', () => {
 
       const comingSoonCount = gameEntries.filter((entry) => entry.status === 'comingSoon').length;
       expect(screen.getAllByText(copy.hub.comingSoon)).toHaveLength(comingSoonCount);
+    });
+  });
+
+  describe('the settings button', () => {
+    it('should open the settings screen when pressed', async () => {
+      await renderThemed(<HubScreen />);
+
+      fireEvent.press(screen.getByRole('button', { name: copy.hub.settings }));
+
+      expect(mockPush).toHaveBeenCalledWith('/settings');
+    });
+
+    it('should come after the last game tile, and in a production build be the last button', async () => {
+      setDevelopmentFlag(false);
+      await renderThemed(<HubScreen />);
+
+      const buttons = screen.getAllByRole('button');
+
+      expect(buttons).toHaveLength(gameEntries.length + 1);
+      expect(buttons.at(-1)).toBe(screen.getByRole('button', { name: copy.hub.settings }));
     });
   });
 
