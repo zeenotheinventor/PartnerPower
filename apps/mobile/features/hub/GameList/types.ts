@@ -6,11 +6,11 @@ export type ListedGame = {
   title: string;
   description: string;
   status: GameStatus;
-  setupRoute: string;
+  entryRoute: string;
 };
 
 export type GameListProps = {
   games: readonly ListedGame[];
-  /** Called with the setup route of an available game when its tile is pressed. */
-  onOpen: (setupRoute: string) => void;
+  /** Called with the entry route of an available game when its tile is pressed. */
+  onOpen: (entryRoute: string) => void;
 };

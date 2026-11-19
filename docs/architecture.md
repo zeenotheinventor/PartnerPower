@@ -78,7 +78,7 @@ type GameId = 'dares' | 'questions';
 interface GameEntry {
   id: GameId;
   status: 'available' | 'comingSoon';
-  setupRoute: string;
+  entryRoute: string;
 }
 ```
 
@@ -87,8 +87,9 @@ descriptions come from `content`, in `displayNames`, which is keyed by game id a
 `GameId`, so a registered game without a title and description fails typecheck.
 
 The hub joins each entry with its names and hands the result to a list component that knows nothing
-about any particular game. An available game's tile opens its `setupRoute`. A coming soon game's
-tile is disabled and carries a marker.
+about any particular game. An available game's tile opens its `entryRoute`: Freak or Drink opens
+its setup, and Drink If opens its own home. A coming soon game's tile is disabled and carries a
+marker.
 
 Adding a game means adding an entry, its names in `content`, a route group registered behind the
 entry guard, and a core module. The hub layout does not change.
@@ -507,6 +508,11 @@ apps/mobile/
         setup.tsx
         play.tsx
         summary.tsx
+      questions/
+        _layout.tsx      holds the question round for this route group
+        index.tsx        the Drink If home
+        setup.tsx
+        play.tsx         a stand-in until the play ticket replaces it
   components/ui/         the UI kit
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -524,6 +530,10 @@ apps/mobile/
   features/roundSetup/   the round setup screen
   features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog
   features/roundSummary/ the end of round summary screen and the player score block
+  features/questionRound/  the question round context for the questions route group
+  features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
+  features/questionsSetup/ the Drink If round setup screen
+  features/questionsPlay/  the Drink If play stand-in
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module
@@ -539,6 +549,10 @@ apps/mobile/
   The provider also keeps `lastStart`, the setup and deck the last round was started from, in
   memory only, so the summary can start another round like it. It goes with the round when the
   route group is left.
+- **Question round state** works the same way for `questions`. The layout renders
+  `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
+  `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
+  for a `QuestionRoundAction`. It holds the question list it was started from in place of a deck.
 - **Settings**, such as the entry confirmation and the remembered player names, are read from
   storage once at launch and exposed through a small settings context, `settings`. Saving the names
   never rejects: a failed write is ignored and the names still count for that session. The
@@ -622,6 +636,26 @@ on it is stored or logged.
   phone screen, even when it is in a higher category. Its cost is in the penalty line.
 - The summary route shows the end of round summary. See the Summary screen section.
 
+### Drink If home and setup
+
+`games/questions` has a home, unlike Freak or Drink, because it has four places to go. The hub tile
+opens it (`entryRoute` is `/games/questions`).
+
+- `features/questionsHome` shows Theo's line as text in a bordered box, with a comment marking where
+  his art goes until FRK-18 lands, and one `Card` button for each item in `homeEntries`. An entry
+  with a `route` is on. An entry whose `route` is null shows as coming soon, disabled and named
+  "title, Coming soon", so a ticket switches its entry on by giving it a route.
+- `features/questionsSetup` is the Freak or Drink setup with two more groups: four format switches
+  and six topic switches, each in one `Card` with `grouped={false}` of `Toggle` rows. The last format
+  and the last topic left on are locked. The categories come from the level, as for dares. Only the
+  names are remembered, through the settings provider, so they are shared with Freak or Drink.
+- `availableQuestionCount` from `core` gives the number of questions the choices leave, so the
+  screen holds no rules. When that is below a numeric length, a message says so. Start stays on and
+  the round ends when the questions run out.
+- Start builds the `QuestionRoundSetup`, starts the round with the shipped questions of every deck
+  and the player's own (an empty list until the device stores them), saves the names and opens the
+  play route.
+
 ### Entry guard
 
 Until the player has confirmed on the `welcome` screen, no other screen exists. The screen asks the
@@ -633,7 +667,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
   only after. A deep link to a closed route, on a cold start or with the app already open, ends at
   `welcome`, and the closed screen never renders.
 - A protected group only covers the routes listed in it, so every new route must be added to the
-  second group in `EntryStack`. A route group with its own layout, such as `games/dares`, is one
+  second group in `EntryStack`. A route group with its own layout, such as `games/dares` or `games/questions`, is one
   screen in that group and its routes sit inside it. A test walks the real route files under
   `app/` and fails if any of them can be opened before confirming.
   The same test fails if `app/` holds a test file or any other file that is not a route or layout,
@@ -656,17 +690,17 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                          |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.   |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                    |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                              |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                 |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                     |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                       |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                             |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.                                                      |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description. |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                    |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                 |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                    |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                   |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                        |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -1058,3 +1092,11 @@ and pnpm 9.11.0, and the README has the steps.
 | Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
 | Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
 | The app icon is discreet                             | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                          | FRK-19 |
+| Drink If has a home screen                           | Unlike Freak or Drink it has four places to go, so the hub tile opens a home and the home opens setup. Secret match is a separate session from a round, because it needs two private passes.                                                                                                                                                      | FRK-60 |
+| `GameEntry` has an `entryRoute`                      | The field was `setupRoute`. It is renamed because a tile now opens a game's home as well as its setup. No registered game is coming soon now, so the hub tests cover that state through the game list.                                                                                                                                            | FRK-60 |
+| Format and topic choices are not kept                | Like level and length, they reset each visit. Only the names are remembered.                                                                                                                                                                                                                                                                      | FRK-60 |
+| Entries switch on by a route                         | `homeEntries` gives each entry a `route`, null while coming soon, so a later ticket changes one line.                                                                                                                                                                                                                                             | FRK-60 |
+| Home shows the returning line                        | Nothing records a first visit yet, so the home always shows the line for a return visit. The first visit line is not in `content` until something can choose it. Counts on Discoveries and Your questions wait for their hooks.                                                                                                                   | FRK-60 |
+| Format and topic switches share a card               | Each group is one `Card` with `grouped={false}`, so a screen reader reaches each switch, and rows are split by a border. Static cards are otherwise one accessible group.                                                                                                                                                                         | FRK-60 |
+| Locked `Toggle` look                                 | The track gains a foreground border with smaller padding, so it is the same size. The row is not dimmed, as with `CategoryToggle`.                                                                                                                                                                                                                | FRK-60 |
+| Drink If play is a stand-in                          | A header and one line, with a way back to setup, until the play ticket replaces it. It does not read the round.                                                                                                                                                                                                                                   | FRK-60 |

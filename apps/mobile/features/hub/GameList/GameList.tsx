@@ -9,7 +9,7 @@ export function GameList({ games, onOpen }: GameListProps) {
       title={game.title}
       description={game.description}
       status={game.status}
-      onPress={() => onOpen(game.setupRoute)}
+      onPress={() => onOpen(game.entryRoute)}
     />
   ));
 }

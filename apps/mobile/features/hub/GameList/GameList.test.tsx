@@ -12,21 +12,21 @@ const madeUpGames: ListedGame[] = [
     title: 'First game',
     description: 'About one',
     status: 'available',
-    setupRoute: '/one',
+    entryRoute: '/one',
   },
   {
     id: 'two',
     title: 'Second game',
     description: 'About two',
     status: 'comingSoon',
-    setupRoute: '/two',
+    entryRoute: '/two',
   },
   {
     id: 'three',
     title: 'Third game',
     description: 'About three',
     status: 'available',
-    setupRoute: '/three',
+    entryRoute: '/three',
   },
 ];
 

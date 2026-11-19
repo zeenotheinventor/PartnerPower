@@ -33,7 +33,7 @@ export function HubScreen() {
   return (
     <Screen scroll>
       <Header title={copy.appName} subtitle={copy.hub.greeting} />
-      <GameList games={listedGames} onOpen={(setupRoute) => router.push(setupRoute)} />
+      <GameList games={listedGames} onOpen={(entryRoute) => router.push(entryRoute)} />
       <View className="flex-1" />
       <Button
         label={copy.hub.settings}

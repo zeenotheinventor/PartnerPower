@@ -50,6 +50,19 @@ describe('KitGallery', () => {
     ).toBeOnTheScreen();
   });
 
+  it('should show a locked switch that stays on and says why', async () => {
+    await renderThemed(<KitGallery />);
+
+    fireEvent.press(screen.getByRole('switch', { name: 'Switch, locked' }));
+
+    const lockedSwitch = screen.getByRole('switch', {
+      name: 'Switch, locked',
+      checked: true,
+      disabled: true,
+    });
+    expect(lockedSwitch).toHaveProp('accessibilityHint', 'One switch has to stay on.');
+  });
+
   it('should show a pressable card and a disabled one', async () => {
     await renderThemed(<KitGallery />);
 
