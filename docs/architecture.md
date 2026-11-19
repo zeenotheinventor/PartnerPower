@@ -626,7 +626,8 @@ apps/mobile/
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
-  features/questionsPlay/  the Drink If play screen, its turn views and the summary stand-in
+  features/questionsPlay/  the Drink If play screen and its turn views
+  features/questionsSummary/ the Drink If round summary screen and its player score block
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
@@ -890,11 +891,39 @@ category's `penalty`, or the drinks the reveal carries.
   optional `skipTitle` and `skipHint` props. The sheet has the category switches as on Freak or
   Drink. A skip or a switch off pins the question view, so the replacement shows at once.
 - When the round is over after a question was in play, the screen replaces itself with
-  `/games/questions/summary`. That route is `SummaryStandIn` until the Drink If summary replaces it.
+  `/games/questions/summary`, the Drink If summary below.
   A round that starts with no questions says so, with a way back to setup.
 - The screen stores nothing. The discoveries a round makes are in the round state, and the summary
   saves them.
 - The copy is in `copy.questionsPlay`, and the leads are in `copy.questionLeads`.
+
+### Drink If summary
+
+`features/questionsSummary/QuestionsSummaryScreen` shows `summariseQuestionRound` of the round from
+`useQuestionRound()`, laid out like the Freak or Drink summary. Nothing on it is logged.
+
+- The heading is "Round over!", with a line giving the questions played and the categories reached.
+  Each player has a `QuestionPlayerScore` block that reads as one group, such as "Alex, 3 drinks, 4
+  of 5 guesses right, knows you best". The `knowsBest` player's block carries a "Knows you best"
+  badge (an accent `Chip`). A tie has no badge, and a player who made no guesses has no guess line,
+  so a round with no guess question has neither a guess line nor a badge. Theo's head sits beside his
+  line in a bordered box: happy for a winner, shocked for a tie, resting when no guess was played. The
+  line is a polite live region.
+- When any would you rather question was played, a line says how many matched.
+- **Saving discoveries.** The screen saves the round's discoveries once, through
+  `useDiscoveries().addDiscoveries`, after the personal store has opened (a write to the placeholder
+  store before that is lost) and only for a round that is over. The round object is remembered in a
+  module level `WeakSet` when the write starts, so a render, an effect that runs again, or a screen
+  that mounts again for the same round never saves twice, and a failed save is not retried.
+  Whether saving is on is the hook's to decide. A round with no discoveries writes nothing.
+- When saving is on and the round made discoveries, a card shows "{n} new discoveries". It is a link
+  to the Discoveries screen once `discoveriesRoute` in the feature holds a route, and a plain count
+  until then. When saving is off nothing about discoveries shows. A failed save replaces the card
+  with a short message in a bordered box, and nothing else on the screen is blocked.
+- Play again starts a round from `lastStart` (the setup and the questions) with a new seed from
+  `randomSeed`, then replaces the summary with the play route. Settings goes back to setup, which is
+  still mounted under the summary. Home goes to the Drink If home with `dismissTo`. The back gesture
+  goes to setup.
 
 ### Entry guard
 
