@@ -98,11 +98,34 @@ jobs:
       - run: pnpm --filter @getfreak/mobile typecheck
       - run: pnpm --filter @getfreak/mobile test
 
+  # Runs only on a full run started by hand, so it adds no cost per push. It bundles the Android
+  # release the way Gradle does: the Expo CLI under plain node, without pnpm's shim, which would
+  # put the hidden hoist on NODE_PATH. A package that apps/mobile uses but does not declare
+  # resolves through that hoist, so only this run can catch it (FRK-24).
+  release-bundle:
+    name: release-bundle
+    if: github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup
+      - name: Bundle the Android release
+        working-directory: apps/mobile
+        run: |
+          env -u NODE_PATH NODE_ENV=production node "$(node -p "require.resolve('expo/bin/cli')")" export:embed \
+            --reset-cache \
+            --platform android \
+            --dev false \
+            --entry-file node_modules/expo-router/entry.js \
+            --bundle-output "${{ runner.temp }}/release-bundle/index.android.bundle" \
+            --assets-dest "${{ runner.temp }}/release-bundle"
+
   # The single required status. It fails if any job failed or was cancelled, and passes when
   # every job succeeded or was skipped.
   checks:
     name: checks
-    needs: [scope, lint, core, content, tokens, mobile]
+    needs: [scope, lint, core, content, tokens, mobile, release-bundle]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
