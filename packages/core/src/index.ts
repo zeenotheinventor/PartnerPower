@@ -150,6 +150,8 @@ export type {
   SecretMatchStrength,
   SecretMatchView,
 } from './secretMatch';
+export { defaultReminder, reminderDays, reminderHours, reminderSchema } from './reminder';
+export type { ReminderSchedule } from './reminder';
 export {
   buildMatchesDeck,
   canOfferMatchesDeck,

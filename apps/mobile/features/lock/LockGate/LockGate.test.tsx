@@ -1,9 +1,9 @@
 import { copy } from '@getfreak/content';
-import { act } from '@testing-library/react-native';
+import { act, renderHook } from '@testing-library/react-native';
 import { allowScreenCaptureAsync, preventScreenCaptureAsync } from 'expo-screen-capture';
 import { fireEvent, screen } from 'nativewind/test';
 import { useState, type ReactElement } from 'react';
-import { AccessibilityInfo, BackHandler, Modal, Platform, Text } from 'react-native';
+import { AccessibilityInfo, BackHandler, Modal, Platform, StyleSheet, Text } from 'react-native';
 
 import { FeedbackPressable } from '../../../components/ui';
 import { LockServiceContext, type LockService } from '../../../lock';
@@ -11,6 +11,7 @@ import { createTestLock, type TestLockSetup } from '../../../lock/testing/create
 import { changeAppState, fakeAppState } from '../../../lock/testing/fakeAppState';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { whileBiometricsPromptIsOpen } from '../../lockSetup/useClearOnBackground';
+import { useLockGate } from '../useLockGate';
 import { LockGate } from './LockGate';
 
 const mockClearEverything = jest.fn();
@@ -281,6 +282,22 @@ describe('LockGate', () => {
       ).toBeOnTheScreen();
     });
 
+    it('should take no touches on the app while it is locked, and take them again once unlocked', async () => {
+      const takesNoTouches = () => {
+        const text = screen.getByText(new RegExp(appContent), { includeHiddenElements: true });
+        for (let node = text.parent; node; node = node.parent) {
+          if (StyleSheet.flatten(node.props.style)?.pointerEvents === 'none') return true;
+        }
+        return false;
+      };
+      await renderGate();
+      expect(takesNoTouches()).toBe(true);
+
+      await unlockWithPin();
+
+      expect(takesNoTouches()).toBe(false);
+    });
+
     it('should show the lock screen in a native modal, so it sits above any dialog the app had open', async () => {
       await renderGate();
 
@@ -333,6 +350,121 @@ describe('LockGate', () => {
 
       expect(screen.getByRole('header', { name: copy.clear.forgotTitle })).toBeOnTheScreen();
       expect(lockHeading()).toBeOnTheScreen();
+    });
+  });
+
+  describe('the time away', () => {
+    it('should lock when the phone clock is set back to hide an hour away', async () => {
+      await renderGate();
+      await unlockWithPin();
+
+      await changeAppState('background');
+      await advance(60 * 60_000);
+      // The clock goes back 59.5 minutes, so the phone's own clock says the trip was 30 seconds.
+      jest.setSystemTime(Date.now() - 59.5 * 60_000);
+      await changeAppState('active');
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
+    it('should not lock a short trip just because the steady clock was read', async () => {
+      await renderGate();
+      await unlockWithPin();
+
+      await awayFor(30_000);
+
+      expect(lockHeading()).toBeNull();
+    });
+
+    it('should lock when the clock went backwards, whatever the steady clock says', async () => {
+      await renderGate();
+      await unlockWithPin();
+
+      await changeAppState('background');
+      await advance(1_000);
+      jest.setSystemTime(Date.now() - 10 * 60_000);
+      await changeAppState('active');
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
+    it('should not restart the clock when a second background event comes during one trip', async () => {
+      await renderGate();
+      await unlockWithPin();
+
+      await changeAppState('background');
+      await advance(30_000);
+      await changeAppState('background');
+      await advance(30_000);
+      await changeAppState('active');
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+  });
+
+  describe('the gate before the lock is read', () => {
+    function pendingLock() {
+      const { lock } = createTestLock();
+      let answer: (isOn: boolean) => void = () => {};
+      jest
+        .spyOn(lock, 'isLockOn')
+        .mockImplementation(() => new Promise<boolean>((resolve) => (answer = resolve)));
+      return { lock, answer: (isOn: boolean) => answer(isOn) };
+    }
+
+    it('should show the cover when the app goes inactive or to the background before the first read', async () => {
+      const { lock } = pendingLock();
+      await renderThemed(gateElement(lock));
+
+      await changeAppState('inactive');
+
+      expect(coverIsShown()).toBe(true);
+    });
+
+    it('should do nothing when unlock is called before the lock has been read', async () => {
+      const { lock, answer } = pendingLock();
+      const { result } = renderHook(() => useLockGate(), {
+        wrapper: ({ children }) => (
+          <LockServiceContext.Provider value={lock}>{children}</LockServiceContext.Provider>
+        ),
+      });
+
+      act(() => result.current.unlock());
+      expect(result.current.phase).toBe('checking');
+
+      await act(async () => answer(true));
+      expect(result.current.phase).toBe('locked');
+    });
+  });
+
+  describe('reads of whether the lock is on that answer out of order', () => {
+    it('should keep the answer of the newest read, so screen capture is not left blocked', async () => {
+      jest.replaceProperty(Platform, 'OS', 'android');
+      const { lock } = await renderGate({ isLockOn: false });
+      let notify: () => void = () => {};
+      jest.spyOn(lock, 'subscribe').mockImplementation((listener) => {
+        notify = listener;
+        return () => {};
+      });
+      // Remount so the gate subscribes with the spy in place.
+      screen.unmount();
+      await mountGate(lock);
+      jest.mocked(preventScreenCaptureAsync).mockClear();
+      const answers: ((isOn: boolean) => void)[] = [];
+      jest
+        .spyOn(lock, 'isLockOn')
+        .mockImplementation(() => new Promise<boolean>((resolve) => answers.push(resolve)));
+
+      // The lock is turned on and then off at once. The second read answers first.
+      act(() => notify());
+      act(() => notify());
+      await act(async () => answers[1]?.(false));
+      await act(async () => answers[0]?.(true));
+
+      expect(preventScreenCaptureAsync).not.toHaveBeenCalled();
     });
   });
 

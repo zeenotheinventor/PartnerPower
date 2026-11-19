@@ -1,0 +1,1 @@
+export { ReminderTapHost } from './ReminderTapHost';

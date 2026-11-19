@@ -52,6 +52,8 @@ jest.mock('expo-updates', () => ({ isEmbeddedLaunch: true, updateId: null }));
 // that checks what was asked of it replaces this with its own mock.
 jest.mock('expo-notifications', () => ({
   cancelAllScheduledNotificationsAsync: jest.fn(() => Promise.resolve()),
+  // The reminder listens for a tap when the app is open.
+  addNotificationResponseReceivedListener: jest.fn(() => ({ remove: jest.fn() })),
 }));
 
 // Screen capture is a native module too. A test that checks what the lock asked of it reads these

@@ -1,0 +1,1 @@
+export { DiscoveriesScreen } from './DiscoveriesScreen';

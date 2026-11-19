@@ -1,6 +1,7 @@
 import { copy, fillCopy } from '@getfreak/content';
+import type { NewDiscovery } from '@getfreak/core';
 import { waitFor } from '@testing-library/react-native';
-import { fireEvent, screen } from 'nativewind/test';
+import { act, fireEvent, screen } from 'nativewind/test';
 
 import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -20,24 +21,47 @@ jest.mock('expo-router', () => ({
   }),
 }));
 
-const comingSoonEntryNames = [copy.questionsHome.discoveriesTitle];
+// The default storage runs over an in-memory backend.
+jest.mock('expo-sqlite/kv-store', () => {
+  const { createInMemoryBackend } = jest.requireActual<
+    typeof import('../../../storage/createInMemoryBackend')
+  >('../../../storage/createInMemoryBackend');
+  return { __esModule: true, default: createInMemoryBackend() };
+});
 
-async function renderHome(fixture = makeOwnQuestionsFixture()) {
+const discoveriesName = (count: string) =>
+  fillCopy(copy.questionsHome.entryLabel, { title: copy.questionsHome.discoveriesTitle, count });
+const ownName = (count: string) =>
+  fillCopy(copy.questionsHome.entryLabel, { title: copy.questionsHome.ownTitle, count });
+
+// Two shipped questions for the discoveries to be about.
+const twoDiscoveries: NewDiscovery[] = [
+  { kind: 'match', questionId: 'shipped-1', strength: 'yes' },
+  { kind: 'agree', questionId: 'shipped-2', optionId: 'a' },
+];
+
+type RenderOptions = { discoveries?: readonly NewDiscovery[]; writtenQuestions?: number };
+
+// Renders over an in-memory store, once the counts have been read.
+async function renderHome({ discoveries = [], writtenQuestions = 0 }: RenderOptions = {}) {
+  const fixture = makeOwnQuestionsFixture({ shippedTexts: ['Shipped one', 'Shipped two'] });
+  await fixture.repository.addDiscoveries(discoveries);
+  for (let index = 1; index <= writtenQuestions; index += 1) {
+    await fixture.repository.savePlayerQuestion({
+      format: 'ifYou',
+      category: 'c1',
+      topic: 't1',
+      text: `Placeholder question ${index}`,
+    });
+  }
   await renderThemed(
     <fixture.Providers>
       <QuestionsHomeScreen />
     </fixture.Providers>,
   );
-  // The count follows the read of the player's questions.
+  // The counts follow the reads of the store.
   await waitFor(() =>
-    expect(
-      screen.getByRole('button', {
-        name: fillCopy(copy.questionsHome.entryLabel, {
-          title: copy.questionsHome.ownTitle,
-          count: copy.questionsHome.ownNone,
-        }),
-      }),
-    ).toBeOnTheScreen(),
+    expect(screen.getByRole('button', { name: /^Your questions, / })).toBeOnTheScreen(),
   );
 }
 
@@ -82,6 +106,12 @@ describe('QuestionsHomeScreen', () => {
     expect(screen.getByText(copy.questionsHome.ownBody)).toBeOnTheScreen();
   });
 
+  it('should show no entry as coming soon', async () => {
+    await renderHome();
+
+    expect(screen.queryByText(copy.hub.comingSoon)).not.toBeOnTheScreen();
+  });
+
   it('should open round setup from Play a round', async () => {
     await renderHome();
 
@@ -98,81 +128,86 @@ describe('QuestionsHomeScreen', () => {
     expect(mockPush).toHaveBeenCalledWith('/games/questions/match');
   });
 
-  it.each(comingSoonEntryNames)(
-    'should show %s as coming soon, disabled, and open nothing',
-    async (title) => {
+  it('should name the entries without a count by their title alone', async () => {
+    await renderHome();
+
+    expect(screen.getByRole('button', { name: copy.questionsHome.playTitle })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: copy.questionsHome.matchTitle })).toBeOnTheScreen();
+  });
+
+  describe('the Discoveries count', () => {
+    it('should open Discoveries from its entry, named with how many are saved', async () => {
+      await renderHome({ discoveries: twoDiscoveries });
+
+      fireEvent.press(
+        screen.getByRole('button', {
+          name: discoveriesName(fillCopy(copy.questionsHome.discoveriesCount, { count: 2 })),
+        }),
+      );
+
+      expect(mockPush).toHaveBeenCalledWith('/games/questions/discoveries');
+    });
+
+    it('should show the count at the end of the Discoveries row', async () => {
+      await renderHome({ discoveries: twoDiscoveries });
+
+      expect(
+        screen.getByText(fillCopy(copy.questionsHome.discoveriesCount, { count: 2 })),
+      ).toBeOnTheScreen();
+    });
+
+    it('should say nothing yet when nothing is saved', async () => {
       await renderHome();
 
-      const entry = screen.getByRole('button', {
-        name: `${title}, ${copy.hub.comingSoon}`,
-        disabled: true,
-      });
-      fireEvent.press(entry);
-
-      expect(mockPush).not.toHaveBeenCalled();
-    },
-  );
-
-  it('should mark exactly the entries that are not on as coming soon', async () => {
-    await renderHome();
-
-    expect(screen.getAllByText(copy.hub.comingSoon)).toHaveLength(comingSoonEntryNames.length);
+      expect(
+        screen.getByRole('button', { name: discoveriesName(copy.questionsHome.discoveriesNone) }),
+      ).toBeOnTheScreen();
+      expect(screen.getByText(copy.questionsHome.discoveriesNone)).toBeOnTheScreen();
+    });
   });
 
-  it('should open Your questions from its entry', async () => {
-    await renderHome();
+  describe('the Your questions count', () => {
+    it('should open Your questions from its entry', async () => {
+      await renderHome();
 
-    fireEvent.press(
-      screen.getByRole('button', {
-        name: fillCopy(copy.questionsHome.entryLabel, {
-          title: copy.questionsHome.ownTitle,
-          count: copy.questionsHome.ownNone,
-        }),
-      }),
-    );
+      fireEvent.press(screen.getByRole('button', { name: ownName(copy.questionsHome.ownNone) }));
 
-    expect(mockPush).toHaveBeenCalledWith('/games/questions/my-questions');
+      expect(mockPush).toHaveBeenCalledWith('/games/questions/my-questions');
+    });
+
+    it('should show None yet beside Your questions when nothing is written', async () => {
+      await renderHome();
+
+      expect(screen.getByText(copy.questionsHome.ownNone)).toBeOnTheScreen();
+    });
+
+    it('should show how many questions are written beside Your questions, in its name too', async () => {
+      await renderHome({ writtenQuestions: 2 });
+
+      const count = fillCopy(copy.questionsHome.ownCount, { count: 2 });
+      expect(screen.getByRole('button', { name: ownName(count) })).toBeOnTheScreen();
+      expect(screen.getByText(count)).toBeOnTheScreen();
+    });
   });
 
-  it('should show None yet beside Your questions when nothing is written', async () => {
-    await renderHome();
-
-    expect(screen.getByText(copy.questionsHome.ownNone)).toBeOnTheScreen();
-  });
-
-  it('should show how many questions are written beside Your questions, in its name too', async () => {
-    const fixture = makeOwnQuestionsFixture();
-    for (const text of ['Placeholder question 1', 'Placeholder question 2']) {
-      await fixture.repository.savePlayerQuestion({
-        format: 'ifYou',
-        category: 'c1',
-        topic: 't1',
-        text,
-      });
-    }
+  it('should show no count until the store has been read', async () => {
+    const fixture = makeOwnQuestionsFixture({ holdLoad: true });
     await renderThemed(
       <fixture.Providers>
         <QuestionsHomeScreen />
       </fixture.Providers>,
     );
 
-    const count = fillCopy(copy.questionsHome.ownCount, { count: 2 });
     expect(
-      await screen.findByRole('button', {
-        name: fillCopy(copy.questionsHome.entryLabel, {
-          title: copy.questionsHome.ownTitle,
-          count,
-        }),
-      }),
+      screen.getByRole('button', { name: copy.questionsHome.discoveriesTitle }),
     ).toBeOnTheScreen();
-    expect(screen.getByText(count)).toBeOnTheScreen();
-  });
-
-  it('should name the other entries by their title alone, with no count', async () => {
-    await renderHome();
-
-    expect(screen.getByRole('button', { name: copy.questionsHome.playTitle })).toBeOnTheScreen();
-    expect(screen.getByRole('button', { name: copy.questionsHome.matchTitle })).toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: copy.questionsHome.ownTitle })).toBeOnTheScreen();
+    expect(screen.queryByText(copy.questionsHome.discoveriesNone)).not.toBeOnTheScreen();
+    expect(screen.queryByText(copy.questionsHome.ownNone)).not.toBeOnTheScreen();
+    await act(async () => fixture.releaseLoad());
+    await waitFor(() =>
+      expect(screen.getByText(copy.questionsHome.discoveriesNone)).toBeOnTheScreen(),
+    );
   });
 
   it('should go back with the back button', async () => {

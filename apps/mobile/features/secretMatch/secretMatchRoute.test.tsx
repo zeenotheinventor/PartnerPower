@@ -7,6 +7,7 @@ import { router } from 'expo-router';
 
 const homeRoute = '/games/questions';
 const matchRoute = '/games/questions/match';
+const discoveriesRoute = '/games/questions/discoveries';
 
 const pressButton = (name: string) => fireEvent.press(screen.getByRole('button', { name }));
 
@@ -19,6 +20,16 @@ async function startSession() {
 
 function rateAll(rating: 'yes' | 'maybe' | 'no') {
   for (let count = 0; count < 12; count += 1) pressButton(copy.secretMatch[rating]);
+}
+
+// Plays both passes with a yes for every item, which ends on the reveal.
+async function playToReveal() {
+  await launchApp(matchRoute);
+  await startSession();
+  rateAll('yes');
+  pressButton(fillCopy(copy.secretMatch.handoffButton, { partner: 'Player B' }));
+  rateAll('yes');
+  await act(async () => {});
 }
 
 describe('secret match in the route tree', () => {
@@ -72,12 +83,19 @@ describe('secret match in the route tree', () => {
       screen.getByText(fillCopy(copy.secretMatch.revealCountMany, { count: 12, total: 12 })),
     ).toBeOnTheScreen();
     expect(screen.getByText(copy.secretMatch.saved)).toBeOnTheScreen();
-    expect(
-      screen.queryByRole('button', { name: copy.secretMatch.daresTitle }),
-    ).not.toBeOnTheScreen();
+    expect(screen.getByRole('button', { name: copy.secretMatch.daresTitle })).toBeOnTheScreen();
 
     pressButton(copy.secretMatch.done);
     await waitFor(() => expect(currentPathname()).toBe(homeRoute));
+  });
+
+  it('should open Discoveries from the dares for you two card on the reveal', async () => {
+    await playToReveal();
+
+    pressButton(copy.secretMatch.daresTitle);
+    await waitFor(() => expect(currentPathname()).toBe(discoveriesRoute));
+
+    expect(screen.getByRole('header', { name: copy.discoveries.title })).toBeOnTheScreen();
   });
 
   it('should open the stop dialog from the system back, and return to the home on confirming', async () => {

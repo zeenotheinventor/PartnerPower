@@ -76,6 +76,19 @@ describe('useDiscoveries', () => {
     expect(result.current.discoveries).toEqual([expect.objectContaining(match)]);
   });
 
+  it('should show the new switch value before the write is done', async () => {
+    const { result } = renderDiscoveries();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    let finished: Promise<void> = Promise.resolve();
+    act(() => {
+      finished = result.current.setSaveDiscoveries(false);
+    });
+
+    expect(result.current.saveDiscoveries).toBe(false);
+    await act(async () => finished);
+  });
+
   it('should start adding again when saving is turned back on', async () => {
     const { result } = renderDiscoveries();
     await waitFor(() => expect(result.current.isLoading).toBe(false));

@@ -31,8 +31,9 @@ export function LockGate({ children }: LockGateProps) {
   useBlockScreenCapture(isLockOn);
 
   const isAppHidden = phase !== 'unlocked';
-  // Locked, being checked, or away while the lock is on (and not known to be off).
-  const isCoverShown = isAppHidden || (isAppAway && isLockOn !== false);
+  // Locked, being checked (which is all that is true before the lock is first read), or away while
+  // the lock is on.
+  const isCoverShown = isAppHidden || (isAppAway && isLockOn === true);
 
   useEffect(() => {
     if (!isAppHidden) return;
