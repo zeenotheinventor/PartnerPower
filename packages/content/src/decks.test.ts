@@ -11,7 +11,9 @@ import { hasBarredWord, hasDashOrSemicolon } from './textRules';
 
 const minimumCardsPerCategory = 30;
 const minimumTogetherCardsPerCategory = 8;
+const minimumTimerCardsPerCategory = 4;
 const shippedCards: Card[] = decks.flatMap((deck) => deck.cards);
+const timerCards = shippedCards.filter((card) => card.effect?.type === 'timer');
 
 describe('shipped decks', () => {
   it('should pass validation for every deck', () => {
@@ -34,8 +36,26 @@ describe('shipped decks', () => {
     expect(shippedCards.filter((card) => card.source !== 'shipped')).toEqual([]);
   });
 
-  it('should leave every card without an effect', () => {
-    expect(shippedCards.filter((card) => card.effect !== undefined)).toEqual([]);
+  it('should give an effect only to solo cards with a timer', () => {
+    const offending = shippedCards.filter(
+      (card) => card.effect !== undefined && (card.kind !== 'solo' || card.effect.type !== 'timer'),
+    );
+
+    expect(offending.map((card) => card.id)).toEqual([]);
+  });
+
+  it('should give every timer card between 15 and 60 seconds', () => {
+    const offending = timerCards.filter(
+      (card) => card.effect === undefined || card.effect.seconds < 15 || card.effect.seconds > 60,
+    );
+
+    expect(offending.map((card) => card.id)).toEqual([]);
+  });
+
+  it.each(categoryIds)('should have enough timer cards in %s', (categoryId) => {
+    const cards = timerCards.filter((card) => card.category === categoryId);
+
+    expect(cards.length).toBeGreaterThanOrEqual(minimumTimerCardsPerCategory);
   });
 
   it.each(categoryIds)('should have enough cards in %s', (categoryId) => {

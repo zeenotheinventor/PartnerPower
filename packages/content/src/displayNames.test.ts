@@ -1,10 +1,18 @@
-import { categoryIds, gameIds, levelIds, questionFormats, topicIds } from '@getfreak/core';
+import {
+  categoryIds,
+  gameIds,
+  levelIds,
+  questionFormats,
+  surpriseIds,
+  topicIds,
+} from '@getfreak/core';
 
 import {
   categoryNames,
   displayNames,
   levelNames,
   questionFormatNames,
+  surpriseNames,
   topicNames,
 } from './displayNames';
 
@@ -31,6 +39,16 @@ describe('category and level names', () => {
   it('should name no category or level that is not defined', () => {
     expect(Object.keys(categoryNames).sort()).toEqual([...categoryIds].sort());
     expect(Object.keys(levelNames).sort()).toEqual([...levelIds].sort());
+  });
+});
+
+describe('surpriseNames', () => {
+  it.each(surpriseIds)('should give the %s surprise a non-empty name', (surpriseId) => {
+    expect(surpriseNames[surpriseId].trim()).not.toBe('');
+  });
+
+  it('should name no surprise that is not defined', () => {
+    expect(Object.keys(surpriseNames).sort()).toEqual([...surpriseIds].sort());
   });
 });
 
