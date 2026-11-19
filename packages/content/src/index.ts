@@ -10,3 +10,5 @@ export {
   topicNames,
 } from './displayNames';
 export type { GameDisplayName } from './displayNames';
+export { privacyPolicy } from './privacyPolicy';
+export type { PrivacyPolicy, PrivacyPolicySection } from './privacyPolicy';

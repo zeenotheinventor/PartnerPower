@@ -1,0 +1,85 @@
+export type PrivacyPolicySection = {
+  heading: string;
+  paragraphs: readonly string[];
+};
+
+export type PrivacyPolicy = {
+  title: string;
+  updated: string;
+  contactEmail: string;
+  sections: readonly PrivacyPolicySection[];
+};
+
+// Placeholder. The owner replaces it with the real contact address before launch (FRK-73). The
+// same address goes in the hosted copy of this policy.
+const contactEmail = 'privacy@example.com';
+
+// The settings screen shows this text, and the owner hosts the same words at the privacy policy URL
+// given to both stores. docs/compliance.md says what has to stay true for it to stay accurate.
+export const privacyPolicy: PrivacyPolicy = {
+  title: 'Privacy policy',
+  updated: 'Last updated 19 November 2026',
+  contactEmail,
+  sections: [
+    {
+      heading: 'The short version',
+      paragraphs: [
+        'Get Freak collects nothing about you. There are no accounts, no adverts, no analytics and no crash reporting in the app.',
+        'Everything you put into the app stays on your phone. We have no server, and we cannot see anything you do in the app.',
+      ],
+    },
+    {
+      heading: 'What the app keeps on your phone',
+      paragraphs: [
+        'The app keeps a few things on your phone so it works the way you left it: that you confirmed you are 18 or over, the names you enter for the two players, and your settings.',
+        'If you write your own dares or questions, save favourites, build decks or keep answers, they are kept on your phone in an encrypted store.',
+        'If you turn on the app lock, your PIN is kept only in a scrambled form, in the secure storage your phone provides.',
+        'None of this is sent to us or to anyone else.',
+      ],
+    },
+    {
+      heading: 'What leaves your phone',
+      paragraphs: [
+        'Nothing that you enter. The app does not send anything to us or to any other company.',
+        'If you buy something in the app, Apple or Google handles the payment under their own privacy policies. The app asks the store on your phone what you own. We never see your payment details.',
+        'If you turn on the reminder, it is scheduled on your phone. No server sends it.',
+      ],
+    },
+    {
+      heading: 'Crash reports',
+      paragraphs: [
+        'The app has no crash reporting built in. If you have chosen in your phone settings to share diagnostics with app developers, Apple or Google may pass us crash reports that do not identify you. You can turn that off in your phone settings at any time.',
+      ],
+    },
+    {
+      heading: 'Backups',
+      paragraphs: [
+        'On Android, the app switches off app backup, so nothing from it goes into a cloud backup.',
+        'On iPhone, your settings and player names may be included in your own iCloud or computer backup, as with most apps. What you write yourselves is encrypted, and the key never leaves your phone, so a backup of it cannot be read.',
+      ],
+    },
+    {
+      heading: 'Removing everything',
+      paragraphs: [
+        'Clear everything, in Settings, deletes everything the app has stored on your phone and takes the app back to its first screen.',
+        'Deleting the app removes everything too. On iPhone, a few secure items, such as a PIN, can stay in the phone keychain after the app is deleted. If you install the app again, it removes them before it reads anything.',
+      ],
+    },
+    {
+      heading: 'Adults only',
+      paragraphs: [
+        'Get Freak is for adults aged 18 and over. It is not meant for anyone under 18. The app collects nothing from anyone, whatever their age.',
+      ],
+    },
+    {
+      heading: 'Changes to this policy',
+      paragraphs: [
+        'If this policy changes, the new version will be in the app and at the same web address, with a new date at the top.',
+      ],
+    },
+    {
+      heading: 'Contact',
+      paragraphs: [`Questions about privacy? Email us at ${contactEmail}.`],
+    },
+  ],
+};
