@@ -1,10 +1,25 @@
-import type { ReactNode } from 'react';
+import type { ReactElement, ReactNode } from 'react';
 
-export type PinEntryStepProps = {
+type HeaderProps = {
   title: string;
   subtitle?: string;
   /** Shows a back button in the header when given. */
   onBack?: () => void;
+  hero?: undefined;
+};
+
+type HeroProps = {
+  /**
+   * Shown just above the dots in place of the header, such as the app mark and a title. The lock
+   * screen has no header and no back control.
+   */
+  hero: ReactElement;
+  title?: undefined;
+  subtitle?: undefined;
+  onBack?: undefined;
+};
+
+export type PinEntryStepProps = (HeaderProps | HeroProps) & {
   /**
    * Called with the whole PIN once the fourth digit has been seen on the dots. It answers with an
    * error line to show, or nothing. The dots clear when it answers. A step that moves on does so

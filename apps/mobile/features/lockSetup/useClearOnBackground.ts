@@ -5,6 +5,11 @@ import { AppState } from 'react-native';
 // leaving. While the app waits on a biometrics prompt, the change is ignored.
 let openPromptCount = 0;
 
+/** Whether the phone's biometrics prompt is up, so a change of app state is the prompt and not the player leaving. */
+export function isBiometricsPromptOpen(): boolean {
+  return openPromptCount > 0;
+}
+
 /** Runs a biometrics prompt, and tells `useClearOnBackground` that the app is not being left. */
 export async function whileBiometricsPromptIsOpen<Result>(
   runPrompt: () => Promise<Result>,

@@ -23,6 +23,7 @@ export {
   pinLength,
   remainingWaitMilliseconds,
   shouldLock,
+  triesLeftBeforeWait,
   waitAfterFailureMilliseconds,
 } from './lock';
 export type { LockAttempts, PinHash } from './lock';

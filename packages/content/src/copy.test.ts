@@ -68,6 +68,8 @@ describe('copy', () => {
           'clearing',
           'confirm',
           'failed',
+          'forgotBody',
+          'forgotTitle',
           'keptLabel',
           'removedLabel',
           'retry',
@@ -161,13 +163,27 @@ describe('copy', () => {
 
     it('should give the wrong PIN and the wait their lines', () => {
       expect(Object.keys(copy.lock).sort()).toEqual([
+        'checkFailed',
+        'forgot',
         'promptMessage',
         'saveFailed',
+        'title',
         'wait',
         'wrong',
+        'wrongFew',
+        'wrongOne',
       ]);
       expect(fillCopy(copy.lock.wait, { time: '0:24' })).toBe('Too many tries. Try again in 0:24.');
+      expect(fillCopy(copy.lock.wrongFew, { count: 2 })).toBe(
+        'Wrong PIN. 2 more tries before a short wait.',
+      );
       expectEveryValueToBeText(copy.lock);
+    });
+
+    it('should give the forgot PIN variant of clear everything its own heading and line', () => {
+      expect(copy.clear.forgotTitle).toBe('Forgot your PIN?');
+      expect(copy.clear.forgotBody).toContain('only way back in');
+      expect(copy.clear.forgotTitle).not.toBe(copy.clear.title);
     });
 
     it('should name every kind of biometrics with its own set of lines', () => {

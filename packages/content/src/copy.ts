@@ -74,6 +74,10 @@ export const copy = {
     clearing: 'Clearing',
     failed: 'That did not finish, so some things may still be here. Try again to finish.',
     retry: 'Try again',
+    // The same dialog, opened from the lock screen's Forgot PIN link.
+    forgotTitle: 'Forgot your PIN?',
+    forgotBody:
+      'Clearing everything is the only way back in without your PIN. The app then starts again, as on first launch.',
   },
   // The reminder screen. The day chips show the short names, and a screen reader says the long ones.
   // The row of Settings says the plural, such as "Fridays, 20:00".
@@ -156,7 +160,14 @@ export const copy = {
   },
   // What the lock tells a player who types a wrong PIN. The lock screen adds its own lines.
   lock: {
+    title: 'Enter your PIN',
+    forgot: 'Forgot PIN?',
     wrong: 'Wrong PIN. Try again.',
+    // From the third wrong PIN in a run, the lock screen says how many tries are left.
+    wrongFew: 'Wrong PIN. {count} more tries before a short wait.',
+    wrongOne: 'Wrong PIN. 1 more try before a short wait.',
+    // The PIN could not be checked, for example because the phone's secure storage was not reachable.
+    checkFailed: 'Could not check your PIN. Try again.',
     wait: 'Too many tries. Try again in {time}.',
     // Shown in the phone's own prompt when the player uses biometrics in place of the PIN.
     promptMessage: 'Unlock to continue',
