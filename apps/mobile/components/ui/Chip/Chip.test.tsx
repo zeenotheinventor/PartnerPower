@@ -23,6 +23,14 @@ describe('Chip', () => {
     expect(screen.getByRole('button', { name: 'Level 1' })).toBeOnTheScreen();
   });
 
+  it('should be named by its accessibility label when it has one', async () => {
+    await renderThemed(
+      <Chip label="Remove" accessibilityLabel="Remove option 3" onPress={jest.fn()} />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Remove option 3' })).toBeOnTheScreen();
+  });
+
   it('should call the handler when pressed', async () => {
     const onPress = jest.fn();
     await renderThemed(<Chip label="Level 1" onPress={onPress} />);
@@ -30,14 +38,6 @@ describe('Chip', () => {
     fireEvent.press(screen.getByRole('button', { name: 'Level 1' }));
 
     expect(onPress).toHaveBeenCalledTimes(1);
-  });
-
-  it('should be named by its accessibility label when it has one, so a short word has its context', async () => {
-    await renderThemed(
-      <Chip label="Remove" accessibilityLabel="Remove, Item" onPress={jest.fn()} />,
-    );
-
-    expect(screen.getByRole('button', { name: 'Remove, Item' })).toBeOnTheScreen();
   });
 
   it('should expose that it is selected', async () => {

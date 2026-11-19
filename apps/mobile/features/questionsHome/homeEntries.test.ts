@@ -22,12 +22,21 @@ describe('homeEntries', () => {
     ]);
   });
 
-  it('should switch on Play a round, Secret match and Discoveries, each with its screen', () => {
+  it('should switch on every place, each opening its screen', () => {
     expect(homeEntries.map((entry) => entry.route)).toEqual([
       '/games/questions/setup',
       '/games/questions/match',
       '/games/questions/discoveries',
-      null,
+      '/games/questions/my-questions',
+    ]);
+  });
+
+  it('should show a count on Discoveries and Your questions only', () => {
+    expect(homeEntries.map((entry) => entry.countOf)).toEqual([
+      undefined,
+      undefined,
+      'discoveries',
+      'ownQuestions',
     ]);
   });
 
@@ -37,14 +46,5 @@ describe('homeEntries', () => {
     );
 
     expect(discoveries?.route).toBe(discoveriesRoute);
-  });
-
-  it('should count discoveries on the Discoveries entry only', () => {
-    expect(homeEntries.map((entry) => entry.count)).toEqual([
-      undefined,
-      undefined,
-      'discoveries',
-      undefined,
-    ]);
   });
 });

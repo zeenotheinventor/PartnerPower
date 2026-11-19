@@ -6,8 +6,8 @@ questionnaires, the privacy label, the data safety form, the export compliance a
 text and the App Review notes.
 
 Get Freak is an 18+ app of games for couples, played together on one phone. It has no accounts, no
-server, no analytics and no error reporting SDK. It makes one kind of network call, the update
-check described under Privacy label and data safety.
+server and no analytics. It makes two kinds of network call, the update check and the error report
+to Sentry (FRK-83), both described under Privacy label and data safety.
 
 - Written for FRK-56 on 19 November 2026. Every rule below was checked on that date at the source
   given. Store rules change, so check the sources again before each submission.
@@ -359,6 +359,19 @@ sign-in, and not a news, government, financial or health app (FRK-73).
   (`Expo-Fatal-Error`, up to 1024 characters). The request reveals the phone's IP address to Expo.
   Nothing a player types or the app stores is sent. The text of a thrown error can reach Expo, so
   an `Error` message must never hold player text.
+- **The error report.** Since FRK-83 the app sends an error report to Sentry
+  (`de.sentry.io`, EU region) when it hits an unhandled error or a screen fails to render. A report
+  holds the error type, the stack, the names of the routes the player moved through, the release
+  and update id, and the phone's model and system version. The app removes every error message, the
+  user, and anything else not on its allowlist before sending, so no player name, card text or
+  typed text is in it. It sends no sessions, no traces and no screenshots. The request reveals the
+  phone's IP address to Sentry, and the organisation is set not to store it. A report the native
+  side sends by itself, which is a crash in native code, an Android "app not responding" report or
+  an iOS app hang, does not pass through the app's scrubbing. It holds no text from the app's
+  screens but keeps the native error's own message. On Android it holds an id made once for each
+  install, as the device id, until the scrubbing rule in the runbook removes it in Sentry. So the
+  answers below count a device id as collected. This settles the crash data answer: crash data is
+  collected whether or not updates are on.
 - **App Store privacy label: probably "Crash Data" and "Device or Other ID", not linked to the user
   and not used for tracking.** Apple defines "collect" as "transmitting data off the device in a
   way that allows you and/or your third-party partners to access it", and "Data that is processed
@@ -408,6 +421,7 @@ so all are listed.
 | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `expo`                                                                 | Runtime and module system                                                    | No. Its dependencies include `expo-asset`, `expo-file-system` and `expo-keep-awake`, none used for network calls.                                                                                                                                                                                                                                  |
 | `expo-updates` (FRK-80)                                                | Over-the-air updates                                                         | Yes, one call at launch to Expo's update service. It sends the platform, runtime version, channel, update ids, a random per-install id (`EAS-Client-ID`) and, after a crash, the previous launch's crash text. It reveals the IP address. It sends nothing a player types or stores. This is what moves the answers above off "no data collected". |
+| `@sentry/react-native` (FRK-83)                                        | Error reporting                                                              | Yes, when an error happens, to Sentry in the EU. It sends the error type, the stack, route names, the release and the phone's model and system version, and no player text. See the error report above.                                                                                                                                            |
 | `expo-router`, `expo-linking`, `expo-constants`                        | Navigation, deep links, app config                                           | No.                                                                                                                                                                                                                                                                                                                                                |
 | `expo-font`, `@expo-google-fonts/baloo-2`, `@expo-google-fonts/nunito` | Fonts                                                                        | No. The font files are bundled with the app and loaded from the bundle.                                                                                                                                                                                                                                                                            |
 | `expo-audio` (FRK-26)                                                  | Button sounds                                                                | No. Plays three short sound files bundled with the app, from `assets/sounds`. The config plugin is set to add no microphone permission, no record permission and no background playback.                                                                                                                                                           |
@@ -442,16 +456,19 @@ Libraries on their way:
 Any of these needs this document, the privacy policy, both store forms and possibly a new rating
 review, in the same pull request:
 
-- An analytics, crash reporting or advertising SDK.
-- Any network call made by the app, other than the update check described above and the store's
-  own purchase calls.
+- An analytics or advertising SDK, or a second crash reporting SDK.
+- Any change to what an error report holds, such as sending messages, a user or breadcrumbs that
+  are not on the allowlist in `apps/mobile/monitoring/scrub.ts`.
+- Any network call made by the app, other than the update check and the error report described
+  above and the store's own purchase calls.
 - A push token, an account or a server.
 - Sending anything the app stores, including the age range, off the phone.
 
 Before submission, check a release build on a real phone behind a network monitor and confirm it
-makes exactly one kind of connection, the update check to `u.expo.dev` when the app opens, and
-nothing else apart from store purchases. Look at what the request carries and confirm it holds no
-player text. This turns "one network call" from a code reading into a measured fact. Add it to
+makes exactly two kinds of connection: the update check to `u.expo.dev` when the app opens, and an
+error report to Sentry only when an error happens. Nothing else apart from store purchases. Look at
+what each request carries and confirm it holds no player text. This turns "two network calls" from
+a code reading into a measured fact. Add it to
 FRK-74.
 
 ### Privacy manifest
@@ -700,7 +717,8 @@ off, so you will not meet it unless you turn it on.]
 
 PRIVACY
 No accounts, no analytics, no ads and no tracking. The app checks for updates when it opens, which
-sends technical details and a crash report if the app crashed last time, and never anything the
+sends technical details and a crash report if the app crashed last time. If the app hits an error
+it sends an anonymous error report to Sentry. Neither ever holds anything the
 player types or plays [, and it makes the App Store's own purchase calls]. The privacy label
 follows the FRK-79 decision, probably Crash Data and Device or Other ID, not linked to the user.
 
@@ -719,7 +737,7 @@ CONTENT and THE VIBRATION CARD paragraphs above.
 
 | Decision                            | Outcome                                                                                                                                                                                                                                                 |
 | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Error reporting and analytics       | None at launch. Crash data comes only from what Apple and Google collect from players who opt in, with no SDK in the app. Recorded in `docs/decisions/privacy.md`.                                                                                      |
+| Error reporting and analytics       | None at launch. Crash data comes only from what Apple and Google collect from players who opt in, with no SDK in the app. Recorded in `docs/decisions/privacy.md`. Changed by FRK-83: Sentry error reporting ships, with no analytics.                  |
 | Apple Graphic Sexual Content answer | None, with the explicit wording disclosed in the review notes. A judgement call the owner may reverse, knowing that any other answer makes the app Unrated on the App Store.                                                                            |
 | Contests and profanity answers      | Infrequent for both. Neither changes the 18+ result.                                                                                                                                                                                                    |
 | Apple Age assurance control         | No at launch, Yes once Declared Age Range ships.                                                                                                                                                                                                        |

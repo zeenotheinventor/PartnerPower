@@ -75,10 +75,10 @@ function lookOf(tone: ChipTone, selected: boolean | undefined): ChipLook {
 
 export function Chip({
   label,
+  accessibilityLabel,
   category,
   accent = false,
   onPress,
-  accessibilityLabel,
   feedback = 'select',
   selected,
 }: ChipProps) {

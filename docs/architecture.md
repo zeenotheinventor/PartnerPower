@@ -9,8 +9,9 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Principles
 
-1. **One phone, no server.** There are no accounts and no backend. The app makes no network calls
-   in the first two milestones.
+1. **One phone, no server.** There are no accounts and no backend. The app makes two kinds of
+   network call and no others: the check for an update, and an error report with no player text
+   in it. See Privacy.
 2. **Rules are pure.** Everything with a branch lives in a core package with no React, React Native
    or Expo imports. The app renders state and sends actions.
 3. **Content is data.** Card text, question text and every display name live in a content package,
@@ -33,6 +34,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
 | Storage        | `expo-sqlite` (SQLCipher build) for what players write, its key-value store for settings, `expo-secure-store` for the key    |
+| Errors         | Sentry, through `@sentry/react-native` (native), behind `apps/mobile/monitoring`. See Error reporting below                  |
 | Validation     | Zod, in the core package                                                                                                     |
 | Tests          | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
 | Checks         | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
@@ -57,6 +59,7 @@ docs/
   architecture.md      this file
   compliance.md        the store review: rules, ratings, privacy answers, listing and review notes
   decisions/           one file per area for decisions a ticket made
+  runbooks/            how to operate the app, such as error monitoring
 ```
 
 ### Import rules
@@ -606,6 +609,10 @@ apps/mobile/
         play.tsx
         summary.tsx      a stand-in until the Drink If summary replaces it
         match.tsx        secret match: holds the session for the route, in memory only
+        my-questions/
+          index.tsx      the Your questions list
+          new.tsx        the question editor, for a new question
+          [id].tsx       the question editor, for a question that is stored
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -627,6 +634,7 @@ apps/mobile/
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
+  features/ownQuestions/  the player's own Drink If questions: the provider, the list screen, the editor, the options editor and the field errors
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
   features/questionsPlay/  the Drink If play screen and its turn views
@@ -635,6 +643,7 @@ apps/mobile/
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
+  monitoring/            error reporting: the start-up, the scrubbing, the route trail and the crash screen
   lock/                  the lock service: the PIN, wrong PINs and their wait, and biometrics
 ```
 
@@ -654,6 +663,11 @@ apps/mobile/
   `usePersonalData`, and a save or a delete goes through the repository and then reads the list again,
   so setup, the list and the editor always agree. `save` returns the repository's result, so a
   screen maps the problem codes to messages. Nothing in it logs.
+- **Own questions** are held once for the `games/questions` route group by `OwnQuestionsProvider`
+  (`features/ownQuestions`), above the question round provider. It calls `useCustomQuestions`
+  (`personal`) once and shares the result with `useOwnQuestions`, which adds `hasReachedLimit`. Without
+  it each screen would hold its own list, and the home count and the setup count would go stale after
+  the editor saves. Nothing in it logs.
 - **The deck choice** is held once for the `games/dares` route group by `DeckChoiceProvider`
   (`features/decks`). `useDeckChoice` gives `choice` (`'starter'` or `'favourites'`) and
   `chooseDeck`. It is the starter deck each time the route group is entered, and is not remembered.
@@ -701,6 +715,32 @@ screen's. The screens map the problem codes to the messages in `content`, in `ca
   the form, which asks with the kit `Dialog`, then deletes through the repository, which also takes
   the dare out of the favourites and the decks, and goes back.
 - **Not logged.** No dare text is logged or sent anywhere.
+
+### Your questions
+
+A couple write their own Drink If questions and they mix into rounds with the shipped ones. The code
+is in `features/ownQuestions`. A question is a `CustomQuestion`, stored by the personal repository, so
+tidying and checking the text and the options are the repository's, through
+`useCustomQuestions().save`. Player questions have no secret match format, so they never reach a
+secret match, and the secret match intro still deals from the shipped decks alone.
+
+- **Home entry.** `Your questions` is on, with its count ("None yet" or "3 written") as a chip.
+- **List** (`my-questions`). The title with how many are written, `Write a question`, then the
+  questions grouped by format (Drink if, Never have I ever, Would you rather, Guess your partner), and
+  within a format by category in rank order. Each is a pressable card in its category colour with a
+  category chip, the topic, and its text after the format's lead. A would you rather question also
+  shows its two options. An empty list shows Theo and invites the first question. At 300 questions
+  (`limits.playerQuestions`) the add button is disabled and a line says why.
+- **Editor** (`my-questions/new`, `my-questions/[id]`). Chips for the format, the category and the
+  topic, the lead before the multiline text field with its count against 140, the options where the
+  format has them, `Save question`, and `Delete question` when editing. Would you rather has two fixed
+  option fields and its text is optional. Guess your partner has two to four, with `Add an option` and
+  a `Remove` chip named "Remove option 2". Changing the format keeps the text and drops the options the
+  new format does not use (`optionsForFormat`). Save is off while a required field is empty. A rejected
+  save puts each message under its own field (`fieldErrors`), and a repeated option shows under the
+  second of the two that match. Delete asks with the kit `Dialog`, then removes the question and its
+  discoveries through the repository.
+- **Not logged.** No question or option text is logged or sent anywhere.
 
 ### Round setup and decks
 
@@ -901,9 +941,12 @@ opens it (`entryRoute` is `/games/questions`).
   and one `Card` button for each item in `homeEntries`. An entry
   with a `route` is on. An entry whose `route` is null shows as coming soon, disabled and named
   "title, Coming soon", so a ticket switches its entry on by giving it a route. An entry with
-  `count: 'discoveries'` shows how many discoveries are saved in an outlined `Chip` at the end of
-  its row, "Nothing yet" for none, and is named "Discoveries, 12 saved". The count waits until the
-  list has been read, so the row never says "Nothing yet" by mistake.
+  `countOf` (`'discoveries'` or `'ownQuestions'`) also shows its count as an outlined `Chip` at the
+  end of its row and in its name, such as "Discoveries, 12 saved" or "Your questions, 3 written".
+  The lines come from one hook, `useHomeEntryCounts`, which returns a line for each `countOf`: it
+  reads `useDiscoveries` and `useOwnQuestions`, says "Nothing yet" or "{n} saved" for discoveries
+  and "None yet" or "{n} written" for questions, and gives undefined until its source has been
+  read, so a row never says "none" by mistake. The screen only reads `counts[countOf]`.
 - `features/questionsSetup` is the Freak or Drink setup with two more groups: four format switches
   and six topic switches, each in one `Card` with `grouped={false}` of `Toggle` rows. The last format
   and the last topic left on are locked. The categories come from the level, as for dares. Only the
@@ -912,8 +955,9 @@ opens it (`entryRoute` is `/games/questions`).
   screen holds no rules. When that is below a numeric length, a message says so. Start stays on and
   the round ends when the questions run out.
 - Start builds the `QuestionRoundSetup`, starts the round with the shipped questions of every deck
-  and the player's own (an empty list until the device stores them), saves the names and opens the
-  play route.
+  and the player's own from `useOwnQuestions`, saves the names and opens the play route. Start waits
+  until the player's questions have been read, so a round never starts without them. The count of
+  questions the choices leave includes the player's.
 
 ### Drink If play screen
 
@@ -1424,6 +1468,63 @@ JavaScript and content changes reach installed phones over the air, through EAS 
   line from `content` when that is true. Under Jest `expo-updates` is replaced by an embedded
   launch, so no test announces an update by accident.
 
+## Error reporting
+
+Errors from installed phones go to Sentry, so a bug is found from a report and not from a player's
+description. `docs/runbooks/error-monitoring.md` says how to read a report and where the secrets
+live.
+
+- `apps/mobile/monitoring` is the only code that imports `@sentry/react-native`. Screens and
+  features never do.
+- `initMonitoring` runs once, when the root layout module loads. It starts the SDK only in a release
+  build that has `EXPO_PUBLIC_SENTRY_DSN`. In development, under Jest, or in a build with no DSN it
+  does nothing, and the app runs the same.
+- A report is tagged so it can be traced. The release is the commit the JavaScript was built from
+  (`EXPO_PUBLIC_COMMIT_SHA`), or the runtime version when the build was given no commit. The dist is
+  the id of the running update. The environment is the update channel.
+- `scrubEvent` and `scrubBreadcrumb` are the SDK's `beforeSend` and `beforeBreadcrumb`. Every level
+  is an allowlist: the event, each context, the tags and each breadcrumb. A report keeps the error
+  type and the stack. It loses every message, the user, the request, extra data and any tag the app
+  did not set. On a phone the SDK merges in what the native side holds, which includes an id made
+  once for each install, as the user and as the device id. The device context keeps only what
+  describes the kind of phone, such as the model, so that id is not sent.
+- Breadcrumbs are a trail of route names and the app going to the background or coming back.
+  `RouteTrail` records the route from Expo Router's segments, so a dynamic part stays as its
+  placeholder, such as `[deckId]`, and no id or typed value is recorded. Tap and console breadcrumbs
+  are dropped, because both are worded from what is on screen.
+- Sessions, client reports, traces, screenshots, the view hierarchy and session replay are all off.
+- `app/dev/test-error` throws `TestReportError` on purpose in an installed build, so the owner can
+  check that a report arrives. It works on the channels that report, `production` and, until
+  FRK-84 retires it, `preview`. A development build, which never reports, is sent to the first
+  screen.
+- Each build profile in `eas.json` names its environment, so the DSN reaches only the builds whose
+  environment has it.
+- Every screen of the root navigator sits inside a `ScreenCrashBoundary`, through the navigator's
+  `screenLayout`. When a screen throws while rendering, it reports the error and shows the crash
+  screen, and the navigator stays mounted. "Start again" leaves the failed screen for the first
+  one, also when the failed screen is the one the app was opened at. On the first screen or the
+  welcome screen there is nowhere better to go, so it tries that screen again. What the player
+  saved is untouched.
+- A second `CrashBoundary` wraps everything below the fonts in the root layout, for a failure
+  outside any screen, such as in a provider. Starting again there mounts everything below afresh.
+- The crash screen takes the splash screen down, so a failure during start-up can be seen.
+- Reports the native side sends by itself do not pass through `scrubEvent`. These are a crash in
+  native code, an Android "app not responding" report and an iOS app hang. They hold no text from
+  the app's screens, since that lives in JavaScript, but they keep the native error's own message.
+  Three things limit what they hold:
+  - `initMonitoring` sets the same fixed user, `player`, on every phone. With no user set, the
+    native SDKs on both platforms fill in the install id, and with one set they do not.
+  - `plugins/withQuietSentryBreadcrumbs` turns off the native tap breadcrumbs on Android, which
+    hold the class and id of the view pressed.
+  - On Android a native report still holds the install id as the device id, and the app cannot
+    remove it. The runbook gives the scrubbing rule to add in Sentry that removes it on arrival.
+- Source maps are uploaded by the Sentry build step in a `production` build, which needs
+  `SENTRY_AUTH_TOKEN` in the build service. The `development` and `preview` profiles set
+  `SENTRY_DISABLE_AUTO_UPLOAD`, so they build without the token. For an update, the README gives the
+  upload command to run after `eas update`.
+- Under Jest the SDK is replaced by a stand-in in `jest.setup.js`. `envelope.test.ts` takes the real
+  SDK and reads the text it would send, to check that a name, a card and a typed dare never appear.
+
 ## Storage
 
 One module, `apps/mobile/storage`, is the only code that touches persistence.
@@ -1819,9 +1920,14 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
 
 ## Privacy
 
-- No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
-  data comes only from what Apple and Google collect from players who opt in on their phones.
-- The app makes one network call, the check for an update. It goes to Expo's update service
+- No analytics. The app has no SDK for it.
+- Error reports go to Sentry (FRK-83). A report holds the error type, the stack, the route names
+  the player moved through, the release, and the phone's model and system version. It holds no
+  message, no user, no player names, no card text and nothing typed. See Error reporting. The
+  request reveals the phone's IP address to Sentry, and the organisation is set not to store it.
+  Apple and Google also collect crash data from players who opt in on their phones.
+- The app makes two kinds of network call, the error report above and the check for an update. The
+  check goes to Expo's update service
   (`u.expo.dev`) and sends the platform, the runtime version, the channel, the ids of the update the
   app is running and of the embedded build, a random install id that `expo-updates` makes (not tied
   to a person or a device), the update protocol versions, and the text of a crash from the previous
@@ -1841,7 +1947,8 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
 - Never log player names, card text or anything a player typed. That includes deck names, the
   database key and anything read from the personal store. The storage and provider tests spy on the
   console to check it. The same goes for the message of a thrown error, because a crash is reported
-  to Expo. Never put player text in an `Error` message.
+  to Expo. Never put player text in an `Error` message. Sentry reports drop every message, but the
+  crash text Expo receives does not.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
 - The PIN is never stored. Only a salted SHA-256 hash is, in the secure store, readable only while

@@ -2,6 +2,8 @@ import type { CategoryId } from '@getfreak/core';
 
 export type ChipProps = {
   label: string;
+  /** What a screen reader says in place of the label, for a chip whose label alone is not clear. */
+  accessibilityLabel?: string;
   /** Fills the chip with the category colour. Without it the chip is neutral. */
   category?: CategoryId;
   /** Fills the chip with the accent colour. It wins over a category. */
@@ -10,8 +12,6 @@ export type ChipProps = {
   onPress?: () => void;
   /** The sound and haptic of a press. A chip that destroys something uses `tap`, as Button does. */
   feedback?: 'select' | 'tap';
-  /** The name of a pressable chip whose visible word needs its context, such as "Remove, {text}". */
-  accessibilityLabel?: string;
   /** For a pressable chip. A category chip is filled when selected and outlined when it is not. */
   selected?: boolean;
 };
