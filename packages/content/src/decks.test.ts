@@ -7,31 +7,11 @@ import {
 } from '@getfreak/core';
 
 import { decks } from './decks';
+import { hasBarredWord, hasDashOrSemicolon } from './textRules';
 
 const minimumCardsPerCategory = 30;
 const minimumTogetherCardsPerCategory = 8;
 const minimumTimerCardsPerCategory = 4;
-const barredWords = [
-  'he',
-  'she',
-  'him',
-  'her',
-  'his',
-  'hers',
-  'boyfriend',
-  'girlfriend',
-  'husband',
-  'wife',
-  'drink',
-  'wine',
-  'shot',
-  'shots',
-  'booze',
-  'beer',
-  'tipsy',
-];
-const barredWordPattern = new RegExp(`\\b(${barredWords.join('|')})\\b`, 'i');
-
 const shippedCards: Card[] = decks.flatMap((deck) => deck.cards);
 const timerCards = shippedCards.filter((card) => card.effect?.type === 'timer');
 
@@ -104,13 +84,13 @@ describe('shipped decks', () => {
   });
 
   it('should keep dashes and semicolons out of every card text', () => {
-    const offending = shippedCards.filter((card) => /[—–;]|--/.test(card.text));
+    const offending = shippedCards.filter((card) => hasDashOrSemicolon(card.text));
 
     expect(offending.map((card) => card.id)).toEqual([]);
   });
 
   it('should keep gendered words and the forfeit word out of every card text', () => {
-    const offending = shippedCards.filter((card) => barredWordPattern.test(card.text));
+    const offending = shippedCards.filter((card) => hasBarredWord(card.text));
 
     expect(offending.map((card) => card.id)).toEqual([]);
   });

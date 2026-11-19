@@ -1,0 +1,294 @@
+{
+  "id": "guess",
+  "version": 1,
+  "questions": [
+    {
+      "id": "guess-c1-01",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t1",
+      "text": "What would your partner pick for a perfect evening in?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A film"
+        },
+        {
+          "id": "o2",
+          "text": "A home cooked meal"
+        },
+        {
+          "id": "o3",
+          "text": "A long bath"
+        },
+        {
+          "id": "o4",
+          "text": "A game night"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-02",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t1",
+      "text": "Which treat would your partner choose?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Chocolate"
+        },
+        {
+          "id": "o2",
+          "text": "Ice cream"
+        },
+        {
+          "id": "o3",
+          "text": "Something salty"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c1-03",
+      "format": "guess",
+      "category": "c1",
+      "topic": "t5",
+      "text": "How would your partner say we first got close?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Through friends"
+        },
+        {
+          "id": "o2",
+          "text": "By chance"
+        },
+        {
+          "id": "o3",
+          "text": "On purpose"
+        },
+        {
+          "id": "o4",
+          "text": "Online"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-01",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t2",
+      "text": "Where does your partner most like to be kissed?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "The neck"
+        },
+        {
+          "id": "o2",
+          "text": "The lips"
+        },
+        {
+          "id": "o3",
+          "text": "The shoulder"
+        },
+        {
+          "id": "o4",
+          "text": "The hand"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-02",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t2",
+      "text": "What would your partner choose to set the mood?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Candles"
+        },
+        {
+          "id": "o2",
+          "text": "Music"
+        },
+        {
+          "id": "o3",
+          "text": "Dim lights"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c2-03",
+      "format": "guess",
+      "category": "c2",
+      "topic": "t1",
+      "text": "Which is your partner most likely to enjoy?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A slow dance"
+        },
+        {
+          "id": "o2",
+          "text": "A back rub"
+        },
+        {
+          "id": "o3",
+          "text": "A bubble bath"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-01",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t2",
+      "text": "What would your partner say is the best way to be teased?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "With words"
+        },
+        {
+          "id": "o2",
+          "text": "With a look"
+        },
+        {
+          "id": "o3",
+          "text": "With a touch"
+        },
+        {
+          "id": "o4",
+          "text": "With a message"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-02",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t3",
+      "text": "Which setting would your partner pick for a daydream?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A hotel"
+        },
+        {
+          "id": "o2",
+          "text": "A beach"
+        },
+        {
+          "id": "o3",
+          "text": "A cabin"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c3-03",
+      "format": "guess",
+      "category": "c3",
+      "topic": "t6",
+      "text": "Which would your partner most like more of?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Time"
+        },
+        {
+          "id": "o2",
+          "text": "Surprises"
+        },
+        {
+          "id": "o3",
+          "text": "Slow mornings"
+        },
+        {
+          "id": "o4",
+          "text": "Spontaneity"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-01",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t6",
+      "text": "What would your partner like to try next?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "A new place"
+        },
+        {
+          "id": "o2",
+          "text": "A new time of day"
+        },
+        {
+          "id": "o3",
+          "text": "A new pace"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-02",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t2",
+      "text": "What does your partner enjoy most?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Being led"
+        },
+        {
+          "id": "o2",
+          "text": "Taking the lead"
+        },
+        {
+          "id": "o3",
+          "text": "Taking turns"
+        }
+      ],
+      "source": "shipped"
+    },
+    {
+      "id": "guess-c4-03",
+      "format": "guess",
+      "category": "c4",
+      "topic": "t3",
+      "text": "Which would your partner choose for a dream night?",
+      "options": [
+        {
+          "id": "o1",
+          "text": "Somewhere far away"
+        },
+        {
+          "id": "o2",
+          "text": "Right here at home"
+        },
+        {
+          "id": "o3",
+          "text": "Somewhere a little risky"
+        },
+        {
+          "id": "o4",
+          "text": "Somewhere very quiet"
+        }
+      ],
+      "source": "shipped"
+    }
+  ]
+}

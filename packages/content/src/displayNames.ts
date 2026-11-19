@@ -1,4 +1,11 @@
-import type { CategoryId, GameId, LevelId, SurpriseId } from '@getfreak/core';
+import type {
+  CategoryId,
+  GameId,
+  LevelId,
+  QuestionFormat,
+  SurpriseId,
+  TopicId,
+} from '@getfreak/core';
 
 export type GameDisplayName = {
   title: string;
@@ -39,4 +46,22 @@ export const surpriseNames: Record<SurpriseId, string> = {
   choice: "Partner's choice",
   timer: 'Timer',
   freePass: 'Free pass',
+};
+
+// Typed by format id, so a format without a name fails typecheck.
+export const questionFormatNames: Record<QuestionFormat, string> = {
+  ifYou: 'Drink if',
+  neverHave: 'Never have I ever',
+  guess: 'Guess your partner',
+  eitherOr: 'Would you rather',
+  secretMatch: 'Secret match',
+};
+
+export const topicNames: Record<TopicId, string> = {
+  t1: 'Favourites',
+  t2: 'Turn-ons and turn-offs',
+  t3: 'Fantasies',
+  t4: 'Kinks and fetishes',
+  t5: 'History',
+  t6: 'Wishlist',
 };

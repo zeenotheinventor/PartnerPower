@@ -127,4 +127,11 @@ export const copy = {
     settings: 'Settings',
     home: 'Home',
   },
+  // The words that lead a question, so question text holds only the clause after them. Guess your
+  // partner and secret match have no lead.
+  questionLeads: {
+    ifYou: 'Drink if',
+    neverHave: 'Never have I ever',
+    eitherOr: 'Would you rather',
+  },
 } as const;
