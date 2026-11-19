@@ -394,6 +394,102 @@ exactly as it did for the same seed and actions. An unknown type or a repeated o
   already given is kept. `end` and `disableCategory` always apply, including to a face down mystery
   and an open choice.
 
+## Question round engine
+
+A round of the `questions` game is a reducer in `core`, in `questionRound.ts`. It follows the dares
+engine: pure, plain serialisable state, and a seeded generator in the state. The pacing rules that
+both games share are in `pacing.ts`, and `round.ts` imports them from there.
+
+```ts
+type QuestionRoundSetup = {
+  players: readonly [string, string];
+  level: LevelId;
+  enabledCategories: readonly CategoryId[];
+  enabledFormats: readonly PlayableFormat[]; // at least one of ifYou, neverHave, guess, eitherOr
+  enabledTopics: readonly TopicId[]; // at least one of t1 to t6
+  length: 10 | 20 | 'endless';
+  seed: number;
+};
+
+type QuestionRoundAction =
+  | { type: 'answer'; answers: readonly [boolean, boolean] } // yes or no per player index
+  | { type: 'pick'; optionId: string }
+  | { type: 'next' }
+  | { type: 'removeQuestion' }
+  | { type: 'disableCategory'; category: CategoryId }
+  | { type: 'end' };
+
+function startQuestionRound(
+  setup: QuestionRoundSetup,
+  questions: readonly Question[],
+): QuestionRoundState;
+function reduceQuestionRound(
+  state: QuestionRoundState,
+  action: QuestionRoundAction,
+): QuestionRoundState;
+function summariseQuestionRound(state: QuestionRoundState): QuestionRoundSummary;
+function isQuestionRoundOver(state: QuestionRoundState): boolean;
+function questionTurnView(state: QuestionRoundState): QuestionTurnView | null;
+function availableQuestionCount(setup: QuestionRoundSetup, questions: readonly Question[]): number;
+```
+
+`startQuestionRound` throws an `Error` that says what is wrong for an invalid setup, as `startRound`
+does. It also checks the formats (at least one, known, not `secretMatch`, none twice), the topics
+(at least one, known, none twice) and the length. It takes the questions as a list, so the app can
+pass shipped and player-written questions together. Only questions in the enabled categories,
+formats and topics are dealt, and each id is dealt at most once. `availableQuestionCount` counts
+what the same setup could deal, so the setup screen can say when there are fewer than the round
+length, with no rules of its own.
+
+`current` carries `question`, `holder`, `other` and `steppingUp` as for dares, plus `stage`
+(`answering`, `secondPick`, `revealed`), `firstPick` and `reveal`. The holder alternates every
+question, starting with the first player. `next` deals the following question from `revealed`.
+
+Screens read `questionTurnView(state)`, never `current.firstPick`. The view has everything a turn
+screen needs (`question`, `holder`, `other`, `steppingUp`, `stage` and `reveal`) and leaves out the
+holder's first pick, so no screen can show a private pick by mistake, including after a focus change
+or a replaced question. It adds `pickLocked`, true while the stage is `secondPick`, so the screen can
+say a pick is locked in without saying which. The first pick appears only inside `reveal`, once both
+players have picked. It is null when the round is over.
+
+Rules the engine owns:
+
+- Pacing is the dares pacing: start in the lowest enabled category, split a 10 or 20 round across
+  the enabled categories with the remainder going higher, and step up every 5 questions in an
+  endless round.
+- Formats mix evenly. The state keeps a bag of the enabled formats, shuffled with the seeded
+  generator. Each question takes the next format from the bag, and the bag is refilled with a new
+  shuffle when it is empty.
+- If the target category has no unused question in the chosen format, the engine tries the other
+  enabled formats in the same category, then the nearest higher category, then the nearest lower
+  one, trying every enabled format in each. If nothing is left anywhere the round is over.
+- A draw takes a player question with a probability of one half when it has unused player and
+  unused shipped questions of the format in the category it is looking in, as for player dares. The
+  generator is used for that only when both sources are present.
+- `ifYou` and `neverHave` are answered openly. `answer` sets a yes or no for each player, and each
+  yes drinks the category's penalty. No discovery is recorded.
+- `eitherOr`: the holder picks, then the other player picks, with the same phone. The first pick is
+  kept in `firstPick` and `reveal` stays null until both have picked. The same option means nobody
+  drinks and an `agree` discovery. Different options mean both drink.
+- `guess`: the holder answers about themselves, the phone is passed, and the other player guesses.
+  A right guess is a point for the guesser. A wrong guess costs the guesser a drink. Either way an
+  `answer` discovery is recorded for the holder.
+- Discoveries are `NewDiscovery` values, without dates. The app adds the date when it saves them.
+- A question counts as played when it is revealed, so ending the round at the reveal keeps it. A
+  question that is in play but not yet revealed is not counted.
+- `removeQuestion` replaces the question in play at no cost, with one of the same format and
+  category (falling back as the draw does), and drops any first pick. It does nothing once the
+  question is revealed. A skipped question is not played, so nobody drinks and it is not counted.
+- `disableCategory` and `end` behave as in the dares engine. A category switched off at the reveal
+  is switched off without replacing the revealed question.
+- An action that does not apply to the stage, and every action on a finished round, returns the
+  same state.
+
+`summariseQuestionRound` gives, for each player, the name, drinks, guesses right and guesses made. It
+also gives the questions played, the categories reached, how many `eitherOr` questions were played
+and how many matched, `knowsBest` (the player with more right guesses, `'tie'`, or null when no
+guess question was played) and the discoveries made in the round.
+
 ## App structure
 
 ```
@@ -922,3 +1018,12 @@ and pnpm 9.11.0, and the README has the steps.
 | Transactions without `withExclusiveTransactionAsync` | That call opens a second connection without the key. A transaction is run with `BEGIN IMMEDIATE` on the keyed connection behind a queue.                                                                                                                                                                                                          | FRK-41 |
 | Database tests on `node:sqlite`                      | Migrations and the repository run on the `node:sqlite` that ships with Node. Files that use it end in `.node.test.ts` and are type checked with Node's types, as the other Node-only tests are.                                                                                                                                                   | FRK-41 |
 | No Face ID text in this ticket                       | The `expo-secure-store` plugin is set with `faceIDPermission: false`, because this ticket stores a key and asks for no biometrics. FRK-53 adds the biometrics text through `expo-local-authentication`.                                                                                                                                           | FRK-41 |
+| Pick formats keep the phone or pass it               | `eitherOr` keeps the phone between picks and `guess` passes it, as the design decides. The engine does not model the passing: `stage` moves from `answering` to `secondPick` in both and the screen shows the handoff.                                                                                                                            | FRK-35 |
+| Answers use the player index                         | `answer` takes a yes or no per player index, not per role, so the same action works whichever player holds the phone.                                                                                                                                                                                                                             | FRK-35 |
+| Where a played question is counted                   | A question joins the history when it is revealed, so ending the round at the reveal keeps it, and a question the round ended on before the reveal is not counted.                                                                                                                                                                                 | FRK-35 |
+| Removing a revealed question                         | `removeQuestion` does nothing once revealed, because the drinks and the discovery are already recorded. Switching a category off at the reveal leaves the revealed question in place.                                                                                                                                                             | FRK-35 |
+| Fallback order for questions                         | The chosen format is tried first in each category, then the other enabled formats, as the ticket says. This differs from dares, which tries the preferred kind in every category before the other kind.                                                                                                                                           | FRK-35 |
+| Knows best after only wrong guesses                  | `knowsBest` is `'tie'` when guess questions were played and both players have the same number right, even zero. It is null only when no guess question was played.                                                                                                                                                                                | FRK-35 |
+| Duplicate ids in the question list                   | The engine deals the first question of an id and ignores the rest, so a repeated id cannot be dealt twice.                                                                                                                                                                                                                                        | FRK-35 |
+| Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
+| Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |

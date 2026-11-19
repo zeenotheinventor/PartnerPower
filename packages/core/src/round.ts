@@ -1,7 +1,13 @@
 import { categories, categoriesForLevel, categoryIds, isCategoryId } from './contentModel';
 import { surpriseIds } from './contentModel';
 import type { Card, CardKind, CategoryId, Deck, LevelId, SurpriseId } from './contentModel';
-import { nextRandom } from './seededRandom';
+import {
+  categoryOrder,
+  pacedCategory,
+  pickWithPlayerShare,
+  resolveEnabled,
+  searchOrder,
+} from './pacing';
 import {
   pickSurpriseOffset,
   shuffleSurpriseTypes,
@@ -12,11 +18,7 @@ import {
 /** Every 5th card of a round is a together card when the category has one. */
 export const togetherCardInterval = 5;
 
-/** An endless round steps up to the next enabled category every 5 cards. */
-export const endlessStepInterval = 5;
-
-/** How often a draw takes a player card when it could take either a player card or a shipped one. */
-const playerCardProbability = 0.5;
+export { endlessStepInterval } from './pacing';
 
 export type RoundLength = 10 | 20 | 'endless';
 export type PlayerIndex = 0 | 1;
@@ -114,10 +116,6 @@ export type RoundSummary = {
   cardsPlayed: number;
   categoriesReached: readonly CategoryId[];
 };
-
-function categoryOrder(category: CategoryId): number {
-  return categoryIds.indexOf(category);
-}
 
 function penaltyFor(category: CategoryId): number {
   return categories.find((candidate) => candidate.id === category)?.penalty ?? 0;
@@ -309,7 +307,7 @@ function disableCategory(
 /** Deals the next card of the round, or leaves `current` null when no card is left. */
 function dealNext(state: RoundState): RoundState {
   const position = state.history.length + 1;
-  const target = resolveEnabled(pacedCategory(state, position), state.enabled);
+  const target = resolveEnabled(pacedCategory(state.pacing, state.length, position), state.enabled);
   const { plan, deal } = planSurprise(state, position, target);
   const planned: RoundState = { ...state, surprisePlan: plan };
   if (deal !== null) return placeSurprise(planned, deal);
@@ -371,19 +369,8 @@ type Candidate = { card: Card; randomState: number };
  * with no player cards deals as it did before player cards existed.
  */
 function pickCard(candidates: readonly Card[], randomState: number): Candidate | null {
-  const playerCards = candidates.filter((card) => card.source === 'player');
-  const shippedCards = candidates.filter((card) => card.source !== 'player');
-  let pool = candidates;
-  let state = randomState;
-  if (playerCards.length > 0 && shippedCards.length > 0) {
-    const coin = nextRandom(state);
-    pool = coin.value < playerCardProbability ? playerCards : shippedCards;
-    state = coin.state;
-  }
-  if (pool.length === 0) return null;
-  const { value, state: nextState } = nextRandom(state);
-  const card = pool[Math.floor(value * pool.length)];
-  return card === undefined ? null : { card, randomState: nextState };
+  const drawn = pickWithPlayerShare(candidates, randomState);
+  return drawn === null ? null : { card: drawn.item, randomState: drawn.randomState };
 }
 
 /** Picks an unused card from one category that passes the check. */
@@ -406,12 +393,9 @@ function drawMatching(
   target: CategoryId,
   matchers: readonly ((card: Card) => boolean)[],
 ): Candidate | null {
-  const targetOrder = categoryOrder(target);
-  const higher = state.enabled.filter((category) => categoryOrder(category) > targetOrder);
-  const lower = state.enabled.filter((category) => categoryOrder(category) < targetOrder).reverse();
-  const searchOrder = [target, ...higher, ...lower];
+  const categoriesInOrder = searchOrder(target, state.enabled);
   for (const matches of matchers) {
-    for (const category of searchOrder) {
+    for (const category of categoriesInOrder) {
       const drawn = pickFromCategory(state, category, matches);
       if (drawn !== null) return drawn;
     }
@@ -561,31 +545,6 @@ function placeSurprise(state: RoundState, deal: SurpriseDeal): RoundState {
       surprise.type === 'freePass' ? withPass(state.freePasses, player, true) : state.freePasses,
     current: { card, player, steppingUp: isSteppingUp(state, card), surprise },
   };
-}
-
-/** The category a card at this position belongs to, before any category was disabled. */
-function pacedCategory(state: RoundState, position: number): CategoryId {
-  const { pacing, length } = state;
-  const highest = pacing.length - 1;
-  if (length === 'endless') {
-    const step = Math.floor((position - 1) / endlessStepInterval);
-    return pacing[Math.min(step, highest)] ?? categoryIds[0];
-  }
-  const share = Math.floor(length / pacing.length);
-  const extraFrom = pacing.length - (length % pacing.length);
-  let lastPosition = 0;
-  for (const [index, category] of pacing.entries()) {
-    lastPosition += share + (index >= extraFrom ? 1 : 0);
-    if (position <= lastPosition) return category;
-  }
-  return pacing[highest] ?? categoryIds[0];
-}
-
-/** A disabled category is stood in for by the next higher enabled one, else the next lower. */
-function resolveEnabled(category: CategoryId, enabled: readonly CategoryId[]): CategoryId {
-  const order = categoryOrder(category);
-  const higher = enabled.find((candidate) => categoryOrder(candidate) >= order);
-  return higher ?? enabled.at(-1) ?? category;
 }
 
 /** A mystery is only passed after the flip, so passing one costs a drink more than its category. */
