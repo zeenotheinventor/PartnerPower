@@ -118,18 +118,63 @@ describe('app.json native settings', () => {
     'android.permission.USE_FINGERPRINT',
     'android.permission.ACCESS_NETWORK_STATE',
     'android.permission.MODIFY_AUDIO_SETTINGS',
+    'android.permission.WAKE_LOCK',
   ])('should not block %s', (permission) => {
     expect(appConfig.expo.android.blockedPermissions).not.toContain(permission);
   });
 
-  it('should block the permissions the app never uses', () => {
-    expect(appConfig.expo.android.blockedPermissions).toEqual(
-      expect.arrayContaining([
-        'android.permission.READ_EXTERNAL_STORAGE',
-        'android.permission.WRITE_EXTERNAL_STORAGE',
-        'android.permission.SYSTEM_ALERT_WINDOW',
-      ]),
+  // Each is a permission that a library of the lock or the reminder adds and the app never uses.
+  // The screenshot listener of expo-screen-capture needs READ_EXTERNAL_STORAGE, READ_MEDIA_IMAGES
+  // and DETECT_SCREEN_CAPTURE, so a lock screen that listens for screenshots must take them off
+  // this list. The badge ones come from the badge
+  // library inside expo-notifications, and the last is for push notifications, which the app
+  // does not use.
+  it.each([
+    'android.permission.READ_EXTERNAL_STORAGE',
+    'android.permission.WRITE_EXTERNAL_STORAGE',
+    'android.permission.SYSTEM_ALERT_WINDOW',
+    'android.permission.READ_MEDIA_IMAGES',
+    'android.permission.DETECT_SCREEN_CAPTURE',
+    'com.google.android.c2dm.permission.RECEIVE',
+    'android.permission.READ_APP_BADGE',
+    'com.anddoes.launcher.permission.UPDATE_COUNT',
+    'com.htc.launcher.permission.READ_SETTINGS',
+    'com.htc.launcher.permission.UPDATE_SHORTCUT',
+    'com.huawei.android.launcher.permission.CHANGE_BADGE',
+    'com.huawei.android.launcher.permission.READ_SETTINGS',
+    'com.huawei.android.launcher.permission.WRITE_SETTINGS',
+    'com.majeur.launcher.permission.UPDATE_BADGE',
+    'com.oppo.launcher.permission.READ_SETTINGS',
+    'com.oppo.launcher.permission.WRITE_SETTINGS',
+    'com.sec.android.provider.badge.permission.READ',
+    'com.sec.android.provider.badge.permission.WRITE',
+    'com.sonyericsson.home.permission.BROADCAST_BADGE',
+    'com.sonymobile.home.permission.PROVIDER_INSERT_BADGE',
+    'me.everything.badger.permission.BADGE_COUNT_READ',
+    'me.everything.badger.permission.BADGE_COUNT_WRITE',
+  ])('should block %s, which the app never uses', (permission) => {
+    expect(appConfig.expo.android.blockedPermissions).toContain(permission);
+  });
+
+  it('should block nothing twice', () => {
+    const { blockedPermissions } = appConfig.expo.android;
+
+    expect(new Set(blockedPermissions).size).toBe(blockedPermissions.length);
+  });
+});
+
+describe('app.json app lock', () => {
+  // Biometrics are an extra on top of the PIN. The usage text cannot live in `packages/content`,
+  // because the native build reads app.json before any JavaScript runs.
+  it('should ask to use Face ID with a usage text', () => {
+    const localAuthentication = appConfig.expo.plugins.find(
+      (plugin) => Array.isArray(plugin) && plugin[0] === 'expo-local-authentication',
     );
+
+    expect(localAuthentication).toEqual([
+      'expo-local-authentication',
+      { faceIDPermission: expect.stringMatching(/\S/) },
+    ]);
   });
 });
 
