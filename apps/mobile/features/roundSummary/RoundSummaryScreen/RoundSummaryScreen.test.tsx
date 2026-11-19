@@ -3,6 +3,10 @@ import type { Deck, RoundAction, RoundSetup } from '@getfreak/core';
 import { act, fireEvent, screen, within } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
+import { DeckChoiceProvider, useDeckChoice } from '../../decks/DeckChoiceProvider';
+import type { DeckChoice } from '../../decks/types';
+import { OwnCardsProvider } from '../../ownCards/OwnCardsProvider';
+
 import { createMockFeedback } from '../../../feedback/createMockFeedback';
 import { FeedbackContext } from '../../../feedback/FeedbackProvider';
 import { PersonalDataProvider } from '../../../personal';
@@ -26,6 +30,13 @@ jest.mock('expo-router', () => ({
     canGoBack: () => mockCanGoBack,
   }),
 }));
+
+const mockDecks: Deck[] = [];
+// The decks are read when they are used, because this factory runs before the array above exists.
+jest.mock('@getfreak/content', () => {
+  const actual = jest.requireActual<typeof import('@getfreak/content')>('@getfreak/content');
+  return Object.defineProperty({ ...actual }, 'decks', { get: () => mockDecks, enumerable: true });
+});
 
 jest.mock('../../roundSetup/randomSeed', () => ({ randomSeed: () => 99 }));
 
@@ -61,6 +72,16 @@ const aBoldest: RoundAction[] = [
 const tied: RoundAction[] = [{ type: 'done' }, { type: 'done' }, { type: 'end' }];
 
 let latestRound: RoundContextValue | undefined;
+// The deck chosen at setup, which the screen rebuilds a favourites round from.
+let chosenDeck: DeckChoice = 'starter';
+
+function ChooseDeck({ children }: { children: ReactNode }) {
+  const { chooseDeck } = useDeckChoice();
+  useEffect(() => {
+    chooseDeck(chosenDeck);
+  }, [chooseDeck]);
+  return children;
+}
 
 function makeRepository(): PersonalRepository {
   return createInMemoryPersonalRepository({
@@ -108,11 +129,17 @@ function summaryTree(
   return (
     <FeedbackContext.Provider value={feedback}>
       <PersonalDataProvider source={personalSource}>
-        <RoundProvider>
-          <PlayedRound actions={actions}>
-            {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
-          </PlayedRound>
-        </RoundProvider>
+        <OwnCardsProvider>
+          <DeckChoiceProvider>
+            <ChooseDeck>
+              <RoundProvider>
+                <PlayedRound actions={actions}>
+                  {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
+                </PlayedRound>
+              </RoundProvider>
+            </ChooseDeck>
+          </DeckChoiceProvider>
+        </OwnCardsProvider>
       </PersonalDataProvider>
     </FeedbackContext.Provider>
   );
@@ -125,7 +152,11 @@ async function renderSummary(actions: RoundAction[] = aBoldest, feedback = creat
 }
 
 describe('RoundSummaryScreen', () => {
-  beforeEach(prepareEmptyPersonalStore);
+  beforeEach(() => {
+    prepareEmptyPersonalStore();
+    mockDecks.splice(0, mockDecks.length, deck);
+    chosenDeck = 'starter';
+  });
 
   afterEach(() => {
     mockBack.mockClear();
@@ -133,6 +164,7 @@ describe('RoundSummaryScreen', () => {
     mockDismissTo.mockClear();
     mockCanGoBack = true;
     latestRound = undefined;
+    chosenDeck = 'starter';
   });
 
   describe('the round complete feedback', () => {
@@ -182,9 +214,15 @@ describe('RoundSummaryScreen', () => {
       const feedback = createMockFeedback();
       await renderThemed(
         <FeedbackContext.Provider value={feedback}>
-          <RoundProvider>
-            <RoundSummaryScreen />
-          </RoundProvider>
+          <PersonalDataProvider source={personalSource}>
+            <OwnCardsProvider>
+              <DeckChoiceProvider>
+                <RoundProvider>
+                  <RoundSummaryScreen />
+                </RoundProvider>
+              </DeckChoiceProvider>
+            </OwnCardsProvider>
+          </PersonalDataProvider>
         </FeedbackContext.Provider>,
       );
 
@@ -289,6 +327,63 @@ describe('RoundSummaryScreen', () => {
     expect(mockReplace).toHaveBeenCalledWith('/games/dares/play');
   });
 
+  describe('Play again from Favourites', () => {
+    const dealtIds = () => latestRound?.lastStart?.deck.cards.map((card) => card.id);
+
+    async function playAgainFromFavourites(change: () => Promise<void>) {
+      chosenDeck = 'favourites';
+      await personalRepository.setFavourite('card-1', true);
+      await personalRepository.setFavourite('card-2', true);
+      await renderSummary();
+      await change();
+      await act(async () => {
+        fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.playAgain }));
+      });
+    }
+
+    it('should deal the favourites as they are now, not as they were when the round started', async () => {
+      await playAgainFromFavourites(async () => {
+        await personalRepository.setFavourite('card-2', false);
+        await personalRepository.setFavourite('card-4', true);
+      });
+
+      expect(dealtIds()).toEqual(['card-1', 'card-4']);
+    });
+
+    it('should leave out a card that was unfavourited on the summary', async () => {
+      await playAgainFromFavourites(() => personalRepository.setFavourite('card-1', false));
+
+      expect(dealtIds()).toEqual(['card-2']);
+    });
+
+    it('should bring in a card that was favourited on the summary', async () => {
+      await playAgainFromFavourites(() => personalRepository.setFavourite('card-3', true));
+
+      expect(dealtIds()).toEqual(['card-1', 'card-2', 'card-3']);
+    });
+
+    it('should keep the settings, take a new seed and open play', async () => {
+      await playAgainFromFavourites(async () => {});
+
+      expect(latestRound?.lastStart?.setup).toEqual({ ...setup, seed: 99 });
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/play');
+    });
+
+    it('should open play only once when pressed twice', async () => {
+      chosenDeck = 'favourites';
+      await personalRepository.setFavourite('card-1', true);
+      await renderSummary();
+      const playAgain = screen.getByRole('button', { name: copy.roundSummary.playAgain });
+
+      await act(async () => {
+        fireEvent.press(playAgain);
+        fireEvent.press(playAgain);
+      });
+
+      expect(mockReplace).toHaveBeenCalledTimes(1);
+    });
+  });
+
   it('should open play only once when Play again is pressed twice', async () => {
     await renderSummary();
     const playAgain = screen.getByRole('button', { name: copy.roundSummary.playAgain });
@@ -373,9 +468,15 @@ describe('RoundSummaryScreen', () => {
 
   it('should not offer Play again when no round has been started', async () => {
     await renderThemed(
-      <RoundProvider>
-        <RoundSummaryScreen />
-      </RoundProvider>,
+      <PersonalDataProvider source={personalSource}>
+        <OwnCardsProvider>
+          <DeckChoiceProvider>
+            <RoundProvider>
+              <RoundSummaryScreen />
+            </RoundProvider>
+          </DeckChoiceProvider>
+        </OwnCardsProvider>
+      </PersonalDataProvider>,
     );
 
     fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.playAgain }));

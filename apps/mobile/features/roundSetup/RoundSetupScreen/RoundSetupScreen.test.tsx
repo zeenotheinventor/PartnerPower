@@ -924,6 +924,41 @@ describe('RoundSetupScreen', () => {
       });
     });
 
+    describe('while the favourites are still being read', () => {
+      async function renderWithSlowFavourites() {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        // The favourites never arrive, as if the read had hung.
+        jest.spyOn(fixture.repository, 'listFavourites').mockReturnValue(new Promise(() => {}));
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        return held;
+      }
+
+      it('should let the starter deck count and start', async () => {
+        await renderWithSlowFavourites();
+
+        expect(screen.getByText(fillCopy(copy.roundSetup.inPlay, { count: 2 }))).toBeOnTheScreen();
+        expect(startButton()).not.toBeDisabled();
+
+        await pressStart();
+
+        expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
+      });
+
+      it('should hold Start, with no count and no hint, for Favourites', async () => {
+        const held = await renderWithSlowFavourites();
+
+        act(() => held.current?.chooseDeck('favourites'));
+
+        expect(startButton()).toBeDisabled();
+        expect(screen.queryByText(/cards at this level/)).not.toBeOnTheScreen();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+    });
+
     describe('with no cards in play', () => {
       async function renderWithNoFavourites() {
         const held = await renderWithFavourites();

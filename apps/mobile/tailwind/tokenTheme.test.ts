@@ -15,6 +15,9 @@ describe('colorVariables', () => {
       '--color-accent-deep': colorThemes.light.accentDeep,
       '--color-on-accent': colorThemes.light.onAccent,
       '--color-on-accent-small': colorThemes.light.onAccentSmall,
+      '--color-danger': colorThemes.light.danger,
+      '--color-danger-deep': colorThemes.light.dangerDeep,
+      '--color-on-danger': colorThemes.light.onDanger,
       '--color-category-c1': colorThemes.light.category.c1,
       '--color-on-category-c4': colorThemes.light.onCategory.c4,
     });

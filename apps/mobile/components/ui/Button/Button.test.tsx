@@ -184,6 +184,21 @@ describe('Button', () => {
       expect(screen.getByText('Continue')).toHaveStyle({ color: theme.onAccent.toLowerCase() });
     });
 
+    it('should fill the danger face with the danger colour on a deeper danger edge', async () => {
+      await renderThemed(
+        <Button label="Clear it" variant="danger" onPress={jest.fn()} />,
+        themeName,
+      );
+
+      expect(screen.getByText('Clear it')).toHaveStyle({
+        backgroundColor: theme.danger.toLowerCase(),
+        color: theme.onDanger.toLowerCase(),
+      });
+      expect(edgeOf(screen.getByRole('button', { name: 'Clear it' }))).toHaveStyle({
+        backgroundColor: theme.dangerDeep.toLowerCase(),
+      });
+    });
+
     it('should fill the secondary face with the surface on a border coloured edge', async () => {
       await renderThemed(
         <Button label="Back" variant="secondary" onPress={jest.fn()} />,

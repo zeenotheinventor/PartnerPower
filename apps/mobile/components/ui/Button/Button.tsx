@@ -9,6 +9,7 @@ import type { ButtonProps, ButtonVariant } from './types';
 const edgeClasses: Record<ButtonVariant, string> = {
   primary: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-lg bg-accent-deep',
   secondary: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-lg bg-border',
+  danger: 'pointer-events-none absolute inset-x-0 bottom-0 top-4 rounded-lg bg-danger-deep',
 };
 
 const faceClasses: Record<ButtonVariant, string> = {
@@ -16,6 +17,8 @@ const faceClasses: Record<ButtonVariant, string> = {
     'type-heading mb-4 rounded-lg bg-accent px-24 py-16 text-center text-on-accent group-active:translate-y-4',
   secondary:
     'type-heading mb-4 rounded-lg border-2 border-border bg-surface px-24 py-16 text-center text-foreground group-active:translate-y-4',
+  danger:
+    'type-heading mb-4 rounded-lg bg-danger px-24 py-16 text-center text-on-danger group-active:translate-y-4',
 };
 
 export function Button({

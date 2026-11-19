@@ -86,9 +86,10 @@ export function RoundSetupScreen() {
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  // Start waits for the dares and the favourites to be read, so a round never starts without the
-  // cards it should deal.
-  const isDeckReady = !isOwnCardsLoading && favouriteIds !== undefined;
+  // Start waits for the dares to be read, so a round never starts without the dares it should mix,
+  // and for the favourites only when they are the deck. The starter deck never needs them.
+  const isDeckReady =
+    !isOwnCardsLoading && (deckChoice === 'starter' || favouriteIds !== undefined);
   const deck = buildRoundDeck({
     choice: deckChoice,
     starterDeck: getStarterDeck(),

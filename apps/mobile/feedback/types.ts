@@ -2,7 +2,7 @@
 export type FeedbackSound = 'tap' | 'done' | 'pass';
 
 /** The moments that give feedback. A moment may have a sound, a haptic, or both. */
-export type FeedbackMoment = FeedbackSound | 'roundComplete';
+export type FeedbackMoment = FeedbackSound | 'roundComplete' | 'timerEnd';
 
 /**
  * What the phone does, with no rules about when. Both calls return at once and report no result.

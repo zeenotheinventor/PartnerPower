@@ -108,6 +108,36 @@ describe('KitGallery', () => {
     expect(screen.getByRole('img', { name: 'Face down card' })).toBeOnTheScreen();
   });
 
+  describe('the countdowns', () => {
+    afterEach(() => jest.useRealTimers());
+
+    it('should show one that has not started and one that has ended', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getByRole('timer', { name: 'Countdown, idle' })).toHaveAccessibilityValue({
+        text: '60 seconds',
+      });
+      expect(screen.getByRole('timer', { name: 'Countdown, ended' })).toHaveAccessibilityValue({
+        text: '0 seconds',
+      });
+    });
+
+    it('should run a live one from ten seconds when it is started, and again when started again', async () => {
+      jest.useFakeTimers();
+      await renderThemed(<KitGallery />);
+      const live = () => screen.getByRole('timer', { name: 'Countdown, live' });
+      expect(live()).toHaveAccessibilityValue({ text: '10 seconds' });
+
+      fireEvent.press(screen.getByRole('button', { name: 'Start the live countdown' }));
+      await act(async () => jest.advanceTimersByTime(4_000));
+      expect(live()).toHaveAccessibilityValue({ text: '6 seconds' });
+
+      fireEvent.press(screen.getByRole('button', { name: 'Start the live countdown' }));
+      await act(async () => jest.advanceTimersByTime(1_000));
+      expect(live()).toHaveAccessibilityValue({ text: '9 seconds' });
+    });
+  });
+
   it('should show a toast when asked, and not before', async () => {
     await renderThemed(<KitGallery />);
     expect(screen.queryByRole('button', { name: 'Toast message' })).not.toBeOnTheScreen();
@@ -144,6 +174,55 @@ describe('KitGallery', () => {
       expect(
         screen.getByText('Keep it to 140 characters.', { includeHiddenElements: true }),
       ).toBeOnTheScreen();
+    });
+  });
+
+  it('should show a danger button', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('button', { name: 'Danger button' })).toBeOnTheScreen();
+  });
+
+  describe('the settings rows', () => {
+    it('should show a row with a value, named by its label and value', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getByRole('button', { name: 'Row with a value, On, PIN' })).toBeOnTheScreen();
+    });
+
+    it('should show a danger row, a disabled row and a row with a caption', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getByRole('button', { name: 'Danger row' })).toBeOnTheScreen();
+      expect(
+        screen.getByRole('button', { name: 'Disabled row', disabled: true }),
+      ).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Row with a caption' })).toHaveProp(
+        'accessibilityHint',
+        'A line under the label.',
+      );
+    });
+  });
+
+  describe('the danger dialog', () => {
+    it('should show a dialog with a list, an error and a danger button, only when asked', async () => {
+      await renderThemed(<KitGallery />);
+      expect(screen.queryByLabelText('Danger dialog title')).not.toBeOnTheScreen();
+
+      fireEvent.press(screen.getByRole('button', { name: 'Show danger dialog' }));
+
+      expect(screen.getByLabelText('Danger dialog title')).toHaveProp('role', 'alertdialog');
+      expect(screen.getByRole('alert')).toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Danger confirm' })).toBeOnTheScreen();
+    });
+
+    it('should close from the cancel button', async () => {
+      await renderThemed(<KitGallery />);
+      fireEvent.press(screen.getByRole('button', { name: 'Show danger dialog' }));
+
+      fireEvent.press(screen.getByRole('button', { name: 'Danger cancel' }));
+
+      expect(screen.queryByLabelText('Danger dialog title')).not.toBeOnTheScreen();
     });
   });
 

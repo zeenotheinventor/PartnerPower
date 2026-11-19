@@ -1,42 +1,71 @@
 import { copy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
-import { View } from 'react-native';
+import { useState } from 'react';
+import { Text, View } from 'react-native';
 
-import { Card, Header, Screen, Toggle } from '../../../components/ui';
+import { Header, Screen, SettingsRow, Toggle } from '../../../components/ui';
 import { useSettings } from '../../../settings';
+import { useClearEverything } from '../../../storage/useClearEverything';
+import { ClearEverythingDialog } from '../ClearEverythingDialog';
+import { getAppVersionLabel } from '../getAppVersionLabel';
+import { SettingsSection } from '../SettingsSection';
+import { useGoBack } from '../useGoBack';
 
 const hubRoute = '/';
+const privacyRoute = '/privacy';
 
-/** The press feedback settings. Each switch is stored on the device as soon as it is changed. */
+/**
+ * Every setting in one place, in sections. A later ticket adds its row by putting one more child
+ * in a section: App lock and Reminder go in Privacy, above the policy. The switches are stored on
+ * the device as soon as they are changed.
+ */
 export function SettingsScreen() {
   const router = useRouter();
+  const goBack = useGoBack(hubRoute);
   const { soundOn, setSoundOn, hapticsOn, setHapticsOn } = useSettings();
-
-  // A deep link can open this screen with nothing behind it, so it falls back to the hub.
-  const goBack = () => (router.canGoBack() ? router.back() : router.replace(hubRoute));
+  const clearEverything = useClearEverything();
+  const [isClearDialogOpen, setIsClearDialogOpen] = useState(false);
+  const versionLabel = getAppVersionLabel();
 
   return (
     <Screen scroll>
       <Header title={copy.settings.title} backLabel={copy.settings.backLabel} onBack={goBack} />
-      {/* Not grouped, so each switch is read on its own. */}
-      <Card grouped={false}>
-        <View className="gap-16">
-          <Toggle
-            label={copy.settings.soundsLabel}
-            description={copy.settings.soundsCaption}
-            value={soundOn}
-            onValueChange={setSoundOn}
-          />
-          <View className="border-t-2 border-border pt-16">
-            <Toggle
-              label={copy.settings.vibrationLabel}
-              description={copy.settings.vibrationCaption}
-              value={hapticsOn}
-              onValueChange={setHapticsOn}
-            />
-          </View>
-        </View>
-      </Card>
+      <SettingsSection label={copy.settings.playSection}>
+        <Toggle
+          label={copy.settings.soundsLabel}
+          description={copy.settings.soundsCaption}
+          value={soundOn}
+          onValueChange={setSoundOn}
+        />
+        <Toggle
+          label={copy.settings.vibrationLabel}
+          description={copy.settings.vibrationCaption}
+          value={hapticsOn}
+          onValueChange={setHapticsOn}
+        />
+      </SettingsSection>
+      <SettingsSection label={copy.settings.privacySection}>
+        <SettingsRow label={copy.settings.privacyLabel} onPress={() => router.push(privacyRoute)} />
+      </SettingsSection>
+      <SettingsSection label={copy.settings.clearSection}>
+        <SettingsRow
+          label={copy.settings.clearLabel}
+          caption={copy.settings.clearCaption}
+          tone="danger"
+          showChevron={false}
+          onPress={() => setIsClearDialogOpen(true)}
+        />
+      </SettingsSection>
+      <View className="flex-1" />
+      {versionLabel ? (
+        <Text className="type-caption text-center text-muted">{versionLabel}</Text>
+      ) : null}
+      {isClearDialogOpen ? (
+        <ClearEverythingDialog
+          clearEverything={clearEverything}
+          onCancel={() => setIsClearDialogOpen(false)}
+        />
+      ) : null}
     </Screen>
   );
 }

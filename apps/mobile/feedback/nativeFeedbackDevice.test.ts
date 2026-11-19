@@ -182,6 +182,14 @@ describe('createNativeFeedbackDevice', () => {
       expect(mockNotification).toHaveBeenCalledWith('warning');
     });
 
+    it('should give the timer end one heavy impact, which no other moment uses', () => {
+      createNativeFeedbackDevice().triggerHaptic('timerEnd');
+
+      expect(mockImpact).toHaveBeenCalledTimes(1);
+      expect(mockImpact).toHaveBeenCalledWith('heavy');
+      expect(mockNotification).not.toHaveBeenCalled();
+    });
+
     it('should start the round complete pattern at once and play several more pulses over time', async () => {
       createNativeFeedbackDevice().triggerHaptic('roundComplete');
       expect(mockNotification).toHaveBeenCalledWith('success');
@@ -222,6 +230,13 @@ describe('createNativeFeedbackDevice', () => {
       expect(mockAndroidHaptics).toHaveBeenCalledWith(effect);
     });
 
+    it('should give the timer end one long press effect', () => {
+      createNativeFeedbackDevice().triggerHaptic('timerEnd');
+
+      expect(mockAndroidHaptics).toHaveBeenCalledTimes(1);
+      expect(mockAndroidHaptics).toHaveBeenCalledWith('long-press');
+    });
+
     it('should play several pulses over time for round complete', async () => {
       createNativeFeedbackDevice().triggerHaptic('roundComplete');
       expect(mockAndroidHaptics).toHaveBeenCalledTimes(1);
@@ -234,7 +249,7 @@ describe('createNativeFeedbackDevice', () => {
     it('should use the effects that follow the phone touch feedback setting, not the vibrator', () => {
       const device = createNativeFeedbackDevice();
 
-      (['tap', 'done', 'pass', 'roundComplete'] as const).forEach((moment) =>
+      (['tap', 'done', 'pass', 'roundComplete', 'timerEnd'] as const).forEach((moment) =>
         device.triggerHaptic(moment),
       );
 

@@ -49,7 +49,7 @@ describe('Drink If in the route tree', () => {
     ).toBeOnTheScreen();
   });
 
-  it('should play into a question and end the round on the summary stand-in', async () => {
+  async function reachTheSummary() {
     await launchApp(setupRoute);
     enterNames('Player A', 'Player B');
     await pressStart();
@@ -64,9 +64,41 @@ describe('Drink If in the route tree', () => {
     );
 
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+  }
+
+  it('should play into a question and end the round on the summary', async () => {
+    await reachTheSummary();
+
+    expect(screen.getByRole('header', { name: copy.questionsSummary.title })).toBeOnTheScreen();
+  });
+
+  it('should start another round from the summary with Play again', async () => {
+    await reachTheSummary();
+
+    fireEvent.press(screen.getByRole('button', { name: copy.questionsSummary.playAgain }));
+
+    await waitFor(() => expect(currentPathname()).toBe(playRoute));
     expect(
-      screen.getByRole('header', { name: copy.questionsPlay.summaryStandInTitle }),
+      screen.getByRole('header', {
+        name: fillCopy(copy.roundPlay.handoffTitle, { name: 'Player A' }),
+      }),
     ).toBeOnTheScreen();
+  });
+
+  it('should go back to setup from the summary with Settings', async () => {
+    await reachTheSummary();
+
+    fireEvent.press(screen.getByRole('button', { name: copy.questionsSummary.settings }));
+
+    await waitFor(() => expect(currentPathname()).toBe(setupRoute));
+  });
+
+  it('should go to the Drink If home from the summary with Home', async () => {
+    await reachTheSummary();
+
+    fireEvent.press(screen.getByRole('button', { name: copy.questionsSummary.home }));
+
+    await waitFor(() => expect(currentPathname()).toBe(homeRoute));
   });
 
   it('should go back from setup to the home and from the home to the hub', async () => {
