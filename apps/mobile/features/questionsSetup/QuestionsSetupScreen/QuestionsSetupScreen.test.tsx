@@ -10,13 +10,15 @@ import { startQuestionRound, type Question, type QuestionDeck, type TopicId } fr
 import { act, waitFor } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { KeyboardAvoidingView } from 'react-native';
-import type { ReactNode } from 'react';
+import { Fragment, type ReactNode } from 'react';
 
 import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
 import { createStorage } from '../../../storage/createStorage';
 import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { useOwnQuestions } from '../../ownQuestions/OwnQuestionsProvider';
+import { makeOwnQuestionsFixture } from '../../ownQuestions/testing/ownQuestionsFixture';
 import { QuestionRoundProvider } from '../../questionRound/QuestionRoundProvider';
 import { QuestionsSetupScreen } from './QuestionsSetupScreen';
 
@@ -83,13 +85,28 @@ function AfterSettingsLoad({ children }: { children: ReactNode }) {
   return useSettings().isLoading ? null : children;
 }
 
-async function renderSetup(storage: Storage = createStorage(createInMemoryBackend())) {
+// Holds the screen back until the player's questions have been read, so the read settles in the
+// wait below. A test of the screen before the read leaves this gate out.
+function AfterOwnQuestionsLoad({ children }: { children: ReactNode }) {
+  return useOwnQuestions().isLoading ? null : children;
+}
+
+async function renderSetup(
+  storage: Storage = createStorage(createInMemoryBackend()),
+  ownQuestions = makeOwnQuestionsFixture(),
+  { waitForOwnQuestions = true } = {},
+) {
+  const Gate = waitForOwnQuestions ? AfterOwnQuestionsLoad : Fragment;
   await renderThemed(
     <SettingsProvider storage={storage}>
       <AfterSettingsLoad>
-        <QuestionRoundProvider>
-          <QuestionsSetupScreen />
-        </QuestionRoundProvider>
+        <ownQuestions.Providers>
+          <Gate>
+            <QuestionRoundProvider>
+              <QuestionsSetupScreen />
+            </QuestionRoundProvider>
+          </Gate>
+        </ownQuestions.Providers>
       </AfterSettingsLoad>
     </SettingsProvider>,
   );
@@ -121,6 +138,21 @@ function switchEveryTopicOffExcept(keptTopic: (typeof topicKeys)[number]) {
   topicKeys
     .filter((topic) => topic !== keptTopic)
     .forEach((topic) => pressSwitch(topicNames[topic]));
+}
+
+async function writeOwnQuestions(
+  fixture: ReturnType<typeof makeOwnQuestionsFixture>,
+  count: number,
+  format: 'ifYou' | 'neverHave' = 'ifYou',
+) {
+  for (let number = 1; number <= count; number += 1) {
+    await fixture.repository.savePlayerQuestion({
+      format,
+      category: 'c1',
+      topic: 't1',
+      text: `Placeholder own question ${number}`,
+    });
+  }
 }
 
 const consoleMethods = ['log', 'info', 'warn', 'error', 'debug'] as const;
@@ -489,6 +521,26 @@ describe('QuestionsSetupScreen', () => {
       expect(screen.getByText(tooFewMessage(0))).toBeOnTheScreen();
     });
 
+    it('should count the questions the player wrote among those that fit', async () => {
+      const ownQuestions = makeOwnQuestionsFixture();
+      await writeOwnQuestions(ownQuestions, 3);
+      await renderSetup(undefined, ownQuestions);
+
+      pressSwitch(questionFormatNames.neverHave);
+
+      expect(screen.getByText(tooFewMessage(15))).toBeOnTheScreen();
+    });
+
+    it('should leave out the questions the player wrote of a format that is off', async () => {
+      const ownQuestions = makeOwnQuestionsFixture();
+      await writeOwnQuestions(ownQuestions, 3, 'neverHave');
+      await renderSetup(undefined, ownQuestions);
+
+      pressSwitch(questionFormatNames.neverHave);
+
+      expect(screen.getByText(tooFewMessage(12))).toBeOnTheScreen();
+    });
+
     it('should go away when the length is shortened to fit', async () => {
       await renderSetup();
       pressSwitch(questionFormatNames.neverHave);
@@ -589,6 +641,40 @@ describe('QuestionsSetupScreen', () => {
 
       const questions = jest.mocked(startQuestionRound).mock.calls[0]?.[1] ?? [];
       expect(questions.map((question) => question.id)).toEqual(['first-0', 'first-1', 'second-0']);
+    });
+
+    it('should start the round with the player questions after the shipped ones', async () => {
+      const ownQuestions = makeOwnQuestionsFixture();
+      await writeOwnQuestions(ownQuestions, 2);
+      await renderSetup(undefined, ownQuestions);
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      const questions = jest.mocked(startQuestionRound).mock.calls[0]?.[1] ?? [];
+      expect(questions).toHaveLength(ifYouQuestions.length + neverHaveQuestions.length + 2);
+      expect(questions.slice(-2)).toEqual([
+        expect.objectContaining({ source: 'player', text: 'Placeholder own question 1' }),
+        expect.objectContaining({ source: 'player', text: 'Placeholder own question 2' }),
+      ]);
+    });
+
+    it('should keep Start off until the player questions have been read, so none are left out', async () => {
+      const ownQuestions = makeOwnQuestionsFixture({ holdLoad: true });
+      await renderSetup(undefined, ownQuestions, { waitForOwnQuestions: false });
+      enterNames('Player A', 'Player B');
+
+      expect(
+        screen.getByRole('button', { name: copy.questionsSetup.start, disabled: true }),
+      ).toBeTruthy();
+
+      await act(async () => {
+        ownQuestions.releaseLoad();
+      });
+
+      expect(
+        screen.getByRole('button', { name: copy.questionsSetup.start, disabled: false }),
+      ).toBeTruthy();
     });
 
     it('should still start, with no questions, while none ship', async () => {

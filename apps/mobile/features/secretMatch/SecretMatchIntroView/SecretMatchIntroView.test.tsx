@@ -23,6 +23,26 @@ jest.mock('../../../personal', () => ({
   useDiscoveries: () => ({ discoveries: mockDiscoveries }),
 }));
 
+// A player has written a question, which the session must never be given. A written item would tell
+// the partner what its writer wants.
+// The intro never imports this provider, so the mock is a tripwire and not proof: it fails only if
+// the intro starts to read player questions.
+jest.mock('../../ownQuestions/OwnQuestionsProvider', () => ({
+  useOwnQuestions: () => ({
+    isLoading: false,
+    questions: [
+      {
+        id: 'pq-00000000-0000-4000-8000-000000000001',
+        format: 'ifYou',
+        category: 'c1',
+        topic: 't1',
+        source: 'player',
+        text: 'Placeholder question 1',
+      },
+    ],
+  }),
+}));
+
 const mockQuestionDecks: QuestionDeck[] = [];
 // The decks are read when they are used, because this factory runs before the array above exists.
 jest.mock('@getfreak/content', () => {
@@ -307,6 +327,15 @@ describe('SecretMatchIntroView', () => {
         },
         items,
       );
+    });
+
+    it('should deal only from the shipped decks, never from the questions a player wrote', async () => {
+      await renderIntro();
+      enterNames('Player A', 'Player B');
+
+      await pressStart();
+
+      expect(mockStart.mock.calls[0]?.[1]).toEqual(items);
     });
 
     it('should pass the ids of the matches already in discoveries as the avoid list, and only those', async () => {

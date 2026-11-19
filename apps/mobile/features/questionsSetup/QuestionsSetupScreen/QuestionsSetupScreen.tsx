@@ -17,7 +17,6 @@ import {
   type LevelId,
   type PlayableFormat,
   type PlayerNames,
-  type Question,
   type QuestionRoundSetup,
   type RoundLength,
   type TopicId,
@@ -37,6 +36,7 @@ import {
   Toggle,
 } from '../../../components/ui';
 import { useSettings } from '../../../settings';
+import { useOwnQuestions } from '../../ownQuestions/OwnQuestionsProvider';
 import { useQuestionRound } from '../../questionRound/QuestionRoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
 
@@ -45,9 +45,6 @@ const defaultLevel: LevelId = 'l2';
 const defaultLength: RoundLength = 20;
 const homeRoute = '/games/questions';
 const playRoute = '/games/questions/play';
-
-// The player's own questions join the shipped ones here once the device stores them.
-const playerQuestions: readonly Question[] = [];
 
 const levelOptions = levelIds.map((levelId) => ({ value: levelId, label: levelNames[levelId] }));
 
@@ -74,6 +71,7 @@ export function QuestionsSetupScreen() {
   const router = useRouter();
   const { playerNames, savePlayerNames } = useSettings();
   const { startNewRound } = useQuestionRound();
+  const { questions: playerQuestions, isLoading: isOwnQuestionsLoading } = useOwnQuestions();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -92,7 +90,8 @@ export function QuestionsSetupScreen() {
   const isLastCategoryOn = enabledCategories.length === 1;
   const isLastFormatOn = enabledFormats.length === 1;
   const isLastTopicOn = enabledTopics.length === 1;
-  const canStart = names.every((name) => tidyName(name) !== '');
+  // Start waits for the player's questions to be read, so a round never starts without them.
+  const canStart = !isOwnQuestionsLoading && names.every((name) => tidyName(name) !== '');
 
   const questions = [...questionDecks.flatMap((deck) => deck.questions), ...playerQuestions];
   const tidiedNames: PlayerNames = [tidyName(names[0]), tidyName(names[1])];

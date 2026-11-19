@@ -610,6 +610,10 @@ apps/mobile/
         play.tsx
         summary.tsx      a stand-in until the Drink If summary replaces it
         match.tsx        secret match: holds the session for the route, in memory only
+        my-questions/
+          index.tsx      the Your questions list
+          new.tsx        the question editor, for a new question
+          [id].tsx       the question editor, for a question that is stored
   components/ui/         the UI kit, including the Character and the SpeechBubble
   components/FontGate/   holds rendering until the bundled fonts are ready
   components/EntryStack/ the root navigator, with the entry guard
@@ -631,6 +635,7 @@ apps/mobile/
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
+  features/ownQuestions/  the player's own Drink If questions: the provider, the list screen, the editor, the options editor and the field errors
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
   features/questionsSetup/ the Drink If round setup screen
   features/questionsPlay/  the Drink If play screen and its turn views
@@ -660,6 +665,11 @@ apps/mobile/
   `usePersonalData`, and a save or a delete goes through the repository and then reads the list again,
   so setup, the list and the editor always agree. `save` returns the repository's result, so a
   screen maps the problem codes to messages. Nothing in it logs.
+- **Own questions** are held once for the `games/questions` route group by `OwnQuestionsProvider`
+  (`features/ownQuestions`), above the question round provider. It calls `useCustomQuestions`
+  (`personal`) once and shares the result with `useOwnQuestions`, which adds `hasReachedLimit`. Without
+  it each screen would hold its own list, and the home count and the setup count would go stale after
+  the editor saves. Nothing in it logs.
 - **The deck choice** is held once for the `games/dares` route group by `DeckChoiceProvider`
   (`features/decks`). `useDeckChoice` gives `choice` (`'starter'` or `'favourites'`) and
   `chooseDeck`. It is the starter deck each time the route group is entered, and is not remembered.
@@ -707,6 +717,32 @@ screen's. The screens map the problem codes to the messages in `content`, in `ca
   the form, which asks with the kit `Dialog`, then deletes through the repository, which also takes
   the dare out of the favourites and the decks, and goes back.
 - **Not logged.** No dare text is logged or sent anywhere.
+
+### Your questions
+
+A couple write their own Drink If questions and they mix into rounds with the shipped ones. The code
+is in `features/ownQuestions`. A question is a `CustomQuestion`, stored by the personal repository, so
+tidying and checking the text and the options are the repository's, through
+`useCustomQuestions().save`. Player questions have no secret match format, so they never reach a
+secret match, and the secret match intro still deals from the shipped decks alone.
+
+- **Home entry.** `Your questions` is on, with its count ("None yet" or "3 written") as a chip.
+- **List** (`my-questions`). The title with how many are written, `Write a question`, then the
+  questions grouped by format (Drink if, Never have I ever, Would you rather, Guess your partner), and
+  within a format by category in rank order. Each is a pressable card in its category colour with a
+  category chip, the topic, and its text after the format's lead. A would you rather question also
+  shows its two options. An empty list shows Theo and invites the first question. At 300 questions
+  (`limits.playerQuestions`) the add button is disabled and a line says why.
+- **Editor** (`my-questions/new`, `my-questions/[id]`). Chips for the format, the category and the
+  topic, the lead before the multiline text field with its count against 140, the options where the
+  format has them, `Save question`, and `Delete question` when editing. Would you rather has two fixed
+  option fields and its text is optional. Guess your partner has two to four, with `Add an option` and
+  a `Remove` chip named "Remove option 2". Changing the format keeps the text and drops the options the
+  new format does not use (`optionsForFormat`). Save is off while a required field is empty. A rejected
+  save puts each message under its own field (`fieldErrors`), and a repeated option shows under the
+  second of the two that match. Delete asks with the kit `Dialog`, then removes the question and its
+  discoveries through the repository.
+- **Not logged.** No question or option text is logged or sent anywhere.
 
 ### Round setup and decks
 
@@ -906,7 +942,9 @@ opens it (`entryRoute` is `/games/questions`).
 - `features/questionsHome` shows Theo's line as text in a bordered box, with his resting head beside it,
   and one `Card` button for each item in `homeEntries`. An entry
   with a `route` is on. An entry whose `route` is null shows as coming soon, disabled and named
-  "title, Coming soon", so a ticket switches its entry on by giving it a route.
+  "title, Coming soon", so a ticket switches its entry on by giving it a route. An entry with
+  `countOf` also shows its count as a chip at the end and in its name ("Your questions, 3 written"),
+  once the count has been read.
 - `features/questionsSetup` is the Freak or Drink setup with two more groups: four format switches
   and six topic switches, each in one `Card` with `grouped={false}` of `Toggle` rows. The last format
   and the last topic left on are locked. The categories come from the level, as for dares. Only the
@@ -915,8 +953,9 @@ opens it (`entryRoute` is `/games/questions`).
   screen holds no rules. When that is below a numeric length, a message says so. Start stays on and
   the round ends when the questions run out.
 - Start builds the `QuestionRoundSetup`, starts the round with the shipped questions of every deck
-  and the player's own (an empty list until the device stores them), saves the names and opens the
-  play route.
+  and the player's own from `useOwnQuestions`, saves the names and opens the play route. Start waits
+  until the player's questions have been read, so a round never starts without them. The count of
+  questions the choices leave includes the player's.
 
 ### Drink If play screen
 
