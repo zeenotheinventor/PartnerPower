@@ -19,3 +19,9 @@ export type QuestionPreferences = z.infer<typeof questionPreferencesSchema>;
 
 // The id of the last over-the-air update the player was told about, so each update is announced once.
 export const lastShownUpdateIdSchema = z.string();
+
+/** Match phone follows the phone's own light or dark setting. Light and dark ignore it (FRK-89). */
+export const appearanceChoices = ['system', 'light', 'dark'] as const;
+export const appearanceSchema = z.enum(appearanceChoices);
+export type Appearance = z.infer<typeof appearanceSchema>;
+export const defaultAppearance: Appearance = 'system';
