@@ -31,6 +31,12 @@ type TurnViewBaseProps = {
    * everything but Stop is disabled, because the phone is held against a body.
    */
   vibration?: { seconds: number };
+  /**
+   * Set for a card whose text names a time. The same row as the vibration card, with Start in place
+   * of Go. Nothing is disabled while it runs. It is left out on a timer or vibration card and while
+   * the card is face down.
+   */
+  cardTimer?: { seconds: number };
   onDone: () => void;
   onPass: () => void;
   onEndRound: () => void;

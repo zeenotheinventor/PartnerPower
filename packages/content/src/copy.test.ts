@@ -687,6 +687,8 @@ describe('copy', () => {
       [
         'backLabel',
         'bothOfYou',
+        'cardTimerStart',
+        'cardTimerStop',
         'choicePrompt',
         'countdownLabel',
         'countdownSecondsMany',

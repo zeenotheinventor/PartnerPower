@@ -583,6 +583,8 @@ export const copy = {
     vibrationGo: 'Go',
     vibrationStop: 'Stop',
     vibrationBlocked: "Vibration is switched off in this phone's settings.",
+    cardTimerStart: 'Start',
+    cardTimerStop: 'Stop',
   },
   roundSummary: {
     title: 'Round over!',
