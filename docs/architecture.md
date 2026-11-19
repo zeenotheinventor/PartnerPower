@@ -1091,6 +1091,22 @@ Installable builds are made with EAS Build from `apps/mobile/eas.json`. The `pre
 an internal release APK that raises its version code on every build. The profiles pin Node 26.13.1
 and pnpm 9.11.0, and the README has the steps.
 
+The `production` profile makes the store builds: an Android app bundle and an iOS build with store
+distribution. It raises the build number on every build (the number comes from EAS remote
+versioning, and the version stays 1.0.0) and sets the `production` update channel. Its
+`submit.production` block names, by path, the Apple API key and the Google service account key
+under `apps/mobile/secrets/`. The block holds no key, and `.gitignore` covers the folder and `.p8`
+files. Agents never run `eas build` or `eas submit`.
+
+`app.json` holds the native settings a store build needs. On iOS: iPhone only, the encryption flag
+`ITSAppUsesNonExemptEncryption` set to `true` (the answer in `docs/compliance.md`, since SQLCipher
+ships), and a privacy manifest declaring the required reason APIs the app and its libraries use.
+On Android: backups off, and `blockedPermissions` removing the three permissions that the Expo
+template adds and the app never uses (`READ_EXTERNAL_STORAGE`, `WRITE_EXTERNAL_STORAGE`,
+`SYSTEM_ALERT_WINDOW`). `appConfig.test.ts` guards these, and also that nothing the lock, reminder
+and vibration work needs is ever blocked. These native changes alter the runtime version
+fingerprint, so the next build is a reinstall and updates made before it do not reach it.
+
 ## Privacy
 
 - No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
@@ -1150,6 +1166,7 @@ its area under `docs/decisions/`:
 - [Privacy](decisions/privacy.md)
 - [Press feedback and effects](decisions/feedback.md)
 - [Updates](decisions/updates.md)
+- [Builds and store submission](decisions/ci-and-builds.md)
 
 A new decision goes at the end of its area's file, as one list entry:
 `- **<decision>** (<ticket>): <reason>`. Do not use a table. A table is padded to its widest row, so
