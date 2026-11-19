@@ -49,7 +49,7 @@ export function HubScreen() {
         <SpeechBubble text={copy.hub.greeting} tail="center" />
         <Character character="host" mood="wave" size="hero" />
       </View>
-      <GameList games={listedGames} onOpen={(setupRoute) => router.push(setupRoute)} />
+      <GameList games={listedGames} onOpen={(entryRoute) => router.push(entryRoute)} />
       <View className="flex-1" />
       <Button
         label={copy.hub.settings}

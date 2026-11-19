@@ -133,6 +133,83 @@ describe('Toggle', () => {
     });
   });
 
+  describe('when locked', () => {
+    it('should expose the disabled state and stay on', async () => {
+      await renderThemed(<Toggle label="Sound" value locked onValueChange={jest.fn()} />);
+
+      expect(
+        screen.getByRole('switch', { name: 'Sound', checked: true, disabled: true }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should carry the hint it is given, so a screen reader says why it does nothing', async () => {
+      await renderThemed(
+        <Toggle label="Sound" value locked lockedHint="Stays on" onValueChange={jest.fn()} />,
+      );
+
+      expect(screen.getByRole('switch', { name: 'Sound' })).toHaveProp(
+        'accessibilityHint',
+        'Stays on',
+      );
+    });
+
+    it('should carry the hint instead of the description', async () => {
+      await renderThemed(
+        <Toggle
+          label="Sound"
+          description="Button sounds."
+          value
+          locked
+          lockedHint="Stays on"
+          onValueChange={jest.fn()}
+        />,
+      );
+
+      expect(screen.getByRole('switch', { name: 'Sound' })).toHaveProp(
+        'accessibilityHint',
+        'Stays on',
+      );
+      expect(screen.getByText('Button sounds.')).toBeOnTheScreen();
+    });
+
+    it('should not report a change when pressed', async () => {
+      const onValueChange = jest.fn();
+      await renderThemed(<Toggle label="Sound" value locked onValueChange={onValueChange} />);
+
+      fireEvent.press(screen.getByRole('switch', { name: 'Sound' }));
+
+      expect(onValueChange).not.toHaveBeenCalled();
+    });
+
+    it('should not be dimmed, so it still reads as the one that is on', async () => {
+      await renderThemed(<Toggle label="Sound" value locked onValueChange={jest.fn()} />);
+
+      expect(screen.getByRole('switch', { name: 'Sound' })).not.toHaveStyle({ opacity: 0.5 });
+    });
+
+    it('should pick out the track with a foreground border', async () => {
+      await renderThemed(<Toggle label="Sound" value locked onValueChange={jest.fn()} />);
+
+      const { track } = trackAndKnobOf(screen.getByRole('switch', { name: 'Sound' }));
+      expect(track).toHaveStyle({ borderColor: colorThemes.light.foreground.toLowerCase() });
+    });
+
+    it('should keep the track the same size as an unlocked one', async () => {
+      await renderThemed(<Toggle label="Sound" value locked onValueChange={jest.fn()} />);
+
+      const { track } = trackAndKnobOf(screen.getByRole('switch', { name: 'Sound' }));
+      expect(track).toHaveStyle({ height: 24, width: 40 });
+    });
+  });
+
+  it('should carry no hint of its own when it is not locked', async () => {
+    await renderThemed(
+      <Toggle label="Sound" value lockedHint="Stays on" onValueChange={jest.fn()} />,
+    );
+
+    expect(screen.getByRole('switch', { name: 'Sound' })).not.toHaveProp('accessibilityHint');
+  });
+
   describe.each(themeNames)('with the device in %s mode', (themeName) => {
     const theme = colorThemes[themeName];
 

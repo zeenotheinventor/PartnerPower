@@ -142,6 +142,13 @@ export function KitGallery() {
             onValueChange={setSoundOn}
           />
           <Toggle label="Switch, disabled" value disabled onValueChange={() => {}} />
+          <Toggle
+            label="Switch, locked"
+            value
+            locked
+            lockedHint="One switch has to stay on."
+            onValueChange={() => {}}
+          />
         </Section>
 
         <Section title="Favourite toggle">

@@ -57,6 +57,53 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.roundSetup);
   });
 
+  it('should give the Drink If home every line as non-empty text', () => {
+    expect(Object.keys(copy.questionsHome).sort()).toEqual(
+      [
+        'backLabel',
+        'discoveriesBody',
+        'discoveriesTitle',
+        'matchBody',
+        'matchTitle',
+        'ownBody',
+        'ownTitle',
+        'playBody',
+        'playTitle',
+        'subtitle',
+        'theoLine',
+        'title',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.questionsHome);
+  });
+
+  it('should give the Drink If setup every line as non-empty text', () => {
+    expect(Object.keys(copy.questionsSetup).sort()).toEqual(
+      [
+        'backLabel',
+        'formatsLabel',
+        'lastFormatHint',
+        'lastTopicHint',
+        'lengthEndless',
+        'lengthLabel',
+        'lengthTen',
+        'lengthTwenty',
+        'start',
+        'title',
+        'tooFew',
+        'topicsLabel',
+      ].sort(),
+    );
+    expectEveryValueToBeText(copy.questionsSetup);
+  });
+
+  it('should give the Drink If round stand-in every line as non-empty text', () => {
+    expect(Object.keys(copy.questionsPlay).sort()).toEqual(
+      ['backLabel', 'standInLine', 'title'].sort(),
+    );
+    expectEveryValueToBeText(copy.questionsPlay);
+  });
+
   it('should give the round screen every line as non-empty text', () => {
     expect(Object.keys(copy.roundPlay).sort()).toEqual(
       [

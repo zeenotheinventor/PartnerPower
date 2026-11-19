@@ -21,19 +21,19 @@ describe('gameEntries', () => {
     expect(gameEntries.map((entry) => entry.id)).toEqual([...gameIds]);
   });
 
-  it('should make the first game available with its setup route', () => {
+  it('should make the first game available, opening on its setup', () => {
     expect(gameEntries[0]).toEqual({
       id: 'dares',
       status: 'available',
-      setupRoute: '/games/dares/setup',
+      entryRoute: '/games/dares/setup',
     });
   });
 
-  it('should mark the second game as coming soon with its setup route', () => {
+  it('should make the second game available, opening on its home', () => {
     expect(gameEntries[1]).toEqual({
       id: 'questions',
-      status: 'comingSoon',
-      setupRoute: '/games/questions/setup',
+      status: 'available',
+      entryRoute: '/games/questions',
     });
   });
 });

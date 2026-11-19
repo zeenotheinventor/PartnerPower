@@ -24,8 +24,9 @@ export function EntryStack() {
         <Stack.Protected guard={hasConfirmedEntry}>
           <Stack.Screen name="index" />
           <Stack.Screen name="settings" />
-          {/* The dares route group has a layout, so it is one screen here and its routes sit inside it. */}
+          {/* Each game's route group has a layout, so it is one screen here and its routes sit inside it. */}
           <Stack.Screen name="games/dares" />
+          <Stack.Screen name="games/questions" />
           <Stack.Screen name="dev/kit" />
         </Stack.Protected>
       </Stack>
