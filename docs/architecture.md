@@ -132,6 +132,7 @@ interface Card {
   kind: CardKind;
   text: string;
   effect?: CardEffect;
+  seconds?: number; // how long the card lasts, whole seconds, 5 to 300, none with an effect
   tags?: string[]; // 1 to 3 interest tags, shipped dares only
   source: 'shipped' | 'player';
 }
@@ -160,7 +161,10 @@ schema and checks that card ids are unique across all decks.
 
 A card's `effect` is a typed union. A value that does not match fails `parseDeck` with a message
 that names the card, for example `cards[2] (id "card-3"): timer seconds must be a whole number from
-5 to 120`. `source` is required: every shipped card carries `shipped`, and a card a player wrote
+5 to 120`. `seconds` is optional and is for a card whose text names a time. It is a whole number from
+5 to 300 (the longest time in the starter deck is 3 minutes), and a card with an `effect` does not
+take it, because a timer or vibration card has its own countdown. `source` is required: every
+shipped card carries `shipped`, and a card a player wrote
 carries `player`. `tags` is optional, so player cards and stored data stay valid, and it holds 1 to 3
 plain strings, because `core` cannot import the vocabulary from `content`.
 
@@ -982,6 +986,22 @@ on it is stored or logged, except that a player can keep a played card as a favo
   platform cannot say whether a system setting blocks it, so no blocked line is shown. A phone that
   cannot vibrate is never dealt the card: `buildRoundDeck` applies `withoutUnsupportedEffects` with
   `isVibrationSupported()`. Removing the card from the starter deck switches the effect off.
+- **Card with a time.** A card with `seconds` (see the card format) is a plain dare that also shows
+  a countdown row, because its text names a time. `RoundPlayScreen` passes `cardTimer` to
+  `TurnView` when the card has `seconds` and no `effect`. The row is `CountdownRow`
+  (`features/roundPlay/CountdownRow`), the same component as the vibration card's: a kit
+  `Countdown` and one `Button` in a third of the width, Start (primary) or Stop (secondary). The
+  countdown shows the full time until Start is pressed. `useCardTimerRun` keeps the run: Start sets
+  `startedAt` to `Date.now()`, Stop clears it and shows the full time, and when the countdown ends it
+  rests at 0:00, gives the `timerEnd` alarm once and Start runs it again from the full time.
+  Nothing else on the card is disabled while it runs: Done, Pass, "Not this one", End round and
+  "Use free pass" all work, and answering takes the card away, which stops the clock. The clock
+  runs on real time, so the background and a locked screen do not pause it. The row is not shown
+  on a timer surprise or a vibration card, which have a countdown of their own, or while a mystery
+  dare is face down. Every shipped card whose text names a time carries its `seconds`, and a test in
+  `content` (`cardSeconds.test.ts`) reads the times in each card's text and fails when the data
+  differs, or when a card has `seconds` and its text names no time. The rule for what a card lasts
+  is in the decision log.
 - A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
   count. An endless round shows only the count.
 - The End round control, and going back by the system back button or the iOS swipe, open a confirm
@@ -1285,7 +1305,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
   10 seconds are left, if the countdown is longer than that, and at zero with `endText`. The bar is
   a fill, as wide as the track, that Reanimated slides left with a linear timing over the real time
   left, and starts again from the real time left when the app comes back. With reduce motion on there
-  is no timing and the bar steps once a second. The vibration card reuses it.
+  is no timing and the bar steps once a second. The vibration card and the card with a time reuse it.
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
   shadow. Pressing a button or a pressable card sinks its face onto the edge.

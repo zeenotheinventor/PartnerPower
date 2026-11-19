@@ -163,6 +163,31 @@ describe('parseDeck', () => {
     ]);
   });
 
+  it.each([5, 300])('should accept a card that lasts %i seconds', (seconds) => {
+    expect(parseDeck(deckWith({ ...validCard, seconds })).success).toBe(true);
+  });
+
+  it.each([4, 301, 0, 7.5])('should name the card when its seconds are %s', (seconds) => {
+    expect(errorsFor(deckWith({ ...validCard, seconds }))).toEqual([
+      'cards[0] (id "card-1"): card seconds must be a whole number from 5 to 300',
+    ]);
+  });
+
+  it('should name the card when its seconds are text', () => {
+    expect(errorsFor(deckWith({ ...validCard, seconds: '60' }))).toEqual([
+      'cards[0] (id "card-1"): card seconds must be a whole number from 5 to 300',
+    ]);
+  });
+
+  it.each([
+    { type: 'timer', seconds: 30 },
+    { type: 'vibrate', seconds: 10 },
+  ])('should name the card when it has seconds and the effect %j', (effect) => {
+    expect(errorsFor(deckWith({ ...validCard, seconds: 60, effect }))).toEqual([
+      'cards[0] (id "card-1"): a card with an effect must not also have seconds',
+    ]);
+  });
+
   it('should name the card when its effect type is unknown', () => {
     expect(errorsFor(deckWith({ ...validCard, effect: { type: 'flash', seconds: 5 } }))).toEqual([
       'cards[0] (id "card-1"): unknown effect type "flash", expected timer or vibrate',

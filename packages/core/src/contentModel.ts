@@ -125,21 +125,28 @@ export const cardSources = ['shipped', 'player'] as const;
 export type CardSource = (typeof cardSources)[number];
 
 /**
- * `effect` is for cards that change the turn. `tags` link a card to what a couple matched on, and
- * player cards have none. `source` tells a shipped card from a player's.
+ * `effect` is for cards that change the turn. `seconds` is how long a card lasts, when its text
+ * names a time, and the screen shows a countdown for it. A card with an effect does not take it,
+ * because a timer or vibration card already has its own countdown. `tags` link a card to what a
+ * couple matched on, and player cards have none. `source` tells a shipped card from a player's.
  */
-export const cardSchema = z.strictObject(
-  {
-    id: text('id'),
-    category: oneOf('category', categoryIds),
-    kind: oneOf('kind', cardKinds),
-    text: text('text'),
-    effect: effectSchema.optional(),
-    tags: tagsSchema.optional(),
-    source: oneOf('source', cardSources),
-  },
-  { error: objectError },
-);
+export const cardSchema = z
+  .strictObject(
+    {
+      id: text('id'),
+      category: oneOf('category', categoryIds),
+      kind: oneOf('kind', cardKinds),
+      text: text('text'),
+      effect: effectSchema.optional(),
+      seconds: secondsBetween('card', 5, 300).optional(),
+      tags: tagsSchema.optional(),
+      source: oneOf('source', cardSources),
+    },
+    { error: objectError },
+  )
+  .refine((card) => card.effect === undefined || card.seconds === undefined, {
+    error: 'a card with an effect must not also have seconds',
+  });
 export type Card = z.infer<typeof cardSchema>;
 
 const playerCardIdPattern = /^p-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;

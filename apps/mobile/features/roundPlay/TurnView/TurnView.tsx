@@ -1,4 +1,4 @@
-import { copy, fillCopy, surpriseNames } from '@getfreak/content';
+import { copy, surpriseNames } from '@getfreak/content';
 import { useEffect, useRef, useState, type RefObject } from 'react';
 import { AccessibilityInfo, Text, View } from 'react-native';
 import Animated from 'react-native-reanimated';
@@ -13,18 +13,14 @@ import {
   Screen,
 } from '../../../components/ui';
 import { useFeedback } from '../../../feedback/FeedbackProvider';
+import { CountdownRow } from '../CountdownRow';
+import { countdownSecondsText } from '../countdownSecondsText';
 import type { PressEffectKind } from '../pressEffect';
 import { TurnTopBar } from '../TurnTopBar';
 import type { TurnViewProps } from './types';
 import { useCardFlip } from './useCardFlip';
+import { useCardTimerRun } from './useCardTimerRun';
 import { useVibrationRun } from './useVibrationRun';
-
-function countdownSecondsText(count: number) {
-  return fillCopy(
-    count === 1 ? copy.roundPlay.countdownSecondsOne : copy.roundPlay.countdownSecondsMany,
-    { count },
-  );
-}
 
 export function TurnView({
   turnLabel,
@@ -40,6 +36,7 @@ export function TurnView({
   freePass,
   timer,
   vibration,
+  cardTimer,
   kind,
   togetherNames,
   onDone,
@@ -70,6 +67,12 @@ export function TurnView({
   const isLockedByVibration = vibrationRun.isRunning;
   const faceDownMystery = mystery && isBackShowing ? mystery : undefined;
   const isFaceDownShowing = faceDownMystery !== undefined;
+  // Done, Pass and the rest are never held back for the card timer. The timer surprise and the
+  // vibration card have a countdown of their own, so they never show this one, and a card face
+  // down has no text yet that a time could belong to.
+  const cardTimerRun = useCardTimerRun();
+  const shownCardTimer =
+    timer === undefined && vibration === undefined && !isFaceDownShowing ? cardTimer : undefined;
 
   // Once the card has turned over, a screen reader is taken to what is written on it.
   const wasFaceDownShowing = useRef(isFaceDownShowing);
@@ -172,28 +175,29 @@ export function TurnView({
       ) : null}
 
       {vibration ? (
-        <View className="flex-row items-center gap-12">
-          <View className="flex-1">
-            <Countdown
-              seconds={vibration.seconds}
-              startedAt={vibrationRun.startedAt}
-              label={copy.roundPlay.countdownLabel}
-              secondsText={countdownSecondsText}
-              endText={copy.roundPlay.timerDone}
-              onEnd={vibrationRun.end}
-            />
-          </View>
-          <View className="w-1/3">
-            <Button
-              label={
-                vibrationRun.isRunning ? copy.roundPlay.vibrationStop : copy.roundPlay.vibrationGo
-              }
-              variant={vibrationRun.isRunning ? 'secondary' : 'primary'}
-              fullWidth
-              onPress={vibrationRun.isRunning ? vibrationRun.stop : vibrationRun.go}
-            />
-          </View>
-        </View>
+        <CountdownRow
+          seconds={vibration.seconds}
+          startedAt={vibrationRun.startedAt}
+          isRunning={vibrationRun.isRunning}
+          startLabel={copy.roundPlay.vibrationGo}
+          stopLabel={copy.roundPlay.vibrationStop}
+          onStart={vibrationRun.go}
+          onStop={vibrationRun.stop}
+          onEnd={vibrationRun.end}
+        />
+      ) : null}
+
+      {shownCardTimer ? (
+        <CountdownRow
+          seconds={shownCardTimer.seconds}
+          startedAt={cardTimerRun.startedAt}
+          isRunning={cardTimerRun.isRunning}
+          startLabel={copy.roundPlay.cardTimerStart}
+          stopLabel={copy.roundPlay.cardTimerStop}
+          onStart={cardTimerRun.start}
+          onStop={cardTimerRun.stop}
+          onEnd={cardTimerRun.end}
+        />
       ) : null}
 
       {faceDownMystery ? (
