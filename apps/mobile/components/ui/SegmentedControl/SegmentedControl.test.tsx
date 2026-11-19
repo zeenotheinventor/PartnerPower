@@ -56,6 +56,20 @@ describe('SegmentedControl', () => {
     expect(screen.getByRole('radio', { name: 'Third', checked: false })).toBeOnTheScreen();
   });
 
+  it('should check no option while it has no value', async () => {
+    await renderThemed(
+      <SegmentedControl
+        label="Size"
+        options={levelOptions}
+        value={undefined}
+        onValueChange={jest.fn()}
+      />,
+    );
+
+    expect(screen.queryAllByRole('radio', { checked: true })).toHaveLength(0);
+    expect(screen.getAllByRole('radio', { checked: false })).toHaveLength(3);
+  });
+
   it('should report the value of the option that is pressed', async () => {
     const onValueChange = jest.fn();
     await renderControl(onValueChange);

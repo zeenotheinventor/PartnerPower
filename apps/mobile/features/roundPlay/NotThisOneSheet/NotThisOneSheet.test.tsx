@@ -55,6 +55,27 @@ describe('NotThisOneSheet', () => {
     expect(screen.getByText(copy.roundPlay.skipBody)).toBeOnTheScreen();
   });
 
+  it('should word the skip row with the title and hint it is given', async () => {
+    await renderThemed(
+      <NotThisOneSheet
+        visible
+        categories={allOn}
+        skipTitle="Skip this thing"
+        skipHint="Another thing is drawn."
+        onSkip={jest.fn()}
+        onSwitchOff={jest.fn()}
+        onClose={jest.fn()}
+      />,
+    );
+
+    expect(screen.getByRole('button', { name: 'Skip this thing' })).toHaveProp(
+      'accessibilityHint',
+      'Another thing is drawn.',
+    );
+    expect(screen.getByText('Another thing is drawn.')).toBeOnTheScreen();
+    expect(screen.queryByText(copy.roundPlay.skipTitle)).not.toBeOnTheScreen();
+  });
+
   it('should skip from the skip row', async () => {
     const { rendered, onSkip } = renderSheet();
     await rendered;

@@ -5,21 +5,26 @@ import { Button, Character, Screen, SpeechBubble } from '../../../components/ui'
 import { categoryFillClasses, categoryLabelClasses } from '../categoryClasses';
 import { CategoryMarkers } from '../CategoryMarkers';
 import { NoticeBox } from '../NoticeBox';
-import type { SteppingUpViewProps } from './types';
+import type { SteppingUpCharacter, SteppingUpViewProps } from './types';
+
+const defaultCharacter: SteppingUpCharacter = { character: 'gatekeeper', mood: 'flirty' };
 
 export function SteppingUpView({
   category,
   categoryName,
   penalty,
   notice,
+  line = copy.roundPlay.stepUpLine,
+  costLine = fillCopy(copy.roundPlay.stepUpCost, { penalty }),
+  character = defaultCharacter,
   onContinue,
 }: SteppingUpViewProps) {
   return (
     <Screen scroll>
       <View className="flex-1 items-center justify-center gap-16">
         {notice ? <NoticeBox message={notice} /> : null}
-        <SpeechBubble text={copy.roundPlay.stepUpLine} tail="center" />
-        <Character character="gatekeeper" mood="flirty" size="hero" />
+        <SpeechBubble text={line} tail="center" />
+        <Character {...character} size="hero" />
         <Text accessibilityRole="header" className="type-body-bold text-muted">
           {copy.roundPlay.stepUpTitle}
         </Text>
@@ -27,9 +32,7 @@ export function SteppingUpView({
           <Text className={`type-title ${categoryLabelClasses[category]}`}>{categoryName}</Text>
         </View>
         <CategoryMarkers category={category} />
-        <Text className="type-body-bold text-muted">
-          {fillCopy(copy.roundPlay.stepUpCost, { penalty })}
-        </Text>
+        <Text className="type-body-bold text-muted">{costLine}</Text>
       </View>
       <Button label={copy.roundPlay.stepUpButton} fullWidth onPress={onContinue} />
     </Screen>

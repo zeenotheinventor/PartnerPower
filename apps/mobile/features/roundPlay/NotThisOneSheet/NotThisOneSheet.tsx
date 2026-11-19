@@ -19,6 +19,8 @@ const ThemedSafeAreaView = cssInterop(SafeAreaView, { className: 'style' });
 export function NotThisOneSheet({
   visible,
   categories,
+  skipTitle = copy.roundPlay.skipTitle,
+  skipHint = copy.roundPlay.skipBody,
   onSkip,
   onSwitchOff,
   onClose,
@@ -43,13 +45,13 @@ export function NotThisOneSheet({
 
             <Pressable
               accessibilityRole="button"
-              accessibilityLabel={copy.roundPlay.skipTitle}
-              accessibilityHint={copy.roundPlay.skipBody}
+              accessibilityLabel={skipTitle}
+              accessibilityHint={skipHint}
               onPress={onSkip}
               className="min-h-48 justify-center rounded-lg border-2 border-border bg-background px-12 py-8"
             >
-              <Text className="type-heading text-foreground">{copy.roundPlay.skipTitle}</Text>
-              <Text className="type-caption text-muted">{copy.roundPlay.skipBody}</Text>
+              <Text className="type-heading text-foreground">{skipTitle}</Text>
+              <Text className="type-caption text-muted">{skipHint}</Text>
             </Pressable>
 
             <View className="gap-4">
