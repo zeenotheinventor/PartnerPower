@@ -1,4 +1,4 @@
-import { categoryNames, copy, decks, levelNames } from '@getfreak/content';
+import { categoryNames, copy, decks, fillCopy, levelNames } from '@getfreak/content';
 import {
   categoriesForLevel,
   levelIds,
@@ -15,6 +15,7 @@ import { Text, View } from 'react-native';
 import {
   Button,
   CategoryToggle,
+  Card,
   Character,
   Header,
   Screen,
@@ -23,6 +24,9 @@ import {
   Toggle,
 } from '../../../components/ui';
 import { useSettings } from '../../../settings';
+import { useOwnCards } from '../../ownCards/OwnCardsProvider';
+import { myDaresRoute } from '../../ownCards/routes';
+import { withOwnCards } from '../../ownCards/withOwnCards';
 import { useRound } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { randomSeed } from '../randomSeed';
@@ -49,6 +53,7 @@ export function RoundSetupScreen() {
   const router = useRouter();
   const { playerNames, savePlayerNames } = useSettings();
   const { startNewRound } = useRound();
+  const { cards: ownCards } = useOwnCards();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -62,10 +67,17 @@ export function RoundSetupScreen() {
   const [length, setLength] = useState<RoundLength>(defaultLength);
   // Not remembered, like the level and the length. It is on each time setup opens.
   const [surprisesOn, setSurprisesOn] = useState(true);
+  // Not remembered either. It is on whenever there is a dare, because a couple who wrote dares want
+  // to see them, and it only decides whether they are dealt in with the starter deck.
+  const [mixOn, setMixOn] = useState(true);
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
   const canStart = names.every((name) => tidyName(name) !== '');
+  const myDaresValue =
+    ownCards.length === 0
+      ? copy.roundSetup.myDaresNone
+      : fillCopy(copy.roundSetup.myDaresCount, { count: ownCards.length });
 
   // A deep link can open this screen with nothing behind it, so it falls back to the first screen.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace('/'));
@@ -97,6 +109,7 @@ export function RoundSetupScreen() {
     const [first, second] = names;
     const tidiedNames: PlayerNames = [tidyName(first), tidyName(second)];
     const [firstDeck = deckWithoutCards] = decks;
+    const deck = mixOn ? withOwnCards(firstDeck, ownCards) : firstDeck;
     startNewRound(
       {
         players: tidiedNames,
@@ -106,7 +119,7 @@ export function RoundSetupScreen() {
         seed: randomSeed(),
         surprises: surprisesOn ? playableSurprises : [],
       },
-      firstDeck,
+      deck,
     );
     // Saving never rejects, and the round does not wait for it.
     void savePlayerNames(tidiedNames);
@@ -146,6 +159,31 @@ export function RoundSetupScreen() {
             maxLength={maxNameLength}
           />
         </View>
+      </View>
+
+      <View className="gap-8">
+        <Card
+          label={fillCopy(copy.roundSetup.myDaresRowName, {
+            label: copy.roundSetup.myDaresLabel,
+            value: myDaresValue,
+          })}
+          onPress={() => router.push(myDaresRoute)}
+        >
+          <View className="flex-row items-center gap-12">
+            <View className="flex-1">
+              <Text className="type-caption uppercase text-muted">
+                {copy.roundSetup.myDaresLabel}
+              </Text>
+              <Text className="type-heading text-foreground">{myDaresValue}</Text>
+            </View>
+            <View className="mr-4 h-12 w-12 rotate-45 border-r-4 border-t-4 border-muted" />
+          </View>
+        </Card>
+        {ownCards.length > 0 ? (
+          <View className="rounded-lg border-2 border-border bg-surface px-12">
+            <Toggle label={copy.roundSetup.mixInMyDares} value={mixOn} onValueChange={setMixOn} />
+          </View>
+        ) : null}
       </View>
 
       <SegmentedControl

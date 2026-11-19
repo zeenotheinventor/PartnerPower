@@ -1,5 +1,5 @@
 import { colorThemes } from '@getfreak/tokens';
-import { fireEvent, screen } from 'nativewind/test';
+import { fireEvent, screen, within } from 'nativewind/test';
 import { KeyboardAvoidingView, ScrollView, StyleSheet } from 'react-native';
 
 import { renderThemed } from '../../../tailwind/renderThemed';
@@ -99,6 +99,68 @@ describe('Screen', () => {
         .map((node) => StyleSheet.flatten(node.props.contentContainerStyle));
       expect(contentStyles.map((style) => style.paddingTop)).toContain(16);
     });
+  });
+
+  describe('a footer', () => {
+    it('should show the footer outside the scrolling content, after it', async () => {
+      await renderThemed(
+        <Screen scroll footer={<Button label="Save" onPress={jest.fn()} />}>
+          <Header title="Editor" />
+        </Screen>,
+      );
+
+      const scrollView = screen.UNSAFE_getByType(ScrollView);
+      expect(within(scrollView).queryByRole('button', { name: 'Save' })).not.toBeOnTheScreen();
+      expect(screen.getByRole('button', { name: 'Save' })).toBeOnTheScreen();
+    });
+
+    it('should ride above the keyboard when the screen avoids it', async () => {
+      await renderThemed(
+        <Screen scroll avoidKeyboard footer={<Button label="Save" onPress={jest.fn()} />}>
+          <Header title="Editor" />
+        </Screen>,
+      );
+
+      const avoidingView = screen.UNSAFE_getByType(KeyboardAvoidingView);
+      expect(within(avoidingView).getByRole('button', { name: 'Save' })).toBeOnTheScreen();
+    });
+
+    it('should be pressable', async () => {
+      const onPress = jest.fn();
+      await renderThemed(
+        <Screen footer={<Button label="Save" onPress={onPress} />}>
+          <Header title="Editor" />
+        </Screen>,
+      );
+
+      fireEvent.press(screen.getByRole('button', { name: 'Save' }));
+
+      expect(onPress).toHaveBeenCalledTimes(1);
+    });
+
+    it.each(themeNames)(
+      'should sit on a border line over the background in %s mode',
+      async (themeName) => {
+        await renderThemed(
+          <Screen footer={<Button label="Save" onPress={jest.fn()} />}>
+            <Header title="Editor" />
+          </Screen>,
+          themeName,
+        );
+
+        // The footer has no role, so it is the nearest view above the button that has a top border.
+        let footer: ReturnType<typeof screen.getByRole> | null = screen.getByRole('button', {
+          name: 'Save',
+        }).parent;
+        while (footer && StyleSheet.flatten(footer.props.style)?.borderTopWidth !== 2) {
+          footer = footer.parent;
+        }
+        expect(footer).toHaveStyle({
+          borderColor: colorThemes[themeName].border.toLowerCase(),
+          backgroundColor: colorThemes[themeName].background.toLowerCase(),
+        });
+      },
+    );
   });
 
   describe.each(themeNames)('with the device in %s mode', (themeName) => {

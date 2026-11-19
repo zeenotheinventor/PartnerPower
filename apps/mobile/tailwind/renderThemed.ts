@@ -9,7 +9,7 @@ type ThemeName = 'light' | 'dark';
 // safelist compiles every utility with one of these prefixes. A utility prefix missing from the
 // list will silently not resolve, so add the prefix here when a test needs it.
 const safelistedPrefixes =
-  /^(flex|items|justify|bg|border|p|mt|gap|h|w|rounded|text|font|type|opacity|px|py|pb|pt|mb|translate|self|grow|inset|top|bottom|min|ml|rotate|left|right|overflow|pointer)-/;
+  /^(flex|items|justify|bg|border|p|mt|gap|h|w|rounded|text|font|type|opacity|px|py|pb|pt|mb|translate|self|grow|inset|top|bottom|min|ml|mr|rotate|left|right|overflow|pointer)-/;
 
 /** Renders with the app's real Tailwind config while the device is in the given colour scheme. */
 export async function renderThemed(element: ReactElement, themeName: ThemeName = 'light') {

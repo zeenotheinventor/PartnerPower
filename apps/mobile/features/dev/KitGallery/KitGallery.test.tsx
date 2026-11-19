@@ -104,6 +104,49 @@ describe('KitGallery', () => {
     expect(mockBack).toHaveBeenCalledTimes(1);
   });
 
+  describe('the multiline text field', () => {
+    it('should show a multiline field with the count against its maximum', async () => {
+      await renderThemed(<KitGallery />);
+
+      expect(screen.getByLabelText('Multiline text field')).toHaveProp('multiline', true);
+      expect(screen.getByText('0/140', { includeHiddenElements: true })).toBeOnTheScreen();
+    });
+
+    it('should count what is typed, and show the error when over the maximum', async () => {
+      await renderThemed(<KitGallery />);
+
+      fireEvent.changeText(screen.getByLabelText('Multiline text field'), 'x'.repeat(141));
+
+      expect(screen.getByText('141/140', { includeHiddenElements: true })).toBeOnTheScreen();
+      expect(
+        screen.getByText('Keep it to 140 characters.', { includeHiddenElements: true }),
+      ).toBeOnTheScreen();
+    });
+  });
+
+  describe('the dialog', () => {
+    it('should show the dialog only when asked', async () => {
+      await renderThemed(<KitGallery />);
+      expect(screen.queryByLabelText('Dialog title')).not.toBeOnTheScreen();
+
+      fireEvent.press(screen.getByRole('button', { name: 'Show dialog' }));
+
+      expect(screen.getByLabelText('Dialog title')).toHaveProp('role', 'alertdialog');
+    });
+
+    it('should close from either button', async () => {
+      await renderThemed(<KitGallery />);
+      fireEvent.press(screen.getByRole('button', { name: 'Show dialog' }));
+
+      fireEvent.press(screen.getByRole('button', { name: 'Dialog confirm' }));
+      expect(screen.queryByLabelText('Dialog title')).not.toBeOnTheScreen();
+
+      fireEvent.press(screen.getByRole('button', { name: 'Show dialog' }));
+      fireEvent.press(screen.getByRole('button', { name: 'Dialog cancel' }));
+      expect(screen.queryByLabelText('Dialog title')).not.toBeOnTheScreen();
+    });
+  });
+
   describe('the cast', () => {
     it.each(characterIds)(
       'should show the %s character with a sample line',
