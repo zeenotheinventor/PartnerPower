@@ -91,6 +91,7 @@ export {
   availableQuestionCount,
   isQuestionRoundOver,
   playableFormats,
+  questionTurnView,
   reduceQuestionRound,
   startQuestionRound,
   summariseQuestionRound,
@@ -107,4 +108,5 @@ export type {
   QuestionRoundState,
   QuestionRoundSummary,
   QuestionStage,
+  QuestionTurnView,
 } from './questionRound';

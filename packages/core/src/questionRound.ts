@@ -74,7 +74,10 @@ export type CurrentQuestion = {
   /** True for the first question in a higher category than the previous one. */
   steppingUp: boolean;
   stage: QuestionStage;
-  /** The holder's pick, kept private until the other player has picked. Null at any other time. */
+  /**
+   * The holder's pick, kept private until the other player has picked. Null at any other time.
+   * Screens must not read this. They read `questionTurnView`, which leaves it out.
+   */
   firstPick: string | null;
   /** Set when the stage is `revealed`. */
   reveal: QuestionReveal | null;
@@ -265,6 +268,30 @@ export function availableQuestionCount(
   questions: readonly Question[],
 ): number {
   return dealableQuestions(setup, questions).length;
+}
+
+/**
+ * What a turn screen shows. It never carries the holder's first pick, so a screen that reads only
+ * this view cannot show it by mistake, including after a focus change or a replaced question.
+ */
+export type QuestionTurnView = Omit<CurrentQuestion, 'firstPick'> & {
+  /** True while the holder's pick is locked in and the other player has yet to pick. */
+  pickLocked: boolean;
+};
+
+/** The view a turn screen reads. Null when the round is over. */
+export function questionTurnView(state: QuestionRoundState): QuestionTurnView | null {
+  const { current } = state;
+  if (current === null) return null;
+  return {
+    question: current.question,
+    holder: current.holder,
+    other: current.other,
+    steppingUp: current.steppingUp,
+    stage: current.stage,
+    reveal: current.reveal,
+    pickLocked: current.stage === 'secondPick',
+  };
 }
 
 /** Applies an action. An action that does not apply returns the same state. */

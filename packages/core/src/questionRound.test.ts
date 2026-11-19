@@ -3,6 +3,7 @@ import { nextRandom } from './seededRandom';
 import {
   availableQuestionCount,
   isQuestionRoundOver,
+  questionTurnView,
   reduceQuestionRound,
   startQuestionRound,
   summariseQuestionRound,
@@ -884,5 +885,86 @@ describe('availableQuestionCount', () => {
       ...makeQuestions(['ifYou'], ['c1'], 2, 'player'),
     ];
     expect(availableQuestionCount(setupWith(), questions)).toBe(4);
+  });
+});
+
+describe('questionTurnView', () => {
+  const secretOptionId = 'secret-pick-id';
+  const secretQuestion: PlayableQuestion = {
+    id: 'shipped-guess-c1-secret',
+    format: 'guess',
+    category: 'c1',
+    topic: 't1',
+    source: 'shipped',
+    text: 'Guess secret',
+    options: [
+      { id: secretOptionId, text: 'Option one' },
+      { id: 'other-option-id', text: 'Option two' },
+    ],
+  };
+  const start = () => startOnly('guess', [secretQuestion]);
+
+  it('should be null when the round is over', () => {
+    expect(questionTurnView(apply(start(), { type: 'end' }))).toBeNull();
+  });
+
+  it('should carry what a turn screen needs', () => {
+    expect(questionTurnView(start())).toMatchObject({
+      question: secretQuestion,
+      holder: 0,
+      other: 1,
+      steppingUp: false,
+      stage: 'answering',
+      reveal: null,
+      pickLocked: false,
+    });
+  });
+
+  it('should lock the pick during the second pick and only then', () => {
+    const answering = questionTurnView(start());
+    const secondPick = questionTurnView(apply(start(), pick(secretOptionId)));
+    const revealed = questionTurnView(apply(start(), pick(secretOptionId), pick(secretOptionId)));
+    expect([answering?.pickLocked, secondPick?.pickLocked, revealed?.pickLocked]).toEqual([
+      false,
+      true,
+      false,
+    ]);
+  });
+
+  it('should never contain the first pick before the reveal', () => {
+    const answering = questionTurnView(start());
+    const secondPick = questionTurnView(apply(start(), pick(secretOptionId)));
+    for (const view of [answering, secondPick]) {
+      expect(view).not.toHaveProperty('firstPick');
+      // The question lists every option, so it is left out to look for the pick anywhere else.
+      expect(JSON.stringify({ ...view, question: null })).not.toContain(secretOptionId);
+    }
+  });
+
+  it('should show the first pick only inside the reveal once both have picked', () => {
+    const view = questionTurnView(apply(start(), pick(secretOptionId), pick('other-option-id')));
+    expect(view).not.toHaveProperty('firstPick');
+    expect(view?.reveal).toMatchObject({ answer: secretOptionId, guess: 'other-option-id' });
+  });
+
+  it('should show no earlier pick on the replacement after a question is removed', () => {
+    const state = apply(startOnly('guess', makeQuestions(['guess'], ['c1'], 3)), pick('a'), {
+      type: 'removeQuestion',
+    });
+    expect(questionTurnView(state)).toMatchObject({ pickLocked: false, stage: 'answering' });
+  });
+});
+
+describe('the first mixed draw with a fixed seed', () => {
+  it.each([
+    [1, 'shipped'],
+    [7, 'player'],
+  ])('should take the first mixed question for seed %s from the %s source', (seed, source) => {
+    const state = startOnly(
+      'ifYou',
+      [...makeQuestions(['ifYou'], ['c1'], 5), ...makeQuestions(['ifYou'], ['c1'], 5, 'player')],
+      { seed },
+    );
+    expect(questionOf(state).source).toBe(source);
   });
 });

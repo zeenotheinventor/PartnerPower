@@ -398,8 +398,7 @@ exactly as it did for the same seed and actions. An unknown type or a repeated o
 
 A round of the `questions` game is a reducer in `core`, in `questionRound.ts`. It follows the dares
 engine: pure, plain serialisable state, and a seeded generator in the state. The pacing rules that
-both games share are in `pacing.ts`. Only this engine uses them for now. Moving the dares engine
-onto them is a later clean-up.
+both games share are in `pacing.ts`, and `round.ts` imports them from there.
 
 ```ts
 type QuestionRoundSetup = {
@@ -430,6 +429,7 @@ function reduceQuestionRound(
 ): QuestionRoundState;
 function summariseQuestionRound(state: QuestionRoundState): QuestionRoundSummary;
 function isQuestionRoundOver(state: QuestionRoundState): boolean;
+function questionTurnView(state: QuestionRoundState): QuestionTurnView | null;
 function availableQuestionCount(setup: QuestionRoundSetup, questions: readonly Question[]): number;
 ```
 
@@ -444,6 +444,13 @@ length, with no rules of its own.
 `current` carries `question`, `holder`, `other` and `steppingUp` as for dares, plus `stage`
 (`answering`, `secondPick`, `revealed`), `firstPick` and `reveal`. The holder alternates every
 question, starting with the first player. `next` deals the following question from `revealed`.
+
+Screens read `questionTurnView(state)`, never `current.firstPick`. The view has everything a turn
+screen needs (`question`, `holder`, `other`, `steppingUp`, `stage` and `reveal`) and leaves out the
+holder's first pick, so no screen can show a private pick by mistake, including after a focus change
+or a replaced question. It adds `pickLocked`, true while the stage is `secondPick`, so the screen can
+say a pick is locked in without saying which. The first pick appears only inside `reveal`, once both
+players have picked. It is null when the round is over.
 
 Rules the engine owns:
 
@@ -935,4 +942,5 @@ and pnpm 9.11.0, and the README has the steps.
 | Fallback order for questions               | The chosen format is tried first in each category, then the other enabled formats, as the ticket says. This differs from dares, which tries the preferred kind in every category before the other kind.                                                                                                                                           | FRK-35 |
 | Knows best after only wrong guesses        | `knowsBest` is `'tie'` when guess questions were played and both players have the same number right, even zero. It is null only when no guess question was played.                                                                                                                                                                                | FRK-35 |
 | Duplicate ids in the question list         | The engine deals the first question of an id and ignores the rest, so a repeated id cannot be dealt twice.                                                                                                                                                                                                                                        | FRK-35 |
-| Pacing constants are copied                | `pacing.ts` has its own copy of the pacing helpers and of `endlessStepInterval`, and `round.ts` is untouched while milestone 3 reworks it. The dares engine adopts `pacing.ts` later, and the two constants collapse into one.                                                                                                                    | FRK-35 |
+| Screens read a turn view                   | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
+| Pacing is shared                           | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
