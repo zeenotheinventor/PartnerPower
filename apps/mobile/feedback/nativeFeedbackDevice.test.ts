@@ -249,4 +249,30 @@ describe('createNativeFeedbackDevice', () => {
       await jest.advanceTimersByTimeAsync(0);
     });
   });
+
+  describe('cancelling a pattern', () => {
+    it('should drop the pulses that have not fired yet', async () => {
+      const device = createNativeFeedbackDevice();
+      device.triggerHaptic('roundComplete');
+      expect(mockNotification).toHaveBeenCalledTimes(1);
+
+      device.cancelHaptics();
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(mockNotification).toHaveBeenCalledTimes(1);
+      expect(mockImpact).not.toHaveBeenCalled();
+    });
+
+    it('should leave a later pattern alone', async () => {
+      const device = createNativeFeedbackDevice();
+      device.triggerHaptic('roundComplete');
+      device.cancelHaptics();
+      mockNotification.mockClear();
+
+      device.triggerHaptic('roundComplete');
+      await jest.advanceTimersByTimeAsync(1000);
+
+      expect(mockImpact).toHaveBeenCalled();
+    });
+  });
 });

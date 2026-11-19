@@ -1,8 +1,8 @@
 import { copy } from '@getfreak/content';
 import { useRouter } from 'expo-router';
-import { Text, View } from 'react-native';
+import { View } from 'react-native';
 
-import { Header, Screen, Toggle } from '../../../components/ui';
+import { Card, Header, Screen, Toggle } from '../../../components/ui';
 import { useSettings } from '../../../settings';
 
 const hubRoute = '/';
@@ -18,20 +18,25 @@ export function SettingsScreen() {
   return (
     <Screen scroll>
       <Header title={copy.settings.title} backLabel={copy.settings.backLabel} onBack={goBack} />
-      <View className="gap-16">
-        <View className="gap-4">
-          <Toggle label={copy.settings.soundsLabel} value={soundOn} onValueChange={setSoundOn} />
-          <Text className="type-caption text-muted">{copy.settings.soundsCaption}</Text>
-        </View>
-        <View className="gap-4">
+      {/* Not grouped, so each switch is read on its own. */}
+      <Card grouped={false}>
+        <View className="gap-16">
           <Toggle
-            label={copy.settings.vibrationLabel}
-            value={hapticsOn}
-            onValueChange={setHapticsOn}
+            label={copy.settings.soundsLabel}
+            description={copy.settings.soundsCaption}
+            value={soundOn}
+            onValueChange={setSoundOn}
           />
-          <Text className="type-caption text-muted">{copy.settings.vibrationCaption}</Text>
+          <View className="border-t-2 border-border pt-16">
+            <Toggle
+              label={copy.settings.vibrationLabel}
+              description={copy.settings.vibrationCaption}
+              value={hapticsOn}
+              onValueChange={setHapticsOn}
+            />
+          </View>
         </View>
-      </View>
+      </Card>
     </Screen>
   );
 }

@@ -11,10 +11,15 @@ export type FeedbackMoment = FeedbackSound | 'roundComplete';
 export type FeedbackDevice = {
   playSound: (sound: FeedbackSound) => void;
   triggerHaptic: (moment: FeedbackMoment) => void;
+  /** Drops the pulses of a pattern that has not finished, such as the end of round run. */
+  cancelHaptics: () => void;
 };
 
 /** One call per moment. The call fires the sound and the haptic together, and never throws. */
-export type Feedback = Record<FeedbackMoment, () => void>;
+export type Feedback = Record<FeedbackMoment, () => void> & {
+  /** Stops the rest of a haptic pattern that is still running. */
+  cancelHaptics: () => void;
+};
 
 export type FeedbackSwitches = {
   soundOn: boolean;

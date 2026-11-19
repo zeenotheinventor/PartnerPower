@@ -23,12 +23,14 @@ function makeCards(category: CategoryId): Card[] {
     id: `${category}-solo-${number}`,
     category,
     kind: 'solo',
+    source: 'shipped',
     text: `Card ${category} solo ${number}`,
   }));
   const together: Card = {
     id: `${category}-together`,
     category,
     kind: 'together',
+    source: 'shipped',
     text: `Card ${category} together`,
   };
   return [...solos, together];

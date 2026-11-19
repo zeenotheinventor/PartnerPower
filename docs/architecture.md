@@ -350,8 +350,10 @@ on it is stored or logged.
   which leaves the route group and discards the round and `lastStart`. A new visit to the game
   starts setup at its defaults. The names are still remembered, because they are settings.
 - Going back by the system back button or the iOS swipe goes to setup, as Settings does.
-- The round complete haptic fires when the summary first shows, once for the round. A ref in the
-  screen guards it, so a render or an effect that runs again does not fire it twice. It fires the same
+- The round complete haptic fires when the summary first shows, once for the round. The
+  screen guards it, keyed on the finished round object in a module level `WeakSet`, so a render, an
+  effect that runs again or a remount of the same round does not fire it twice. It fires only for a
+  round that is over, because Play again starts the next round while the summary is still up. It fires the same
   way whether the round ended by itself or from End round, because both end at this screen. Play
   again replaces the screen, and the next summary is a new round with its own single haptic.
 
@@ -433,7 +435,7 @@ player to confirm they are 18 or over, and its wording is in `content`.
 | `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
 | `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                          |
 | `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.   |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state.                                                                                                                                                                                                                                                                       |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                    |
 | `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
 | `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                              |
 | `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                 |
@@ -479,12 +481,15 @@ player to confirm they are 18 or over, and its wording is in `content`.
   `interruptionMode: 'mixWithOthers'`, so music already playing is neither stopped nor lowered. On
   Android that mode asks for no audio focus. The sounds follow the media volume on both platforms.
   The `expo-audio` config plugin is set to add no microphone permission, no record permission and no
-  background playback service.
+  background playback service. On Android, `playsInSilentMode: false` also mutes the sounds when the
+  ringer is on silent or vibrate.
 - Haptics follow the phone's own setting. On iOS the impact and notification generators are silent
   when System Haptics is off. On Android the effects are the view haptic effects from
   `performAndroidHapticsAsync`, which follow the touch feedback setting and need no permission. The
   vibrator calls are not used, because they ignore that setting. A phone with no haptic hardware
   does nothing and no error shows. Each haptic call is wrapped, so a rejection or a throw is dropped.
+  The later pulses of the round complete run are timers, and `cancelHaptics` drops them. The summary
+  calls it when it is left, and the provider calls it when vibration is turned off.
 - Each moment has its own feel. On iOS a tap is a light impact, done is a success notification and
   pass is a warning notification. On Android they are the virtual key, confirm and reject effects.
   The round complete haptic is a run of four pulses over about half a second on both platforms, so it
@@ -500,9 +505,11 @@ player to confirm they are 18 or over, and its wording is in `content`.
 ## Settings screen
 
 `features/settings/SettingsScreen` is the `/settings` route. It shows the `Header` with a back button
-and the title, then two `Toggle` rows, Sounds and Vibration, each with a caption under it. A change is
+and the title, then one static `Card` (not grouped, so each switch is read on its own) holding two
+`Toggle` rows, Sounds and Vibration, with a divider between them. Each caption is the toggle's
+`description`, so it is also the switch's hint. A change is
 stored at once through the settings context. The hub has a secondary Settings button below the game
-tiles. The route is in the second protected group of `EntryStack`, so it is closed until the player
+tiles, pushed to the bottom by a flexible spacer. The dev kit link stays below it, in development builds only. The route is in the second protected group of `EntryStack`, so it is closed until the player
 has confirmed. Back goes to the hub, and a deep link with nothing behind it replaces the screen with
 the hub. All its text is in `content`.
 
@@ -677,4 +684,4 @@ and pnpm 9.11.0, and the README has the steps.
 | Feedback with no provider                  | Calls do nothing, so a component renders alone. The route tests prove the real root layout wires the provider.                                                                                                                                   | FRK-26 |
 | Android haptics                            | The view haptic effects, not the vibrator, so the phone's touch feedback setting is respected and no permission is needed. iOS uses its system generators, which follow System Haptics.                                                          | FRK-28 |
 | Round complete haptic                      | A run of four pulses over about half a second, fired once from the summary screen when it first shows. The summary is where both ways of ending a round meet, so one guard gives once only.                                                      | FRK-28 |
-| Settings screen captions                   | Each caption is plain text under its `Toggle`, because the kit `Toggle` has no caption. A screen reader reads the switch and then the caption.                                                                                                   | FRK-26 |
+| Settings screen captions                   | The kit `Toggle` has an optional `description`, drawn under the label and given as the switch's accessibility hint. The settings rows use it.                                                                                                    | FRK-26 |

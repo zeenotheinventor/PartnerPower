@@ -34,7 +34,7 @@ jest.mock('../../../global.css', () => ({}));
 // The phone's sounds and haptics are replaced by one recording device, so a route test can check
 // what a press asked for. A test clears it before it starts.
 jest.mock('../../../feedback/nativeFeedbackDevice', () => {
-  const device = { playSound: jest.fn(), triggerHaptic: jest.fn() };
+  const device = { playSound: jest.fn(), triggerHaptic: jest.fn(), cancelHaptics: jest.fn() };
   return { createNativeFeedbackDevice: () => device };
 });
 

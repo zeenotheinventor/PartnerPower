@@ -7,6 +7,7 @@ const silentFeedback: Feedback = {
   done: () => {},
   pass: () => {},
   roundComplete: () => {},
+  cancelHaptics: () => {},
 };
 
 // With no provider above, feedback does nothing. The app has one at its root, so only a component

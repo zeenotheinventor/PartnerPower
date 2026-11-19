@@ -34,5 +34,6 @@ export function createFeedback(
     done: fire('done', 'done'),
     pass: fire('pass', 'pass'),
     roundComplete: fire('roundComplete'),
+    cancelHaptics: () => attempt(() => device.cancelHaptics()),
   };
 }

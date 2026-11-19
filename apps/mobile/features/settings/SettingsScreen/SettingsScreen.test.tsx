@@ -52,11 +52,13 @@ describe('SettingsScreen', () => {
     expect(screen.getByRole('header', { name: copy.settings.title })).toBeOnTheScreen();
   });
 
-  it('should show a caption under each setting', async () => {
+  it('should show a caption under each setting, and give it as the hint of the switch', async () => {
     await renderScreen();
 
     expect(screen.getByText(copy.settings.soundsCaption)).toBeOnTheScreen();
     expect(screen.getByText(copy.settings.vibrationCaption)).toBeOnTheScreen();
+    expect(soundsSwitch().props.accessibilityHint).toBe(copy.settings.soundsCaption);
+    expect(vibrationSwitch().props.accessibilityHint).toBe(copy.settings.vibrationCaption);
   });
 
   it('should show both settings as on when nothing is stored', async () => {

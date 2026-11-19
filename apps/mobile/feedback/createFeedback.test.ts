@@ -6,6 +6,7 @@ function createFakeDevice() {
   const device: FeedbackDevice = {
     playSound: jest.fn((sound) => calls.push(`sound:${sound}`)),
     triggerHaptic: jest.fn((moment) => calls.push(`haptic:${moment}`)),
+    cancelHaptics: jest.fn(),
   };
   return { device, calls };
 }
@@ -61,6 +62,14 @@ describe('createFeedback', () => {
     });
   });
 
+  it('should ask the device to drop pending haptics', () => {
+    const { device } = createFakeDevice();
+
+    createFeedback(device, allOn).cancelHaptics();
+
+    expect(device.cancelHaptics).toHaveBeenCalledTimes(1);
+  });
+
   it('should do nothing at all when both are off', () => {
     const { device } = createFakeDevice();
     const feedback = createFeedback(device, { soundOn: false, hapticsOn: false });
@@ -81,6 +90,9 @@ describe('createFeedback', () => {
       triggerHaptic: () => {
         throw new Error('The haptic failed');
       },
+      cancelHaptics: () => {
+        throw new Error('The cancel failed');
+      },
     };
 
     it('should not throw', () => {
@@ -88,6 +100,7 @@ describe('createFeedback', () => {
 
       expect(() => feedback.tap()).not.toThrow();
       expect(() => feedback.roundComplete()).not.toThrow();
+      expect(() => feedback.cancelHaptics()).not.toThrow();
     });
 
     it('should still fire the haptic when the sound fails', () => {

@@ -11,7 +11,7 @@ import { useFeedback } from './useFeedback';
 jest.mock('../nativeFeedbackDevice', () => ({ createNativeFeedbackDevice: jest.fn() }));
 
 function createFakeDevice(): FeedbackDevice {
-  return { playSound: jest.fn(), triggerHaptic: jest.fn() };
+  return { playSound: jest.fn(), triggerHaptic: jest.fn(), cancelHaptics: jest.fn() };
 }
 
 function renderFeedback(device: FeedbackDevice, backend = createInMemoryBackend()) {
@@ -58,6 +58,17 @@ describe('FeedbackProvider', () => {
 
     expect(device.triggerHaptic).not.toHaveBeenCalled();
     expect(device.playSound).toHaveBeenCalledWith('pass');
+  });
+
+  it('should drop a pending haptic pattern when vibration is turned off', async () => {
+    const device = createFakeDevice();
+    const { result } = renderFeedback(device);
+    await waitFor(() => expect(result.current.settings.isLoading).toBe(false));
+    expect(device.cancelHaptics).not.toHaveBeenCalled();
+
+    await act(() => result.current.settings.setHapticsOn(false));
+
+    expect(device.cancelHaptics).toHaveBeenCalled();
   });
 
   it('should use the stored settings from the start', async () => {

@@ -84,6 +84,9 @@ export function createNativeFeedbackDevice(): FeedbackDevice {
     pass: createAudioPlayer(passSound),
   };
 
+  // The timers of a pattern that is still running, so they can be dropped.
+  const pendingPulses = new Set<ReturnType<typeof setTimeout>>();
+
   return {
     playSound: (sound) => {
       try {
@@ -98,9 +101,17 @@ export function createNativeFeedbackDevice(): FeedbackDevice {
         if (afterMilliseconds === 0) {
           ignoreFailure(fire);
         } else {
-          setTimeout(() => ignoreFailure(fire), afterMilliseconds);
+          const timer = setTimeout(() => {
+            pendingPulses.delete(timer);
+            ignoreFailure(fire);
+          }, afterMilliseconds);
+          pendingPulses.add(timer);
         }
       });
+    },
+    cancelHaptics: () => {
+      pendingPulses.forEach(clearTimeout);
+      pendingPulses.clear();
     },
   };
 }

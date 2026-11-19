@@ -71,12 +71,16 @@ function PlayedRound({ actions, children }: { actions: RoundAction[]; children: 
   return children;
 }
 
-function summaryTree(actions: RoundAction[], feedback: ReturnType<typeof createMockFeedback>) {
+function summaryTree(
+  actions: RoundAction[],
+  feedback: ReturnType<typeof createMockFeedback>,
+  { screenKey = 0, showScreen = true } = {},
+) {
   return (
     <FeedbackContext.Provider value={feedback}>
       <RoundProvider>
         <PlayedRound actions={actions}>
-          <RoundSummaryScreen />
+          {showScreen ? <RoundSummaryScreen key={screenKey} /> : null}
         </PlayedRound>
       </RoundProvider>
     </FeedbackContext.Provider>
@@ -120,6 +124,23 @@ describe('RoundSummaryScreen', () => {
 
       expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
       expect(laterFeedback.roundComplete).not.toHaveBeenCalled();
+    });
+
+    it('should not ask again when the screen mounts again for the same round', async () => {
+      const { view, feedback } = await renderSummary();
+
+      view.rerender(summaryTree(aBoldest, feedback, { screenKey: 1 }));
+
+      expect(feedback.roundComplete).toHaveBeenCalledTimes(1);
+    });
+
+    it('should drop the rest of the buzz when the screen is left', async () => {
+      const { view, feedback } = await renderSummary();
+      expect(feedback.cancelHaptics).not.toHaveBeenCalled();
+
+      view.rerender(summaryTree(aBoldest, feedback, { showScreen: false }));
+
+      expect(feedback.cancelHaptics).toHaveBeenCalled();
     });
 
     it('should ask for nothing when there is no round to celebrate', async () => {

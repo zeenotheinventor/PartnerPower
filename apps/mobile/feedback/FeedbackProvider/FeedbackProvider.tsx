@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 
 import { useSettings } from '../../settings';
 import { createFeedback } from '../createFeedback';
@@ -18,6 +18,11 @@ export function FeedbackProvider({ children, device }: FeedbackProviderProps) {
     () => createFeedback(phone, { soundOn, hapticsOn }),
     [phone, soundOn, hapticsOn],
   );
+
+  // Turning vibration off stops a pattern that is part way through.
+  useEffect(() => {
+    if (!hapticsOn) phone.cancelHaptics();
+  }, [hapticsOn, phone]);
 
   return <FeedbackContext.Provider value={feedback}>{children}</FeedbackContext.Provider>;
 }
