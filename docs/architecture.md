@@ -53,6 +53,7 @@ packages/
 tools/                 data shared by the checks, such as the raw colour pattern
 docs/
   architecture.md      this file
+  compliance.md        the store review: rules, ratings, privacy answers, listing and review notes
 ```
 
 ### Import rules
@@ -175,7 +176,8 @@ category) stay in the shipped deck test and do not apply to player cards.
 - `withoutUnsupportedEffects(deck, { vibrate })` returns the deck without the cards whose effect
   the phone cannot play. Today that means `vibrate` cards on a phone that cannot vibrate.
 
-User-facing copy also lives in `content`, in one module, in British English. Screens never hold
+User-facing copy also lives in `content`, in one module, in British English. The privacy policy is
+a separate export, `privacyPolicy`, as headed sections of plain paragraphs. Screens never hold
 string literals for copy. A line with a value in it carries a marker such as `{name}`, and
 `fillCopy` fills it. Its type reads the markers from the line, so a missing or misspelled value
 fails typecheck.
@@ -749,8 +751,17 @@ and pnpm 9.11.0, and the README has the steps.
 
 ## Privacy
 
-- No analytics and no error reporting in milestones 1 and 2. Both are decided in the launch
-  milestone.
+- No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
+  data comes only from what Apple and Google collect from players who opt in on their phones.
+- The app makes no network calls and collects no data, so both store privacy answers are "no data
+  collected". `docs/compliance.md` checks every library against that answer.
+- The privacy policy is one export, `privacyPolicy`, in `packages/content`. The settings screen
+  shows it, and the owner hosts the same words at the URL given to the stores.
+- The policy describes the launch build. `docs/compliance.md` lists what must be true before it is
+  published: no Android backup, a device-only database key, the PIN hash and install marker, and
+  Clear everything.
+- A change that adds a network call, an SDK that sends data, a push token, or a new kind of stored
+  data updates `docs/compliance.md` and `privacyPolicy` in the same pull request.
 - Never log player names, card text or anything a player typed.
 - Test fixtures contain placeholder text only.
 
@@ -763,11 +774,9 @@ and pnpm 9.11.0, and the README has the steps.
 
 ## Decisions still open
 
-| Decision                                  | Needed by        |
-| ----------------------------------------- | ---------------- |
-| Launch platforms: iOS, Android or both    | Launch milestone |
-| Whether an alternative forfeit mode ships | FRK-16           |
-| Error reporting and analytics, if any     | Launch milestone |
+| Decision                               | Needed by        |
+| -------------------------------------- | ---------------- |
+| Launch platforms: iOS, Android or both | Launch milestone |
 
 ## Decisions made
 
@@ -826,3 +835,6 @@ and pnpm 9.11.0, and the README has the steps.
 | Turn moves only for the holder of the turn | A solo card moves the turn only when the player who played it is the one whose turn it was. A swap does not move it, and a swap dropped by a skip still keeps the alternation.                                                                                                                                                                    | FRK-43 |
 | Replacement keeps the player               | `removeCard` and `disableCategory` keep the player who held the phone, so a dropped swap card is still played by the swapped partner.                                                                                                                                                                                                             | FRK-43 |
 | Mystery cost in the history                | A passed mystery is recorded with its surprise and `summarise` adds one to its penalty, so no extra field is needed.                                                                                                                                                                                                                              | FRK-43 |
+| Error reporting and analytics              | None at launch. No SDK for either in the app. Crash data comes only from what Apple and Google collect from players who opt in.                                                                                                                                                                                                                   | FRK-56 |
+| Encryption export answer                   | `ITSAppUsesNonExemptEncryption` is `NO` until SQLCipher ships, then `YES` as an industry standard algorithm not provided by the operating system. `docs/compliance.md` gives the reasons.                                                                                                                                                         | FRK-56 |
+| Alternative forfeit mode                   | None at launch: no drink cap and no non-alcoholic mode, decided by the owner on 2026-11-18. `docs/compliance.md` lists the options if a store objects to the drink forfeit.                                                                                                                                                                       | FRK-16 |
