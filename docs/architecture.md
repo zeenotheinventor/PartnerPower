@@ -112,11 +112,17 @@ interface Level {
 
 type CardKind = 'solo' | 'together';
 
+type CardEffect =
+  | { type: 'timer'; seconds: number } // whole seconds, 5 to 120
+  | { type: 'vibrate'; seconds: number }; // whole seconds, 1 to 30
+
 interface Card {
   id: string;
   category: CategoryId;
   kind: CardKind;
   text: string;
+  effect?: CardEffect;
+  source: 'shipped' | 'player';
 }
 
 interface Deck {
@@ -141,9 +147,32 @@ category, at least 8 of them `together` cards, and card text of 140 characters o
 fails typecheck, and `displayNames` for games. A test in `content` validates every deck against the
 schema and checks that card ids are unique across all decks.
 
-The `Card` type leaves room for later milestones through two optional fields that are not used yet:
-`effect`, a string for cards that change the turn, and `source`, `shipped` or `player`, to tell a
-shipped card from one a player wrote.
+A card's `effect` is a typed union. A value that does not match fails `parseDeck` with a message
+that names the card, for example `cards[2] (id "card-3"): timer seconds must be a whole number from
+5 to 120`. `source` is required: every shipped card carries `shipped`, and a card a player wrote
+carries `player`.
+
+### Player-written cards
+
+Text rules live in `cardText.ts` and hold no copy. `tidyCardText` trims text and turns each run of
+spaces, tabs and line breaks into one space. `checkCardText(text, otherTexts)` takes tidied text and
+returns problem codes: `empty`, `tooLong` (over 140 characters) and `duplicate` (the same as one of
+`otherTexts`, ignoring case and spacing). Screens map the codes to messages from `content`.
+
+The base rules are shared. The shipped deck test and `playerCardSchema` both use `checkCardText`.
+The editorial rules (no dashes or semicolons, no gendered words, no forfeit word, ids numbered by
+category) stay in the shipped deck test and do not apply to player cards.
+
+- `playerCardSchema`: id `p-` followed by a UUID, category, kind, text that passes `checkCardText`
+  on its own (stored tidied), `source: 'player'`, and no effect.
+- `customDeckSchema`: id, a name of 1 to 30 characters after trimming, and a list of card ids with
+  no repeats and at most 200 entries.
+- `limits`: 140 characters per card, 300 player cards, 20 custom decks, 200 cards per custom deck,
+  30 characters per deck name.
+- `surpriseIds`: `mystery`, `jump`, `swap`, `choice`, `timer`, `freePass`. `content` types the
+  surprise names by these ids.
+- `withoutUnsupportedEffects(deck, { vibrate })` returns the deck without the cards whose effect
+  the phone cannot play. Today that means `vibrate` cards on a phone that cannot vibrate.
 
 User-facing copy also lives in `content`, in one module, in British English. Screens never hold
 string literals for copy. A line with a value in it carries a marker such as `{name}`, and
@@ -206,6 +235,12 @@ Rules the engine owns:
 - If the category for a card has no unused card of the kind needed, the engine takes one from the
   next higher enabled category, then the next lower, nearest first. The preferred kind is tried in
   every category before the other kind. If no card is left anywhere, the round is over.
+- A draw looks at the unused cards of the kind it wants in the category it is looking in. When both
+  player cards and shipped cards are there, it takes a player card with a probability of one half,
+  from the seeded generator. The generator is used for that only when both sources are present, so a
+  deck with no player cards deals exactly as it did before for the same seed. Every other rule
+  applies to player cards unchanged.
+- Cards with a `timer` effect are left out of the normal deal. Only the timer surprise deals them.
 - Every 5th card of the round (cards 5, 10, 15 and so on) is a `together` card when the category
   for that card has one, otherwise a `solo` card.
 - A `together` card counts toward the round length. A card removed with `removeCard` does not.
@@ -532,32 +567,39 @@ and pnpm 9.11.0, and the README has the steps.
 
 ## Decisions made
 
-| Decision                            | Outcome                                                                                                                                                                                                                                     | Ticket |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
-| Expo SDK 57 or 58                   | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                       | FRK-1  |
-| Colours before the tokens package   | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                              | FRK-1  |
-| Themes                              | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                      | FRK-3  |
-| Typefaces                           | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                            | FRK-3  |
-| Category colours in the light theme | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                               | FRK-3  |
-| Text on the accent colour           | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                       | FRK-3  |
-| Small text on the accent colour     | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.    | FRK-13 |
-| Together card tint                  | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                        | FRK-13 |
-| Spacing and radius utility names    | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                         | FRK-3  |
-| Role and name for the screen shell  | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
-| Depth edge                          | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |
-| Design sizes off the scales         | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                  | FRK-4  |
-| Entry guard mechanism               | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.  | FRK-6  |
-| Declining the entry confirmation    | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                           | FRK-6  |
-| A failed write when confirming      | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                        | FRK-6  |
-| Built-in sitemap route              | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                          | FRK-6  |
-| Game tiles on the hub               | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                         | FRK-7  |
-| Round setup before its ticket       | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                          | FRK-7  |
-| Node version                        | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
-| App name and identifiers            | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
-| Not this one is not a penalty       | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.          | FRK-14 |
-| Staging after a replacement         | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                     | FRK-14 |
-| Switched off categories stay off    | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                | FRK-14 |
-| Sheet frame, skip row               | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                        | FRK-14 |
-| Sheet frame, shape and spacing      | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                           | FRK-14 |
-| Sheet frame, quiet control          | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                  | FRK-14 |
-| Sheet frame, last category hint     | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                 | FRK-14 |
+| Decision                                   | Outcome                                                                                                                                                                                                                                     | Ticket |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ |
+| Expo SDK 57 or 58                          | Stay on SDK 57 (React Native 0.86), as the milestone brief specifies. SDK 58 is current, so plan an upgrade once the app is playable.                                                                                                       | FRK-1  |
+| Colours before the tokens package          | Two placeholder colours sat in the app's Tailwind config until FRK-3 created `packages/tokens`. They are gone.                                                                                                                              | FRK-1  |
+| Themes                                     | Light and dark, following the device, decided by the owner on 2026-11-18. Light is blush and cherry, dark is grape and sunny yellow. This replaces "dark theme first".                                                                      | FRK-3  |
+| Typefaces                                  | Baloo 2 for display, titles and headings, Nunito for body, labels and captions, approved by the owner with the visual direction.                                                                                                            | FRK-3  |
+| Category colours in the light theme        | The approved light category colours are too pale to read as text on the light background, so they are used as fills with their own label colour. The values were not changed.                                                               | FRK-3  |
+| Text on the accent colour                  | White on the light accent has a contrast of 3.37, so it is limited to large bold labels. The values were not changed.                                                                                                                       | FRK-3  |
+| Small text on the accent colour            | A new token, `onAccentSmall` (`text-on-accent-small`), keeps the pink accent fill and gives small labels on it enough contrast. Light is `#3A1730` (4.63 on `#FF3D7F`), dark is `#2A1450` (11.06 on `#FFD23F`). The accent chip uses it.    | FRK-13 |
+| Together card tint                         | The design's soft accent tint at the top of a together card has no token, so it is left out. The card face stays the surface colour.                                                                                                        | FRK-13 |
+| Spacing and radius utility names           | Named by pixel value (`p-16` is 16px), because NativeWind's default rem is 14px and would not give the token sizes.                                                                                                                         | FRK-3  |
+| Role and name for the screen shell         | The shell is a layout container with no role or name of its own. A label on a container that is not an accessibility element does nothing on iOS. The "role and name" criterion is applied to components that mean something by themselves. | FRK-4  |
+| Depth edge                                 | Built from layered views in token colours. Token-coloured shadows do not exist.                                                                                                                                                             | FRK-4  |
+| Design sizes off the scales                | The design's 14, 16 and 22px radii use the nearest scale value, and cards have a 2px border and a 4px edge where the design shows 3 and 6.                                                                                                  | FRK-4  |
+| Entry guard mechanism                      | Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.  | FRK-6  |
+| Declining the entry confirmation           | Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.                                                                                                                           | FRK-6  |
+| A failed write when confirming             | The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.                                                                                                                        | FRK-6  |
+| Built-in sitemap route                     | Turned off in `app.json`, because it sits outside the entry guard.                                                                                                                                                                          | FRK-6  |
+| Game tiles on the hub                      | Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.                                         | FRK-7  |
+| Round setup before its ticket              | The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.                                                                                                          | FRK-7  |
+| Node version                               | Node 26, the active long-term support line, decided by the owner on 2026-11-18. Node 24 is the fallback if a dependency fails on 26.                                                                                                        | FRK-1  |
+| App name and identifiers                   | The app is Get Freak: display name `Get Freak`, slug `get-freak`, scheme `getfreak`, store id `com.sojisoft.getfreak`, packages `@getfreak/*`. Decided by the owner on 2026-11-18.                                                          | FRK-1  |
+| Not this one is not a penalty              | Skipping a card and switching a category off cost no drink and count as no dare done, and the card number does not move. The ticket says nobody drinks, and the engine's `removeCard` and `disableCategory` already work that way.          | FRK-14 |
+| Staging after a replacement                | A replacement card shows at once, with no step up or pass the phone screen, even in a higher category. The same player holds the phone, and the new cost is in the card's penalty line.                                                     | FRK-14 |
+| Switched off categories stay off           | A category already switched off shows in the sheet as off and locked, because the round has no action to switch one back on.                                                                                                                | FRK-14 |
+| Sheet frame, skip row                      | The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.                                        | FRK-14 |
+| Sheet frame, shape and spacing             | The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.                                           | FRK-14 |
+| Sheet frame, quiet control                 | The design's 13px link text uses the 12px caption style, with a 48px touch area around it.                                                                                                                                                  | FRK-14 |
+| Sheet frame, last category hint            | The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.                                                                                 | FRK-14 |
+| For your partner means a solo card         | A player-written dare marked for your partner is a `solo` card, dealt to whoever's turn it is, as FRK-8 defines a card for one partner. Addressing a dare to one named partner is a separate product question.                              | FRK-39 |
+| Same base rules, different editorial rules | Player text follows the same length and repeat rules as shipped text, through `checkCardText`. The house style rules stay on shipped cards, because a couple writing for themselves know who they are.                                      | FRK-39 |
+| Duplicates checked against shipped text    | A player cannot add a card the deck already has.                                                                                                                                                                                            | FRK-39 |
+| Mixing ratio of one half                   | With 30 or more shipped cards per category, a plain shuffle would rarely deal a couple's own dares in a 10 card round. One half shows them without crowding out the deck.                                                                   | FRK-39 |
+| Timer cards are surprise only              | They are written to last the timer, so a normal deal would show them without a clock.                                                                                                                                                       | FRK-39 |
+| Limits live in `cardText.ts`               | The limits are one `limits` constant, next to the text rules that use the card length. `contentModel.ts` imports it, so no module imports in a circle.                                                                                      | FRK-39 |
+| Player card text is stored tidied          | `playerCardSchema` tidies the text, then checks it, so what is stored is what was checked.                                                                                                                                                  | FRK-39 |

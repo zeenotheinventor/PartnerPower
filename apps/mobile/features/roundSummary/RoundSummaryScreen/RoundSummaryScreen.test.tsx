@@ -38,6 +38,7 @@ const deck: Deck = {
     category: 'c2',
     kind: 'solo',
     text: `Card ${number}`,
+    source: 'shipped',
   })),
 };
 

@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { checkCardText, limits, tidyCardText } from './cardText';
+
 export const categoryIds = ['c1', 'c2', 'c3', 'c4'] as const;
 export type CategoryId = (typeof categoryIds)[number];
 
@@ -76,22 +78,103 @@ function objectError(issue: ErrorContext & { keys?: string[] }) {
 export const cardKinds = ['solo', 'together'] as const;
 export type CardKind = (typeof cardKinds)[number];
 
-/**
- * `effect` is for cards that change the turn and `source` tells a shipped card from one a player
- * wrote. Neither is used yet.
- */
+function secondsBetween(effectType: string, least: number, most: number) {
+  const message = `${effectType} seconds must be a whole number from ${least} to ${most}`;
+  return z.number({ error: message }).int(message).min(least, message).max(most, message);
+}
+
+function effectError(issue: ErrorContext & { input?: unknown }) {
+  const { input } = issue;
+  if (typeof input !== 'object' || input === null) {
+    return 'effect must be an object with a type and seconds';
+  }
+  const effectType = 'type' in input ? input.type : undefined;
+  return `unknown effect type "${showValue(effectType)}", expected timer or vibrate`;
+}
+
+/** What a card does to the turn. Seconds are whole numbers. */
+export const effectSchema = z.discriminatedUnion(
+  'type',
+  [
+    z.strictObject(
+      { type: z.literal('timer'), seconds: secondsBetween('timer', 5, 120) },
+      { error: objectError },
+    ),
+    z.strictObject(
+      { type: z.literal('vibrate'), seconds: secondsBetween('vibrate', 1, 30) },
+      { error: objectError },
+    ),
+  ],
+  { error: effectError },
+);
+export type CardEffect = z.infer<typeof effectSchema>;
+
+export const cardSources = ['shipped', 'player'] as const;
+export type CardSource = (typeof cardSources)[number];
+
+/** `effect` is for cards that change the turn. `source` tells a shipped card from a player's. */
 export const cardSchema = z.strictObject(
   {
     id: text('id'),
     category: oneOf('category', categoryIds),
     kind: oneOf('kind', cardKinds),
     text: text('text'),
-    effect: z.string().optional(),
-    source: oneOf('source', ['shipped', 'player']).optional(),
+    effect: effectSchema.optional(),
+    source: oneOf('source', cardSources),
   },
   { error: objectError },
 );
 export type Card = z.infer<typeof cardSchema>;
+
+const playerCardIdPattern = /^p-[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+
+/** A card a player wrote. It follows the base text rules and none of the editorial ones. */
+export const playerCardSchema = z.strictObject(
+  {
+    id: z.string().regex(playerCardIdPattern, 'id must be p- followed by a UUID'),
+    category: oneOf('category', categoryIds),
+    kind: oneOf('kind', cardKinds),
+    text: z
+      .string({ error: 'text must be text' })
+      .transform(tidyCardText)
+      .superRefine((tidied, context) => {
+        const [problem] = checkCardText(tidied, []);
+        if (problem === 'empty')
+          context.addIssue({ code: 'custom', message: 'text must not be empty' });
+        if (problem === 'tooLong') {
+          context.addIssue({
+            code: 'custom',
+            message: `text must be ${limits.cardTextLength} characters or fewer`,
+          });
+        }
+      }),
+    source: z.literal('player', { error: 'source must be player' }),
+  },
+  { error: objectError },
+);
+export type PlayerCard = z.infer<typeof playerCardSchema>;
+
+/** A named set of a couple's own cards, kept as a list of card ids. */
+export const customDeckSchema = z.strictObject(
+  {
+    id: text('id'),
+    name: z
+      .string({ error: 'name must be text' })
+      .trim()
+      .min(1, 'name must not be empty')
+      .max(limits.deckNameLength, `name must be ${limits.deckNameLength} characters or fewer`),
+    cardIds: z
+      .array(text('card id'), { error: 'cardIds must be a list' })
+      .max(limits.cardsPerCustomDeck, `a deck holds at most ${limits.cardsPerCustomDeck} cards`)
+      .refine((cardIds) => new Set(cardIds).size === cardIds.length, 'a card is listed twice'),
+  },
+  { error: objectError },
+);
+export type CustomDeck = z.infer<typeof customDeckSchema>;
+
+/** The surprises a round can deal. The engine gives each one its rules. */
+export const surpriseIds = ['mystery', 'jump', 'swap', 'choice', 'timer', 'freePass'] as const;
+export type SurpriseId = (typeof surpriseIds)[number];
 
 export const deckSchema = z
   .strictObject(
@@ -167,4 +250,14 @@ export function findDuplicateCardIds(decks: readonly Deck[]): string[] {
     }
   }
   return [...repeatedIds];
+}
+
+export type PhoneAbilities = { vibrate: boolean };
+
+/** Returns the deck without the cards whose effect this phone cannot play. */
+export function withoutUnsupportedEffects(deck: Deck, abilities: PhoneAbilities): Deck {
+  return {
+    ...deck,
+    cards: deck.cards.filter((card) => card.effect?.type !== 'vibrate' || abilities.vibrate),
+  };
 }

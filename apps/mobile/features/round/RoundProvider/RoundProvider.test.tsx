@@ -9,8 +9,8 @@ const deck: Deck = {
   id: 'test-deck',
   version: 1,
   cards: [
-    { id: 'card-1', category: 'c1', kind: 'solo', text: 'Card 1' },
-    { id: 'card-2', category: 'c1', kind: 'solo', text: 'Card 2' },
+    { id: 'card-1', category: 'c1', kind: 'solo', text: 'Card 1', source: 'shipped' },
+    { id: 'card-2', category: 'c1', kind: 'solo', text: 'Card 2', source: 'shipped' },
   ],
 };
 

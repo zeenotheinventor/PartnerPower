@@ -25,6 +25,7 @@ function makeCards(category: CategoryId): Card[] {
     category,
     kind: 'solo',
     text: `Card ${category} ${number}`,
+    source: 'shipped',
   }));
 }
 
