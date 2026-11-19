@@ -1,4 +1,4 @@
-import { decks } from '@getfreak/content';
+import { decks, questionDecks } from '@getfreak/content';
 import { getRandomBytes, randomUUID } from 'expo-crypto';
 
 import { expoDatabaseFactory } from './createExpoDatabaseFactory';
@@ -8,6 +8,14 @@ import { createDatabaseKey } from './databaseKey';
 import { secureKeyStore } from './secureKeyStore';
 
 const getShippedCards = () => decks.flatMap((deck) => deck.cards);
+const getShippedQuestions = () =>
+  questionDecks
+    .flatMap((deck) => deck.questions)
+    .map((question) => ({
+      id: question.id,
+      text: question.text,
+      optionIds: 'options' in question ? question.options.map((option) => option.id) : undefined,
+    }));
 
 // The one personal store the app uses. It opens `personal.db` the first time it is loaded, and
 // `clearAll` in the storage module clears it.
@@ -16,6 +24,7 @@ export const personalStore = createPersonalStore({
   keyStore: secureKeyStore,
   generateKey: () => createDatabaseKey(getRandomBytes),
   getShippedCards,
+  getShippedQuestions,
   randomUUID,
   now: Date.now,
 });
@@ -24,5 +33,10 @@ export const personalStore = createPersonalStore({
 export const personalDataSource = {
   load: personalStore.load,
   createEmpty: () =>
-    createInMemoryPersonalRepository({ getShippedCards, randomUUID, now: Date.now }),
+    createInMemoryPersonalRepository({
+      getShippedCards,
+      getShippedQuestions,
+      randomUUID,
+      now: Date.now,
+    }),
 };

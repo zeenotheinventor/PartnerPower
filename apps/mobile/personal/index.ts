@@ -4,3 +4,7 @@ export type {
   PersonalDataProviderProps,
   PersonalDataSource,
 } from './PersonalDataProvider';
+export { useCustomQuestions } from './useCustomQuestions';
+export type { CustomQuestions } from './useCustomQuestions';
+export { useDiscoveries } from './useDiscoveries';
+export type { Discoveries } from './useDiscoveries';
