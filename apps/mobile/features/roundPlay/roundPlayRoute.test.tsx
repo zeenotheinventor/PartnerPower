@@ -42,8 +42,12 @@ const setupRoute = '/games/dares/setup';
 const playRoute = '/games/dares/play';
 const summaryRoute = '/games/dares/summary';
 
-async function startTenCardRound() {
+async function startTenCardRound({ withSurprises = false } = {}) {
   await launchApp(setupRoute);
+  // Surprises are on each time setup opens. The plain round is the one that counts every card.
+  if (!withSurprises) {
+    fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.surprises }));
+  }
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerOneLabel), 'Player A');
   fireEvent.changeText(screen.getByLabelText(copy.roundSetup.playerTwoLabel), 'Player B');
   fireEvent.press(screen.getByRole('radio', { name: copy.roundSetup.lengthTen }));
@@ -54,10 +58,11 @@ async function startTenCardRound() {
 }
 
 /** Presses whatever moves the round on, until the round leaves the play screen. */
-function playUntilTheSummary() {
+async function playUntilTheSummary() {
   const nextButtons = [
     copy.roundPlay.handoffButton,
     copy.roundPlay.stepUpButton,
+    copy.roundPlay.flip,
     copy.roundPlay.done,
     copy.roundPlay.togetherDone,
   ];
@@ -65,6 +70,11 @@ function playUntilTheSummary() {
     const name = nextButtons.find((label) => screen.queryByRole('button', { name: label }));
     if (!name) throw new Error('The play screen has nothing to press');
     fireEvent.press(screen.getByRole('button', { name }));
+    // A flipped card shows once Reanimated reports the turn, a moment after the press. The route
+    // tests run on fake timers, which hold that report back until the clock moves.
+    await act(async () => {
+      await jest.advanceTimersByTimeAsync(1);
+    });
   }
 }
 
@@ -78,7 +88,7 @@ describe('playing a round in the route tree', () => {
   it('should play a ten card round through to the summary', async () => {
     await startTenCardRound();
 
-    playUntilTheSummary();
+    await playUntilTheSummary();
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
 
     expect(screen.getByRole('header', { name: copy.roundSummary.title })).toBeOnTheScreen();
@@ -91,9 +101,18 @@ describe('playing a round in the route tree', () => {
     ).toBeOnTheScreen();
   });
 
+  it('should play a ten card round with surprises on through to the summary', async () => {
+    await startTenCardRound({ withSurprises: true });
+
+    await playUntilTheSummary();
+    await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
+
+    expect(screen.getByRole('header', { name: copy.roundSummary.title })).toBeOnTheScreen();
+  });
+
   it('should go back to setup from the summary, and start another round from there', async () => {
     await startTenCardRound();
-    playUntilTheSummary();
+    await playUntilTheSummary();
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
 
     fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.settings }));
@@ -148,7 +167,7 @@ describe('playing a round in the route tree', () => {
 
   it('should go back to setup, not to the finished round, from the summary with the back gesture', async () => {
     await startTenCardRound();
-    playUntilTheSummary();
+    await playUntilTheSummary();
     await waitFor(() => expect(currentPathname()).toBe(summaryRoute));
 
     act(() => router.back());

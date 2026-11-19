@@ -100,6 +100,7 @@ export function KitGallery() {
             <Chip label="Accent chip" accent />
             <Text className="type-heading mt-8 text-foreground">Accent card</Text>
           </Card>
+          <Card faceDown mark="?" title="Face down" label="Face down card" />
           {categoryIds.map((categoryId) => (
             <Card key={categoryId} category={categoryId}>
               <Chip label={`Category ${categoryId}`} category={categoryId} />

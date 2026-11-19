@@ -24,6 +24,7 @@ import {
 } from '../../../components/ui';
 import { useSettings } from '../../../settings';
 import { useRound } from '../../round/RoundProvider';
+import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { randomSeed } from '../randomSeed';
 
 const maxNameLength = 20;
@@ -59,6 +60,8 @@ export function RoundSetupScreen() {
     categoriesForLevel(defaultLevel),
   );
   const [length, setLength] = useState<RoundLength>(defaultLength);
+  // Not remembered, like the level and the length. It is on each time setup opens.
+  const [surprisesOn, setSurprisesOn] = useState(true);
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
@@ -101,6 +104,7 @@ export function RoundSetupScreen() {
         enabledCategories,
         length,
         seed: randomSeed(),
+        surprises: surprisesOn ? playableSurprises : [],
       },
       firstDeck,
     );
@@ -182,8 +186,13 @@ export function RoundSetupScreen() {
         onValueChange={setLength}
       />
 
-      <View className="rounded-lg border-2 border-dashed border-border px-12">
-        <Toggle label={copy.roundSetup.surprises} value={false} disabled onValueChange={() => {}} />
+      <View className="rounded-lg border-2 border-border bg-surface px-12 pb-12">
+        <Toggle
+          label={copy.roundSetup.surprises}
+          value={surprisesOn}
+          onValueChange={setSurprisesOn}
+        />
+        <Text className="type-caption text-muted">{copy.roundSetup.surprisesCaption}</Text>
       </View>
 
       <View className="flex-1" />

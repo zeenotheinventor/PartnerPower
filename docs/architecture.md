@@ -615,7 +615,7 @@ apps/mobile/
   features/settings/     the settings screen
   features/round/        the round context for the dares route group
   features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
-  features/roundPlay/    the play screen: the card, the step up and pass the phone screens, the end round dialog, the press effects
+  features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
   features/questionRound/  the question round context for the questions route group
   features/questionsHome/  the Drink If home: Theo's line and the entries, listed in `homeEntries`
@@ -703,19 +703,56 @@ on it is stored or logged, except that a player can keep a played card as a favo
 `features/roundPlay/RoundPlayScreen` reads the round from `useRound()` and sends `done`, `pass`,
 `removeCard`, `disableCategory` and `end`. The card number is `history.length + 1`, and the penalty is the category's `penalty`.
 
-- Each card can come with two screens before it, in this order. If `current.steppingUp` is true,
-  the step up screen names the new category and what passing now costs. Then, if the player who
-  holds the phone is not the one who held it for the previous card, or there was no previous
-  card, the pass the phone screen names who receives it. Then the card shows. These screens are
-  state of the play screen, kept with the card number they belong to, and are not routes.
+- Each card can come with three screens before it, in this order. If `current.steppingUp` is true,
+  the step up screen names the new category and what passing now costs. Then, if the card carries a
+  surprise, the `SurpriseView` reveal names it. Then, if the player who holds the phone is not the
+  one who held it for the previous card, or there was no previous card, the pass the phone screen
+  names who receives it. Then the card shows. A category jump's reveal takes the place of the step
+  up screen, and so does the reveal of a mystery dare that is still face down. These screens are state of the play screen, kept with the card number they belong to,
+  and are not routes.
 - Nyx says the step up line in a speech bubble on the step up screen. Mei's head peeks over the top
-  edge of the card on the card view. Both are decorative.
+  edge of the card on the card view, outside the flip of a mystery dare. Both are decorative.
 - A `together` card uses the same card view with "Both of you" for the turn and a penalty line that
   says both drink. The card is edged in the accent colour with the accent depth edge, in place of
   the category colour, and has a Together chip above the category chip and a line naming both
   players. The buttons read "We did it" and "We drink", and send the same `done` and `pass`
   actions. The core already charges both players on a pass and keeps the turn order. The accent
   edge and chip are the `accent` option of `Card` and `Chip`.
+- **Surprises.** Setup has a "Surprises" `Toggle`, on each time setup opens and not remembered. When
+  it is on, Start passes `playableSurprises` as `RoundSetup.surprises`, and when it is off it passes
+  an empty list. `playableSurprises` (`features/roundPlay/playableSurprises.ts`) is the list of
+  types this screen can show, `mystery`, `jump`, `swap` and `freePass`. The play screen owns it, so a
+  type is added there when the screen learns to show it and setup does not change. A card carrying a
+  type that is not on the list plays as a plain card. With surprises off, nothing below shows.
+  - **Reveal.** `SurpriseView` is a full screen state like `SteppingUpView`. It shows "Surprise!",
+    the surprise's name from `surpriseNames` as a heading in an accent pill, the rule line from
+    `copy.roundPlay.surpriseRule` filled with the name of the player the card is for, the category
+    and its cost, and the turn line. Only a category jump adds the step up markers
+    (`CategoryMarkers`, shared with `SteppingUpView`). Its button is "Bring it".
+  - **Role swap.** `current.player` is the partner who now plays, so the reveal, the pass the phone
+    screen, the turn line and the penalty all name that partner. If they already hold the phone,
+    there is no pass the phone screen.
+  - **Surprise chip.** A category jump, a role swap and a flipped mystery dare carry an accent `Chip`
+    with the surprise's name, above the category chip where the Together chip goes. A free pass has
+    no chip, because the pass belongs to the player.
+  - **Mystery dare.** `TurnView` shows `Card` in its face down state, named by
+    `copy.roundPlay.faceDownLabel`, with no card text and no category, and under it only "Flip it",
+    which sends `flip`. "Not this one" is not shown, and "End round" stays. The card turns over in
+    280 ms (see below) and then shows as a normal card with the chip. Its penalty line reads
+    `flippedPenalty` with the category's penalty plus one, which is what `summarise` charges, in the
+    main text colour. Screen reader focus moves to the card text after the flip.
+  - **The flip.** `useCardFlip` turns the card edge on over 120 ms, swaps the back for the card at
+    90 degrees, and turns it back over 160 ms, with Reanimated and an animated style. The swap is
+    driven by the animation's finish callback. With reduce motion on it fades out over 80 ms and in
+    over 120 ms. The back stays up until the swap, so the card text is not in the tree before then.
+  - **Free pass.** While the player holding the phone has a pass, their solo cards show an accent
+    `Chip` marker, "Free pass ready", at the end of the turn line, and a full width secondary
+    "Use free pass" button under Done and Pass. It sends `useFreePass`. It is not shown on a together
+    card, on another player's card, or on a mystery card before its flip, which is when the engine
+    would ignore it. The confirmation, "Pass used. Nobody drinks.", is a `NoticeBox` at the top of
+    the first screen of the next card. It is a live region, announced on iOS when it appears, and it
+    goes once the player moves on. If the round ends on that card the summary shows and it is
+    dropped.
 - A round of 10 or 20 cards shows a progress bar, announced as a progress bar named by the card
   count. An endless round shows only the count.
 - The End round control, and going back by the system back button or the iOS swipe, open a confirm
@@ -798,21 +835,21 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                |
-| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                       |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                             |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.                                                      |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description. |
-| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                   |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                    |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                 |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                    |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                   |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                        |
-| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                |
-| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                      |
-| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                       |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| ------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                                                                                                                                                                                  |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                        |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                            |
+| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                              |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                               |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                            |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                               |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                                                                                                                                                                              |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                   |
+| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                           |
+| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                 |
+| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                                                                                                                                  |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a

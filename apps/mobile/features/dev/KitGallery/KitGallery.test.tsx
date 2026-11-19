@@ -88,6 +88,12 @@ describe('KitGallery', () => {
     expect(screen.getByRole('text', { name: 'Accent chip' })).toBeOnTheScreen();
   });
 
+  it('should show a face down card named by its label', async () => {
+    await renderThemed(<KitGallery />);
+
+    expect(screen.getByRole('img', { name: 'Face down card' })).toBeOnTheScreen();
+  });
+
   it('should show a toast when asked, and not before', async () => {
     await renderThemed(<KitGallery />);
     expect(screen.queryByRole('button', { name: 'Toast message' })).not.toBeOnTheScreen();
