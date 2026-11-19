@@ -14,7 +14,7 @@ import type { DeckEditorScreenProps } from './types';
 // picker.
 export function DeckEditorScreen({ deckId }: DeckEditorScreenProps) {
   const router = useRouter();
-  const customDecks = useCustomDecks();
+  const { customDecks } = useCustomDecks();
 
   const found = deckId === undefined ? undefined : customDecks?.find((deck) => deck.id === deckId);
   const [deck, setDeck] = useState(found);

@@ -17,10 +17,11 @@ describe('useCustomDecks', () => {
     const fixture = makeOwnCardsFixture({ holdLoad: true });
     const { result } = renderHook(() => useCustomDecks(), { wrapper: fixture.Providers });
 
-    expect(result.current).toBeUndefined();
+    expect(result.current.customDecks).toBeUndefined();
+    expect(result.current.isReadOnFocus).toBe(false);
 
     fixture.releaseLoad();
-    await waitFor(() => expect(result.current).toEqual([]));
+    await waitFor(() => expect(result.current.customDecks).toEqual([]));
   });
 
   it('should hold the stored decks', async () => {
@@ -30,7 +31,7 @@ describe('useCustomDecks', () => {
     const { result } = renderHook(() => useCustomDecks(), { wrapper: fixture.Providers });
 
     await waitFor(() =>
-      expect(result.current?.map((deck) => [deck.name, deck.cardIds])).toEqual([
+      expect(result.current.customDecks?.map((deck) => [deck.name, deck.cardIds])).toEqual([
         ['Placeholder deck', ['card-1']],
       ]),
     );
@@ -42,6 +43,21 @@ describe('useCustomDecks', () => {
 
     const { result } = renderHook(() => useCustomDecks(), { wrapper: fixture.Providers });
 
-    await waitFor(() => expect(result.current).toEqual([]));
+    await waitFor(() => expect(result.current.customDecks).toEqual([]));
+  });
+
+  it('should say the list was read on this focus once the read has finished', async () => {
+    const fixture = makeOwnCardsFixture();
+    const { result } = renderHook(() => useCustomDecks(), { wrapper: fixture.Providers });
+
+    await waitFor(() => expect(result.current.isReadOnFocus).toBe(true));
+  });
+
+  it('should say the list was read even when the read failed', async () => {
+    const fixture = makeOwnCardsFixture();
+    jest.spyOn(fixture.repository, 'listDecks').mockRejectedValue(new Error('unreadable'));
+    const { result } = renderHook(() => useCustomDecks(), { wrapper: fixture.Providers });
+
+    await waitFor(() => expect(result.current.isReadOnFocus).toBe(true));
   });
 });

@@ -35,7 +35,7 @@ export function DeckPickerScreen() {
   const { choice, chooseDeck } = useDeckChoice();
   const { cards: ownCards } = useOwnCards();
   const favouriteIds = useFavouriteIds();
-  const customDecks = useCustomDecks();
+  const { customDecks } = useCustomDecks();
 
   // A deep link can open this screen with nothing behind it, so it falls back to setup.
   const goBack = () => (router.canGoBack() ? router.back() : router.replace(setupRoute));

@@ -63,9 +63,9 @@ export function RoundSetupScreen() {
   const { playerNames, savePlayerNames } = useSettings();
   const { startNewRound } = useRound();
   const { cards: ownCards, isLoading: isOwnCardsLoading } = useOwnCards();
-  const { choice: deckChoice } = useDeckChoice();
+  const { choice: deckChoice, chooseDeck } = useDeckChoice();
   const favouriteIds = useFavouriteIds();
-  const customDecks = useCustomDecks();
+  const { customDecks, isReadOnFocus: isCustomDecksReadOnFocus } = useCustomDecks();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -92,14 +92,26 @@ export function RoundSetupScreen() {
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
   // Start waits for the dares to be read, so a round never starts without the dares it should mix.
-  // It waits for the favourites only when they are the deck, and for the custom decks only when one
-  // of them is. The starter deck never needs them.
+  // It waits for the favourites only when they are the deck. It waits for the custom decks only when
+  // one is, until they have been read on this focus and the deck is in them, so a deck saved a
+  // moment ago is never missed. The starter deck never needs them.
+  const customDeckId = customDeckIdOf(deckChoice);
+  const isCustomDeckStored =
+    customDeckId !== undefined &&
+    customDecks?.some((stored) => stored.id === customDeckId) === true;
   const isDeckReady =
     !isOwnCardsLoading &&
     (deckChoice === 'starter' ||
       (deckChoice === 'favourites'
         ? favouriteIds !== undefined
-        : customDeckIdOf(deckChoice) === undefined || customDecks !== undefined));
+        : isCustomDeckStored && isCustomDecksReadOnFocus));
+  // A chosen deck that is not stored once the decks have been read, because it was deleted or the
+  // read failed, gives way to the starter deck, as deleting the chosen deck does.
+  const isCustomDeckMissing =
+    customDeckId !== undefined && isCustomDecksReadOnFocus && !isCustomDeckStored;
+  useEffect(() => {
+    if (isCustomDeckMissing) chooseDeck('starter');
+  }, [isCustomDeckMissing, chooseDeck]);
   const deck = buildRoundDeck({
     choice: deckChoice,
     starterDeck: getStarterDeck(),

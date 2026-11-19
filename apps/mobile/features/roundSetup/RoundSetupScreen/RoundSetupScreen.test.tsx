@@ -23,14 +23,22 @@ import { RoundProvider } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { RoundSetupScreen } from './RoundSetupScreen';
 
+const mockFocusSetters = new Set<(isFocused: boolean) => void>();
 const mockPush = jest.fn();
 const mockBack = jest.fn();
 const mockReplace = jest.fn();
 let mockCanGoBack = true;
 jest.mock('expo-router', () => ({
-  useFocusEffect: (callback: () => void) => {
-    const { useEffect } = jest.requireActual<typeof import('react')>('react');
-    useEffect(callback, [callback]);
+  useFocusEffect: (callback: () => void | (() => void)) => {
+    const { useEffect, useState } = jest.requireActual<typeof import('react')>('react');
+    const [isFocused, setIsFocused] = useState(true);
+    useEffect(() => {
+      mockFocusSetters.add(setIsFocused);
+      return () => {
+        mockFocusSetters.delete(setIsFocused);
+      };
+    }, []);
+    useEffect(() => (isFocused ? callback() : undefined), [callback, isFocused]);
   },
   useRouter: () => ({
     push: mockPush,
@@ -868,7 +876,7 @@ describe('RoundSetupScreen', () => {
         await renderSetup(undefined, fixture, <ChoiceProbe />);
         if (dareCount > 0)
           await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
-        return { held, deckChoice: customDeckChoice(savedDeck.saved.id) };
+        return { held, deckChoice: customDeckChoice(savedDeck.saved.id), fixture };
       }
 
       it('should show the name the player gave the deck on the Deck row', async () => {
@@ -938,6 +946,65 @@ describe('RoundSetupScreen', () => {
         expect(
           await screen.findByText(fillCopy(copy.roundSetup.inPlayOne, { count: 1 })),
         ).toBeOnTheScreen();
+      });
+
+      // The picker opens over setup, and closes again, which gives setup focus once more.
+      const setFocus = (isFocused: boolean) =>
+        act(async () => mockFocusSetters.forEach((set) => set(isFocused)));
+
+      it('should wait for the decks to be read again when the deck was saved after the last read', async () => {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        const saved = await fixture.repository.saveDeck({
+          name: 'Placeholder deck',
+          cardIds: ['card-1'],
+        });
+        if (!saved.ok) throw new Error('The test deck was not saved');
+        // The read on the next focus is slow.
+        jest.spyOn(fixture.repository, 'listDecks').mockReturnValue(new Promise(() => {}));
+
+        await setFocus(false);
+        act(() => held.current?.chooseDeck(customDeckChoice(saved.saved.id)));
+        await setFocus(true);
+
+        expect(startButton()).toBeDisabled();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+        expect(held.current?.choice).toBe(customDeckChoice(saved.saved.id));
+      });
+
+      it('should fall back to the starter deck when the decks cannot be read, and let Start work', async () => {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        jest.spyOn(fixture.repository, 'listDecks').mockRejectedValue(new Error('unreadable'));
+
+        await setFocus(false);
+        act(() => held.current?.chooseDeck(customDeckChoice('d-gone')));
+        await setFocus(true);
+
+        await waitFor(() => expect(held.current?.choice).toBe('starter'));
+        expect(startButton()).not.toBeDisabled();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+
+      it('should fall back to the starter deck when the chosen deck is no longer stored', async () => {
+        const { held, deckChoice, fixture } = await renderWithCustomDeck({ cardIds: ['card-1'] });
+        act(() => held.current?.chooseDeck(deckChoice));
+        enterNames('Player A', 'Player B');
+        await fixture.repository.deleteDeck(deckChoice.slice('custom:'.length));
+
+        await setFocus(false);
+        await setFocus(true);
+
+        await waitFor(() => expect(held.current?.choice).toBe('starter'));
+        expect(startButton()).not.toBeDisabled();
       });
 
       it('should hold Start, with no count and no hint, while the decks are being read', async () => {

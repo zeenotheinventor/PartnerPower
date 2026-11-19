@@ -90,11 +90,10 @@ export function DeckEditorForm({ deck }: DeckEditorFormProps) {
 
   const toggleCard = (cardId: string) => {
     setMessage(undefined);
-    setSelectedIds((current) => {
-      if (current.includes(cardId)) return current.filter((id) => id !== cardId);
-      // The cards that are not in the deck are disabled at the limit, so this is a second guard.
-      return current.length >= limits.cardsPerCustomDeck ? current : [...current, cardId];
-    });
+    // The cards that are not in the deck are disabled at the limit, so none is added past it.
+    setSelectedIds((current) =>
+      current.includes(cardId) ? current.filter((id) => id !== cardId) : [...current, cardId],
+    );
   };
 
   const submit = async () => {
@@ -225,15 +224,13 @@ export function DeckEditorForm({ deck }: DeckEditorFormProps) {
 
   // Delete sits at the end of the list, away from Save.
   const listFooter = deck ? (
-    <View className="pt-16">
-      <View className="pt-12">
-        <Button
-          label={copy.decks.deleteDeck}
-          variant="secondary"
-          fullWidth
-          onPress={() => setIsConfirmingDelete(true)}
-        />
-      </View>
+    <View className="pt-24">
+      <Button
+        label={copy.decks.deleteDeck}
+        variant="secondary"
+        fullWidth
+        onPress={() => setIsConfirmingDelete(true)}
+      />
     </View>
   ) : null;
 
