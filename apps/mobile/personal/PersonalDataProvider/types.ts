@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-import type { PersonalRepository } from '../../storage/personal/types';
+import type { PersonalRepository } from '../../storage';
 
 export type PersonalData = {
   /** True until the database has been opened once at launch. */
@@ -14,6 +14,11 @@ export type PersonalData = {
   repository: PersonalRepository;
   /** True when the database was unreadable and was made again empty, until it is dismissed. */
   recoveredFromUnreadable: boolean;
+  /**
+   * Opens the database again and loads a new repository. Clear everything must call it after
+   * `storage.clearAll()`, because the repository from before points at a closed database.
+   */
+  reload: () => void;
   /** Stops reporting the recovery, once the screen has told the player. */
   dismissRecoveryNotice: () => void;
 };

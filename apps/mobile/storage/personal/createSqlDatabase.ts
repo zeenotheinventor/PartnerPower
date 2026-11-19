@@ -37,16 +37,19 @@ export function createSqlDatabase(connection: NativeConnection): SqlDatabase {
     exec: (sql) => inQueue(() => executor.exec(sql)),
     run: (sql, params) => inQueue(() => executor.run(sql, params)),
     all: (sql, params) => inQueue(() => executor.all(sql, params)),
+    // `work` must use the executor it is given, never `database.exec` and the like, or it waits
+    // on the queue it is holding and never finishes.
     transaction: (work) =>
       inQueue(async () => {
         await connection.execAsync('BEGIN IMMEDIATE');
         try {
           await work(executor);
+          await connection.execAsync('COMMIT');
         } catch (error) {
-          await connection.execAsync('ROLLBACK');
+          // A failed ROLLBACK must not hide the error that caused it.
+          await connection.execAsync('ROLLBACK').catch(() => undefined);
           throw error;
         }
-        await connection.execAsync('COMMIT');
       }),
     close: () => inQueue(() => connection.closeAsync()),
   };

@@ -428,6 +428,32 @@ export function describePersonalRepository(name: string, createFixture: CreateFi
         ]);
       });
 
+      it('should keep several missing cards in their stored order through a save', async () => {
+        const deck = await addDeck('Deck 1', [
+          'starter-c1-01',
+          'z-missing',
+          'a-missing',
+          'starter-c1-02',
+        ]);
+
+        await repository.saveDeck({
+          id: deck.id,
+          name: 'Deck 1',
+          cardIds: ['starter-c1-02', 'starter-c1-01'],
+        });
+        shippedCards.push(
+          { id: 'a-missing', text: 'Shipped card a' },
+          { id: 'z-missing', text: 'Shipped card z' },
+        );
+
+        expect((await repository.listDecks())[0]?.cardIds).toEqual([
+          'starter-c1-02',
+          'starter-c1-01',
+          'z-missing',
+          'a-missing',
+        ]);
+      });
+
       it('should keep a card that is missing now through a save of the deck', async () => {
         const deck = await addDeck('Deck 1', ['starter-c1-01', 'starter-c1-99', 'starter-c1-02']);
 

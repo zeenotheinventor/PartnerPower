@@ -6,6 +6,11 @@ import type { DatabaseFactory } from './types';
 import { UnreadableDatabaseError } from './UnreadableDatabaseError';
 
 export const personalDatabaseName = 'personal.db';
+export const personalDatabaseFileNames = [
+  personalDatabaseName,
+  `${personalDatabaseName}-journal`,
+  `${personalDatabaseName}-wal`,
+];
 
 const hexKeyPattern = /^[0-9a-f]{64}$/;
 
@@ -46,11 +51,14 @@ export const expoDatabaseFactory: DatabaseFactory = {
     });
   },
   async delete() {
-    try {
-      await deleteDatabaseAsync(personalDatabaseName);
-    } catch (error) {
-      // A file that is not there is what the caller wanted. Any other failure is passed up.
-      if (!(error instanceof Error && /not found/i.test(error.message))) throw error;
+    // The journal files can hold pieces of the data after a crash, so they go too.
+    for (const fileName of personalDatabaseFileNames) {
+      try {
+        await deleteDatabaseAsync(fileName);
+      } catch (error) {
+        // A file that is not there is what the caller wanted. Any other failure is passed up.
+        if (!(error instanceof Error && /not found/i.test(error.message))) throw error;
+      }
     }
   },
 };

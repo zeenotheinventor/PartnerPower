@@ -716,8 +716,18 @@ module, `storage/personal`, and nothing else touches it.
 - **Transactions.** A transaction is run with `BEGIN IMMEDIATE` and `COMMIT` on the one keyed
   connection, behind a queue. `expo-sqlite`'s `withExclusiveTransactionAsync` opens a second
   connection that does not have the key, so it cannot be used on an encrypted database.
-- **`clearAll`.** It closes the database, deletes `personal.db` and deletes the key. Each step is
+- **`clearAll`.** It closes the database, deletes `personal.db` and its `-journal` and `-wal` files, and deletes the key. Each step is
   safe to run twice. A later load makes a new key and an empty database.
+- **After `clearAll`.** The repository the provider holds points at a closed database. Whatever runs
+  clear everything (FRK-53) must call `usePersonalData().reload()` after `storage.clearAll()`, or
+  remount the provider. `reload` sets `isLoading` and opens a new database with a new key.
+- **While loading.** Screens must not write while `isLoading` is true, because a write to the
+  placeholder store is dropped when the real repository arrives. The same holds after `loadFailed`,
+  where writes last for the session only.
+- **Android backup.** The `expo-secure-store` plugin sets `fullBackupContent` and
+  `dataExtractionRules` that include only shared preferences and exclude SecureStore, so the key is
+  not backed up and, with it, the database is unreadable from a backup. It does not set
+  `allowBackup`. FRK-58 should set `android.allowBackup: false`.
 - **Native build.** SQLCipher, `expo-secure-store` and `expo-crypto` are native, so this needs a
   new build.
 

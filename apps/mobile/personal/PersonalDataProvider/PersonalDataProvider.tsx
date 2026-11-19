@@ -1,7 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 
-import { personalDataSource } from '../../storage';
-import type { PersonalRepository } from '../../storage/personal/types';
+import { personalDataSource, type PersonalRepository } from '../../storage';
 import { PersonalDataContext } from './PersonalDataContext';
 import type { PersonalData, PersonalDataProviderProps } from './types';
 
@@ -18,6 +17,7 @@ export function PersonalDataProvider({
   source = personalDataSource,
 }: PersonalDataProviderProps) {
   const [loaded, setLoaded] = useState<Loaded | undefined>(undefined);
+  const [loadCount, setLoadCount] = useState(0);
   // What the screens see while loading. It is made once per source, so they see one store.
   const placeholder = useMemo(() => source.createEmpty(), [source]);
 
@@ -48,7 +48,12 @@ export function PersonalDataProvider({
     return () => {
       isCurrent = false;
     };
-  }, [source]);
+  }, [source, loadCount]);
+
+  const reload = useCallback(() => {
+    setLoaded(undefined);
+    setLoadCount((count) => count + 1);
+  }, []);
 
   const dismissRecoveryNotice = useCallback(() => {
     setLoaded((current) => current && { ...current, recoveredFromUnreadable: false });
@@ -60,9 +65,10 @@ export function PersonalDataProvider({
       loadFailed: loaded?.loadFailed ?? false,
       repository: loaded?.repository ?? placeholder,
       recoveredFromUnreadable: loaded?.recoveredFromUnreadable ?? false,
+      reload,
       dismissRecoveryNotice,
     }),
-    [loaded, placeholder, dismissRecoveryNotice],
+    [loaded, placeholder, reload, dismissRecoveryNotice],
   );
 
   return (

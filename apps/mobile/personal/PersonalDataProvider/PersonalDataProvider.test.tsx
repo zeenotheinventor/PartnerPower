@@ -2,7 +2,7 @@ import { act, renderHook, waitFor } from '@testing-library/react-native';
 import type { ReactNode } from 'react';
 
 import { createInMemoryPersonalRepository } from '../../storage/personal/createInMemoryPersonalRepository';
-import type { PersonalRepository } from '../../storage/personal/types';
+import type { PersonalRepository } from '../../storage';
 import { PersonalDataProvider } from './PersonalDataProvider';
 import type { PersonalDataSource } from './types';
 import { usePersonalData } from './usePersonalData';
@@ -138,6 +138,23 @@ describe('PersonalDataProvider', () => {
     });
 
     expect(result.current.recoveredFromUnreadable).toBe(false);
+  });
+
+  it('should load again from the source when reloaded', async () => {
+    const first = makeRepository();
+    const second = makeRepository();
+    await second.setFavourite('starter-c1-01', true);
+    const load = jest.fn().mockResolvedValueOnce(first).mockResolvedValueOnce(second);
+    const { result } = renderPersonalData(makeSource(load));
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    expect(result.current.repository).toBe(first);
+
+    act(() => result.current.reload());
+    expect(result.current.isLoading).toBe(true);
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+
+    expect(result.current.repository).toBe(second);
+    expect(load).toHaveBeenCalledTimes(2);
   });
 
   it('should fail clearly when used outside the provider', () => {

@@ -49,6 +49,36 @@ describe('createSqlDatabase', () => {
     expect(calls).toEqual(['BEGIN IMMEDIATE', 'STEP 1', 'FAIL', 'ROLLBACK']);
   });
 
+  it('should roll back, and keep working, when the commit fails', async () => {
+    const { connection, calls } = createRecordingConnection();
+    let failNextCommit = true;
+    const database = createSqlDatabase({
+      ...connection,
+      execAsync: async (sql) => {
+        if (sql === 'COMMIT' && failNextCommit) {
+          failNextCommit = false;
+          calls.push(sql);
+          throw new Error('The commit failed');
+        }
+        await connection.execAsync(sql);
+      },
+    });
+
+    await expect(database.transaction(async () => {})).rejects.toThrow('The commit failed');
+    await database.transaction(async (transaction) => {
+      await transaction.exec('STEP 2');
+    });
+
+    expect(calls).toEqual([
+      'BEGIN IMMEDIATE',
+      'COMMIT',
+      'ROLLBACK',
+      'BEGIN IMMEDIATE',
+      'STEP 2',
+      'COMMIT',
+    ]);
+  });
+
   it('should keep a statement from outside out of a transaction that is still running', async () => {
     const { connection, calls, gates } = createRecordingConnection();
     const database = createSqlDatabase(connection);
