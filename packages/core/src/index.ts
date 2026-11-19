@@ -4,6 +4,7 @@ export {
   defaultSaveDiscoveries,
   entryConfirmationSchema,
   hapticsOnSchema,
+  lastShownUpdateIdSchema,
   playerNamesSchema,
   questionPreferencesSchema,
   soundOnSchema,

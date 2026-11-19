@@ -6,7 +6,8 @@ questionnaires, the privacy label, the data safety form, the export compliance a
 text and the App Review notes.
 
 Get Freak is an 18+ app of games for couples, played together on one phone. It has no accounts, no
-server, no analytics, no error reporting and no network calls.
+server, no analytics and no error reporting SDK. It makes one kind of network call, the update
+check described under Privacy label and data safety.
 
 - Written for FRK-56 on 19 November 2026. Every rule below was checked on that date at the source
   given. Store rules change, so check the sources again before each submission.
@@ -351,15 +352,28 @@ sign-in, and not a news, government, financial or health app (FRK-73).
 
 ### Expected answers
 
-- **App Store privacy label: Data Not Collected.** Apple defines "collect" as "transmitting data off
-  the device in a way that allows you and/or your third-party partners to access it", and "Data that
-  is processed only on device is not 'collected'" (A5). Crash logs that Apple gathers from players
-  who opt in do not count: "You are not responsible for disclosing data collected by Apple" (A5).
-- **Google Play data safety: no user data collected or shared.** Google defines "Collect" as
-  "transmitting data from your app off a user's device", and the form must still be completed (G5).
-  Whether Android vitals, which Google gathers from players who opt in, needs declaring is not
-  covered in G5. **Unconfirmed**. It is Google's own collection, not the app's, so the answer stays
-  "no data collected".
+- **The one network call.** Since FRK-80 the app checks for an update when it opens, with a request
+  to Expo's update service (`u.expo.dev`). It sends the platform, the runtime version, the channel,
+  the id of the running update and of the embedded build, and a random per-install id
+  (`EAS-Client-ID`). After a crash it also sends the previous launch's crash text
+  (`Expo-Fatal-Error`, up to 1024 characters). The request reveals the phone's IP address to Expo.
+  Nothing a player types or the app stores is sent. The text of a thrown error can reach Expo, so
+  an `Error` message must never hold player text.
+- **App Store privacy label: probably "Crash Data" and "Device or Other ID", not linked to the user
+  and not used for tracking.** Apple defines "collect" as "transmitting data off the device in a
+  way that allows you and/or your third-party partners to access it", and "Data that is processed
+  only on device is not 'collected'" (A5). The crash text and the install id leave the device and
+  Expo, a third-party partner, can access them, so "Data Not Collected" no longer fits while
+  updates are on. Crash logs that Apple gathers from players who opt in still do not count: "You
+  are not responsible for disclosing data collected by Apple" (A5). **Decision for the owner in
+  FRK-79.** "Data Not Collected" stays correct only if updates are turned off in production builds.
+- **Google Play data safety: probably "Crash logs" and "Device or other IDs" collected, not shared,
+  not linked to a person.** Google defines "Collect" as "transmitting data from your app off a
+  user's device", and the form must still be completed (G5). Whether Expo counts as sharing or as a
+  service provider acting for the app is not covered in G5. **Unconfirmed**. Whether Android vitals,
+  which Google gathers from players who opt in, needs declaring is also not covered in G5.
+  **Unconfirmed**. **Decision for the owner in FRK-79**, with the same alternative of turning
+  updates off in production builds.
 - Both stores need the privacy policy URL. The text is `privacyPolicy` in `packages/content`, and
   the owner hosts the same words.
 
@@ -383,43 +397,45 @@ policy or gives its URL to a store:
   anything differs. FRK-73 also replaces the placeholder contact email and turns on the launch gate
   test in `privacyPolicy.test.ts`.
 
-### Every library against "no data collected"
+### Every library against the privacy answers
 
 Checked from `apps/mobile/package.json` on `main` and from the source of `apps/mobile`, which has no
-`fetch`, no HTTP URL and no socket. Libraries the app's code does not import still ship if declared,
+`fetch`, no HTTP URL and no socket of its own. The only network call is the update check made by
+`expo-updates`. Libraries the app's code does not import still ship if declared,
 so all are listed.
 
-| Library                                                                | What it does                                                                 | Sends data off the phone?                                                                                                                                                                                                                           |
-| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `expo`                                                                 | Runtime and module system                                                    | No. Its dependencies include `expo-asset`, `expo-file-system` and `expo-keep-awake`, none used for network calls. `expo-updates` is not installed, so the app never fetches updates.                                                                |
-| `expo-router`, `expo-linking`, `expo-constants`                        | Navigation, deep links, app config                                           | No.                                                                                                                                                                                                                                                 |
-| `expo-font`, `@expo-google-fonts/baloo-2`, `@expo-google-fonts/nunito` | Fonts                                                                        | No. The font files are bundled with the app and loaded from the bundle.                                                                                                                                                                             |
-| `expo-audio` (FRK-26)                                                  | Button sounds                                                                | No. Plays three short sound files bundled with the app, from `assets/sounds`. The config plugin is set to add no microphone permission, no record permission and no background playback.                                                            |
-| `expo-asset` (FRK-26)                                                  | Loads bundled files, such as the sounds                                      | No. It can download a file from a URL it is given, but the app only gives it files in its own bundle.                                                                                                                                               |
-| `expo-haptics` (FRK-28)                                                | Press haptics                                                                | No. On Android it uses the view haptic effects, which need no permission.                                                                                                                                                                           |
-| `expo-sqlite`                                                          | Settings, including the sound and vibration switches, in its key-value store | No. Local database only (E1).                                                                                                                                                                                                                       |
-| `expo-status-bar`, `expo-system-ui`                                    | Status bar and background colour                                             | No.                                                                                                                                                                                                                                                 |
-| `expo-dev-client`                                                      | Development builds                                                           | Not in store builds. Its launcher only works in debug builds, and release builds "will not change other than the addition of a few header files" (E5, version 56. **Unconfirmed** for 57). The production profile must not set `developmentClient`. |
-| `react`, `react-native`, `react-dom`                                   | UI                                                                           | No. `react-dom` is for the web build only.                                                                                                                                                                                                          |
-| `react-native-reanimated`, `react-native-worklets`                     | Animation                                                                    | No.                                                                                                                                                                                                                                                 |
-| `react-native-screens`, `react-native-safe-area-context`               | Layout                                                                       | No.                                                                                                                                                                                                                                                 |
-| `nativewind`, `react-native-css-interop`                               | Styling                                                                      | No.                                                                                                                                                                                                                                                 |
-| `zod`                                                                  | Validation                                                                   | No.                                                                                                                                                                                                                                                 |
-| `@getfreak/core`, `@getfreak/content`, `@getfreak/tokens`              | This repository's packages                                                   | No.                                                                                                                                                                                                                                                 |
+| Library                                                                | What it does                                                                 | Sends data off the phone?                                                                                                                                                                                                                                                                                                                          |
+| ---------------------------------------------------------------------- | ---------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expo`                                                                 | Runtime and module system                                                    | No. Its dependencies include `expo-asset`, `expo-file-system` and `expo-keep-awake`, none used for network calls.                                                                                                                                                                                                                                  |
+| `expo-updates` (FRK-80)                                                | Over-the-air updates                                                         | Yes, one call at launch to Expo's update service. It sends the platform, runtime version, channel, update ids, a random per-install id (`EAS-Client-ID`) and, after a crash, the previous launch's crash text. It reveals the IP address. It sends nothing a player types or stores. This is what moves the answers above off "no data collected". |
+| `expo-router`, `expo-linking`, `expo-constants`                        | Navigation, deep links, app config                                           | No.                                                                                                                                                                                                                                                                                                                                                |
+| `expo-font`, `@expo-google-fonts/baloo-2`, `@expo-google-fonts/nunito` | Fonts                                                                        | No. The font files are bundled with the app and loaded from the bundle.                                                                                                                                                                                                                                                                            |
+| `expo-audio` (FRK-26)                                                  | Button sounds                                                                | No. Plays three short sound files bundled with the app, from `assets/sounds`. The config plugin is set to add no microphone permission, no record permission and no background playback.                                                                                                                                                           |
+| `expo-asset` (FRK-26)                                                  | Loads bundled files, such as the sounds                                      | No. It can download a file from a URL it is given, but the app only gives it files in its own bundle.                                                                                                                                                                                                                                              |
+| `expo-haptics` (FRK-28)                                                | Press haptics                                                                | No. On Android it uses the view haptic effects, which need no permission.                                                                                                                                                                                                                                                                          |
+| `expo-sqlite`                                                          | Settings, including the sound and vibration switches, in its key-value store | No. Local database only (E1).                                                                                                                                                                                                                                                                                                                      |
+| `expo-status-bar`, `expo-system-ui`                                    | Status bar and background colour                                             | No.                                                                                                                                                                                                                                                                                                                                                |
+| `expo-dev-client`                                                      | Development builds                                                           | Not in store builds. Its launcher only works in debug builds, and release builds "will not change other than the addition of a few header files" (E5, version 56. **Unconfirmed** for 57). The production profile must not set `developmentClient`.                                                                                                |
+| `react`, `react-native`, `react-dom`                                   | UI                                                                           | No. `react-dom` is for the web build only.                                                                                                                                                                                                                                                                                                         |
+| `react-native-reanimated`, `react-native-worklets`                     | Animation                                                                    | No.                                                                                                                                                                                                                                                                                                                                                |
+| `react-native-screens`, `react-native-safe-area-context`               | Layout                                                                       | No.                                                                                                                                                                                                                                                                                                                                                |
+| `nativewind`, `react-native-css-interop`                               | Styling                                                                      | No.                                                                                                                                                                                                                                                                                                                                                |
+| `zod`                                                                  | Validation                                                                   | No.                                                                                                                                                                                                                                                                                                                                                |
+| `@getfreak/core`, `@getfreak/content`, `@getfreak/tokens`              | This repository's packages                                                   | No.                                                                                                                                                                                                                                                                                                                                                |
 
 Libraries on their way:
 
-| Library                              | Ticket            | Sends data off the phone?                                                                                                                                                                                                                                                                        |
-| ------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `expo-sqlite` with SQLCipher         | FRK-41            | No. Encrypts the local database. See [Export compliance](#export-compliance).                                                                                                                                                                                                                    |
-| `expo-secure-store`                  | FRK-41, FRK-53    | No. Keychain on iOS, Keystore-encrypted storage on Android (E2).                                                                                                                                                                                                                                 |
-| `expo-crypto`                        | FRK-41, FRK-53    | No. Random ids and SHA-256 on the phone.                                                                                                                                                                                                                                                         |
-| `expo-local-authentication`          | FRK-53            | No. The phone checks Face ID or a fingerprint and only tells the app yes or no.                                                                                                                                                                                                                  |
-| `expo-notifications`                 | FRK-53, FRK-68    | No, as long as the app only schedules local notifications. Never call `getExpoPushTokenAsync` or `getDevicePushTokenAsync`: a push token is device data sent to a server, and would change both answers.                                                                                         |
-| `expo-screen-capture`                | FRK-53, FRK-66    | No.                                                                                                                                                                                                                                                                                              |
-| Vibration module                     | FRK-29            | No. A local module or a library with no network code.                                                                                                                                                                                                                                            |
-| Purchase library                     | FRK-71, if needed | Apple and Google handle purchases under their own policies, and the app asks the store on the phone. `expo-iap` or `react-native-iap` keep the answer at "no data collected". A service such as RevenueCat would not, and FRK-71 rules it out. Check the chosen library's own data safety notes. |
-| Declared Age Range, Play Age Signals | Not yet ticketed  | No, if the app only reads the age range on the phone and never sends it. Google says "No data is collected by the Play Age Signals client library" (G8).                                                                                                                                         |
+| Library                              | Ticket            | Sends data off the phone?                                                                                                                                                                                                                                                                               |
+| ------------------------------------ | ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `expo-sqlite` with SQLCipher         | FRK-41            | No. Encrypts the local database. See [Export compliance](#export-compliance).                                                                                                                                                                                                                           |
+| `expo-secure-store`                  | FRK-41, FRK-53    | No. Keychain on iOS, Keystore-encrypted storage on Android (E2).                                                                                                                                                                                                                                        |
+| `expo-crypto`                        | FRK-41, FRK-53    | No. Random ids and SHA-256 on the phone.                                                                                                                                                                                                                                                                |
+| `expo-local-authentication`          | FRK-53            | No. The phone checks Face ID or a fingerprint and only tells the app yes or no.                                                                                                                                                                                                                         |
+| `expo-notifications`                 | FRK-53, FRK-68    | No, as long as the app only schedules local notifications. Never call `getExpoPushTokenAsync` or `getDevicePushTokenAsync`: a push token is device data sent to a server, and would change both answers.                                                                                                |
+| `expo-screen-capture`                | FRK-53, FRK-66    | No.                                                                                                                                                                                                                                                                                                     |
+| Vibration module                     | FRK-29            | No. A local module or a library with no network code.                                                                                                                                                                                                                                                   |
+| Purchase library                     | FRK-71, if needed | Apple and Google handle purchases under their own policies, and the app asks the store on the phone. `expo-iap` or `react-native-iap` add nothing to the update-check answers above. A service such as RevenueCat would not, and FRK-71 rules it out. Check the chosen library's own data safety notes. |
+| Declared Age Range, Play Age Signals | Not yet ticketed  | No, if the app only reads the age range on the phone and never sends it. Google says "No data is collected by the Play Age Signals client library" (G8).                                                                                                                                                |
 
 ### What would change the answers
 
@@ -427,13 +443,16 @@ Any of these needs this document, the privacy policy, both store forms and possi
 review, in the same pull request:
 
 - An analytics, crash reporting or advertising SDK.
-- Any network call made by the app, other than the store's own purchase calls.
+- Any network call made by the app, other than the update check described above and the store's
+  own purchase calls.
 - A push token, an account or a server.
 - Sending anything the app stores, including the age range, off the phone.
 
 Before submission, check a release build on a real phone behind a network monitor and confirm it
-makes no connection apart from store purchases. This turns "no network calls" from a code reading
-into a measured fact. Add it to FRK-74.
+makes exactly one kind of connection, the update check to `u.expo.dev` when the app opens, and
+nothing else apart from store purchases. Look at what the request carries and confirm it holds no
+player text. This turns "one network call" from a code reading into a measured fact. Add it to
+FRK-74.
 
 ### Privacy manifest
 
@@ -680,13 +699,15 @@ content in the app switcher. "Forgot PIN?" leads to Clear everything. A fresh in
 off, so you will not meet it unless you turn it on.]
 
 PRIVACY
-No accounts, no analytics, no crash reporting, no ads and no tracking. The app makes no network
-requests [apart from the App Store's own purchase calls]. The privacy label is Data Not Collected.
+No accounts, no analytics, no ads and no tracking. The app checks for updates when it opens, which
+sends technical details and a crash report if the app crashed last time, and never anything the
+player types or plays [, and it makes the App Store's own purchase calls]. The privacy label
+follows the FRK-79 decision, probably Crash Data and Device or Other ID, not linked to the user.
 
 WHAT SETS IT APART
 This is not a simple drinking game. It is a designed card game for couples with over a hundred
 hand-written cards that build in steps, [the couple's own dares and decks,] an app lock, and a
-privacy-first design with nothing leaving the phone.
+privacy-first design where nothing a player writes leaves the phone.
 ```
 
 Google Play has no dedicated reviewer notes for content, only App access instructions and appeals

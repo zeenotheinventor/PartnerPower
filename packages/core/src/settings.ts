@@ -16,3 +16,6 @@ export const defaultSaveDiscoveries = true;
 
 export const questionPreferencesSchema = z.object({ saveDiscoveries: z.boolean() });
 export type QuestionPreferences = z.infer<typeof questionPreferencesSchema>;
+
+// The id of the last over-the-air update the player was told about, so each update is announced once.
+export const lastShownUpdateIdSchema = z.string();

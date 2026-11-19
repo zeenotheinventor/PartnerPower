@@ -78,6 +78,8 @@ export function useDiscoveries(storage: Storage = defaultStorage): Discoveries {
       sessionSwitch.current = isSaving;
       try {
         await storage.set('questionPreferences', { saveDiscoveries: isSaving });
+        // Stored, so storage is the truth again and another screen's change counts.
+        sessionSwitch.current = undefined;
       } catch {
         // Deliberately ignored, see above.
       }

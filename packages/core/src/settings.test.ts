@@ -2,6 +2,7 @@ import {
   entryConfirmationSchema,
   hapticsOnSchema,
   defaultSaveDiscoveries,
+  lastShownUpdateIdSchema,
   playerNamesSchema,
   questionPreferencesSchema,
   soundOnSchema,
@@ -70,5 +71,15 @@ describe('questionPreferencesSchema', () => {
 describe('defaultSaveDiscoveries', () => {
   it('should be on until the owner decides otherwise (FRK-33)', () => {
     expect(defaultSaveDiscoveries).toBe(true);
+  });
+});
+
+describe('lastShownUpdateIdSchema', () => {
+  it('should accept an update id', () => {
+    expect(lastShownUpdateIdSchema.parse('update-1')).toBe('update-1');
+  });
+
+  it.each([1, null, true, {}])('should reject %p', (value) => {
+    expect(lastShownUpdateIdSchema.safeParse(value).success).toBe(false);
   });
 });

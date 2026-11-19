@@ -184,6 +184,21 @@ describe('useDiscoveries', () => {
     expect(await repository.listDiscoveries()).toEqual([]);
   });
 
+  it('should follow storage again once the switch was stored, so another screen can change it', async () => {
+    const { result, storage } = renderDiscoveries();
+    await waitFor(() => expect(result.current.isLoading).toBe(false));
+    await act(async () => {
+      await result.current.setSaveDiscoveries(false);
+    });
+    await storage.set('questionPreferences', { saveDiscoveries: true });
+
+    await act(async () => {
+      await result.current.addDiscoveries([agree]);
+    });
+
+    expect(result.current.discoveries).toEqual([expect.objectContaining(agree)]);
+  });
+
   it('should not log anything', async () => {
     const { result } = renderDiscoveries();
     await waitFor(() => expect(result.current.isLoading).toBe(false));
