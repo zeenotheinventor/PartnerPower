@@ -19,6 +19,19 @@ jest.mock('../../../storage/useClearEverything', () => ({
   useClearEverything: () => mockClearEverything,
 }));
 
+// React Native provides this clock, and the project's TypeScript libraries do not declare it.
+declare const performance: { now(): number };
+
+/** Takes the steady clock away for the rest of the test, as on a phone where it is missing. */
+function removeSteadyClock() {
+  const original = Object.getOwnPropertyDescriptor(globalThis, 'performance');
+  Object.defineProperty(globalThis, 'performance', { value: undefined, configurable: true });
+  restoreSteadyClock = () => {
+    if (original) Object.defineProperty(globalThis, 'performance', original);
+  };
+}
+let restoreSteadyClock = () => {};
+
 const rightPin = '4821';
 const appContent = 'App content';
 
@@ -97,6 +110,8 @@ describe('LockGate', () => {
   });
 
   afterEach(() => {
+    restoreSteadyClock();
+    restoreSteadyClock = () => {};
     jest.useRealTimers();
     jest.restoreAllMocks();
   });
@@ -402,6 +417,55 @@ describe('LockGate', () => {
       await advance(1);
 
       expect(lockHeading()).toBeOnTheScreen();
+    });
+  });
+
+  describe('clocks that cannot be trusted', () => {
+    it('should still lock after 60 seconds when there is no steady clock at all', async () => {
+      removeSteadyClock();
+      await renderGate();
+      await unlockWithPin();
+
+      await awayFor(60_000);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
+    it('should lock when the phone clock answers with something that is not a number', async () => {
+      await renderGate();
+      await unlockWithPin();
+      await changeAppState('background');
+      await advance(1_000);
+
+      jest.spyOn(Date, 'now').mockReturnValue(Number.NaN);
+      await changeAppState('active');
+      jest.mocked(Date.now).mockRestore();
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
+    it('should lock when the steady clock answers with something that is not a number', async () => {
+      await renderGate();
+      await unlockWithPin();
+      await changeAppState('background');
+      await advance(1_000);
+
+      jest.spyOn(performance, 'now').mockReturnValue(Number.NaN);
+      await changeAppState('active');
+      await advance(1);
+
+      expect(lockHeading()).toBeOnTheScreen();
+    });
+
+    it('should not lock a short trip when there is no steady clock', async () => {
+      removeSteadyClock();
+      await renderGate();
+      await unlockWithPin();
+
+      await awayFor(10_000);
+
+      expect(lockHeading()).toBeNull();
     });
   });
 
