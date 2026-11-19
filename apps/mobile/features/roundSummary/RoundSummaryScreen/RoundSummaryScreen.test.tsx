@@ -3,6 +3,7 @@ import type { Deck, RoundAction, RoundSetup } from '@getfreak/core';
 import { act, fireEvent, screen, within } from 'nativewind/test';
 import { useEffect, type ReactNode } from 'react';
 
+import { customDeckChoice } from '../../decks/customDeckChoice';
 import { DeckChoiceProvider, useDeckChoice } from '../../decks/DeckChoiceProvider';
 import type { DeckChoice } from '../../decks/types';
 import { OwnCardsProvider } from '../../ownCards/OwnCardsProvider';
@@ -399,6 +400,102 @@ describe('RoundSummaryScreen', () => {
       chosenDeck = 'favourites';
       await personalRepository.setFavourite('card-1', true);
       await renderSummary();
+      const playAgain = screen.getByRole('button', { name: copy.roundSummary.playAgain });
+
+      await act(async () => {
+        fireEvent.press(playAgain);
+        fireEvent.press(playAgain);
+      });
+
+      expect(mockReplace).toHaveBeenCalledTimes(1);
+    });
+  });
+
+  describe('Play again from a custom deck', () => {
+    const dealtIds = () => latestRound?.lastStart?.deck.cards.map((card) => card.id);
+
+    // Stores the deck, chooses it as setup did, and shows the summary with it chosen.
+    async function renderWithCustomDeck(cardIds: string[]) {
+      const saved = await personalRepository.saveDeck({ name: 'Placeholder deck', cardIds });
+      if (!saved.ok) throw new Error('The test deck was not saved');
+      chosenDeck = customDeckChoice(saved.saved.id);
+      await renderSummary();
+      return saved.saved.id;
+    }
+
+    const pressPlayAgain = () =>
+      act(async () => {
+        fireEvent.press(screen.getByRole('button', { name: copy.roundSummary.playAgain }));
+      });
+
+    it('should deal the deck as it is stored when Play again is pressed, not as it was', async () => {
+      const deckId = await renderWithCustomDeck(['card-1', 'card-2']);
+      await personalRepository.saveDeck({
+        id: deckId,
+        name: 'Placeholder deck',
+        cardIds: ['card-2', 'card-4'],
+      });
+
+      await pressPlayAgain();
+
+      expect(dealtIds()).toEqual(['card-2', 'card-4']);
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/play');
+    });
+
+    it('should deal only the cards of the deck, though the round started from more', async () => {
+      await renderWithCustomDeck(['card-3']);
+
+      await pressPlayAgain();
+
+      expect(dealtIds()).toEqual(['card-3']);
+    });
+
+    it('should keep the settings and take a new seed', async () => {
+      await renderWithCustomDeck(['card-2']);
+
+      await pressPlayAgain();
+
+      expect(latestRound?.lastStart?.setup).toEqual({ ...setup, seed: 99 });
+    });
+
+    it('should not start a round when the deck has no cards left in play, and go to setup', async () => {
+      const deckId = await renderWithCustomDeck(['card-1']);
+      await personalRepository.saveDeck({ id: deckId, name: 'Placeholder deck', cardIds: [] });
+
+      await pressPlayAgain();
+
+      expect(latestRound?.lastStart?.deck).toBe(deck);
+      expect(mockReplace).toHaveBeenCalledTimes(1);
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/setup');
+    });
+
+    it('should go to setup when the deck has been deleted', async () => {
+      const deckId = await renderWithCustomDeck(['card-1']);
+      await personalRepository.deleteDeck(deckId);
+
+      await pressPlayAgain();
+
+      expect(mockReplace).toHaveBeenCalledWith('/games/dares/setup');
+    });
+
+    it('should let Play again be pressed again after it sent the player to setup', async () => {
+      const deckId = await renderWithCustomDeck(['card-1']);
+      await personalRepository.saveDeck({ id: deckId, name: 'Placeholder deck', cardIds: [] });
+      await pressPlayAgain();
+      await personalRepository.saveDeck({
+        id: deckId,
+        name: 'Placeholder deck',
+        cardIds: ['card-3'],
+      });
+
+      await pressPlayAgain();
+
+      expect(mockReplace).toHaveBeenLastCalledWith('/games/dares/play');
+      expect(dealtIds()).toEqual(['card-3']);
+    });
+
+    it('should open play only once when pressed twice', async () => {
+      await renderWithCustomDeck(['card-1']);
       const playAgain = screen.getByRole('button', { name: copy.roundSummary.playAgain });
 
       await act(async () => {

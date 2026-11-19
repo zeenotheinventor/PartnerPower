@@ -124,23 +124,63 @@ describe('copy', () => {
     expectEveryValueToBeText(copy.roundSetup);
   });
 
-  it('should give the deck picker and the Favourites view every line as non-empty text', () => {
+  it('should give the deck picker, the Favourites view and the deck editor every line as non-empty text', () => {
     expect(Object.keys(copy.decks).sort()).toEqual(
       [
         'backLabel',
+        'cardLimit',
+        'categoryCount',
         'count',
         'countOne',
         'deckCardName',
+        'deckLimit',
+        'deleteBody',
+        'deleteCancel',
+        'deleteConfirm',
+        'deleteDeck',
+        'deleteFailed',
+        'deleteTitle',
+        'editDeck',
+        'editDeckName',
+        'editorTitle',
         'favourites',
         'favouritesEmpty',
         'groupHeading',
+        'nameError',
+        'nameLabel',
+        'newDeck',
+        'nothingToAdd',
         'pickerTitle',
+        'saveDeck',
+        'sectionFavourites',
+        'sectionMine',
         'starter',
         'viewFavourites',
         'viewFavouritesName',
+        'writeFailed',
       ].sort(),
     );
     expectEveryValueToBeText(copy.decks);
+  });
+
+  it('should word the deck editor lines as the ticket drafts them', () => {
+    expect(copy.decks.newDeck).toBe('New deck');
+    expect(copy.decks.editorTitle).toBe('Your deck');
+    expect(copy.decks.nameLabel).toBe('Deck name');
+    expect(copy.decks.nameError).toBe('Give your deck a name.');
+    expect(copy.decks.saveDeck).toBe('Save deck');
+    expect(copy.decks.deleteDeck).toBe('Delete deck');
+    expect(copy.decks.deckLimit).toBe("That's 20 decks. Delete one to make another.");
+    expect(copy.decks.cardLimit).toBe('A deck holds up to 200 cards.');
+    expect(copy.decks.deleteTitle).toBe('Delete this deck?');
+    expect(copy.decks.deleteBody).toBe('Your dares and favourites stay.');
+    expect(copy.decks.deleteConfirm).toBe('Delete');
+    expect(copy.decks.deleteCancel).toBe('Keep it');
+  });
+
+  it('should keep the deck limits in the copy the same as the limits in core', () => {
+    expect(copy.decks.deckLimit).toContain(String(limits.customDecks));
+    expect(copy.decks.cardLimit).toContain(String(limits.cardsPerCustomDeck));
   });
 
   it('should give the shared kit lines as non-empty text', () => {

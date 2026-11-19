@@ -1,5 +1,11 @@
 import { copy, fillCopy } from '@getfreak/content';
-import { isRoundOver, summarise, type Deck, type RoundState } from '@getfreak/core';
+import {
+  isRoundOver,
+  summarise,
+  type CustomDeck,
+  type Deck,
+  type RoundState,
+} from '@getfreak/core';
 import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
@@ -65,34 +71,35 @@ export function RoundSummaryScreen() {
       startNewRound({ ...lastStart.setup, seed: randomSeed() }, deck);
       router.replace(playRoute);
     };
-    if (deckChoice !== 'favourites') {
+    if (deckChoice === 'starter') {
       begin(lastStart.deck);
       return;
     }
-    // Favourites is built from the list as it is now, so a card turned on or off on this screen
-    // counts. A list that cannot be read counts as empty.
-    repository
-      .listFavourites()
-      .then(
+    // Favourites and a custom deck are built from what is stored now, so a card turned on or off,
+    // or a deck changed, counts. A list that cannot be read counts as empty.
+    Promise.all([
+      repository.listFavourites().then(
         (cardIds) => new Set(cardIds),
         () => new Set<string>(),
-      )
-      .then((favouriteIds) => {
-        const deck = buildRoundDeck({
-          choice: deckChoice,
-          starterDeck: getStarterDeck(),
-          ownCards,
-          mixInOwnCards: false,
-          favouriteIds,
-        });
-        // Setup holds Start when nothing is in play, and so does this. Setup says why.
-        if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
-          hasStarted.current = false;
-          router.replace(setupRoute);
-          return;
-        }
-        begin(deck);
+      ),
+      repository.listDecks().catch((): CustomDeck[] => []),
+    ]).then(([favouriteIds, customDecks]) => {
+      const deck = buildRoundDeck({
+        choice: deckChoice,
+        starterDeck: getStarterDeck(),
+        ownCards,
+        mixInOwnCards: false,
+        favouriteIds,
+        customDecks,
       });
+      // Setup holds Start when nothing is in play, and so does this. Setup says why.
+      if (countCardsInPlay(deck, lastStart.setup.enabledCategories) === 0) {
+        hasStarted.current = false;
+        router.replace(setupRoute);
+        return;
+      }
+      begin(deck);
+    });
   };
 
   // Going to the hub ends the route group, which discards the round.

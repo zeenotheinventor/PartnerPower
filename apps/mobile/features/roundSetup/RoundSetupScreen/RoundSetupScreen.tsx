@@ -3,6 +3,7 @@ import {
   categoriesForLevel,
   levelIds,
   type CategoryId,
+  type CustomDeck,
   type LevelId,
   type PlayerNames,
   type RoundLength,
@@ -25,9 +26,11 @@ import { useSettings } from '../../../settings';
 import { buildRoundDeck } from '../../decks/buildRoundDeck';
 import { countCardsInPlay } from '../../decks/countCardsInPlay';
 import { useDeckChoice } from '../../decks/DeckChoiceProvider';
-import { deckNames } from '../../decks/deckNames';
+import { deckNameOf } from '../../decks/deckNames';
 import { getStarterDeck } from '../../decks/getStarterDeck';
 import { deckPickerRoute } from '../../decks/routes';
+import { customDeckIdOf } from '../../decks/customDeckChoice';
+import { useCustomDecks } from '../../decks/useCustomDecks';
 import { useFavouriteIds } from '../../decks/useFavouriteIds';
 import { useOwnCards } from '../../ownCards/OwnCardsProvider';
 import { myDaresRoute } from '../../ownCards/routes';
@@ -43,6 +46,7 @@ const playRoute = '/games/dares/play';
 
 // Before the favourites have been read, no card counts as one.
 const noFavouriteIds: ReadonlySet<string> = new Set();
+const noCustomDecks: readonly CustomDeck[] = [];
 
 const levelOptions = levelIds.map((levelId) => ({ value: levelId, label: levelNames[levelId] }));
 
@@ -61,6 +65,7 @@ export function RoundSetupScreen() {
   const { cards: ownCards, isLoading: isOwnCardsLoading } = useOwnCards();
   const { choice: deckChoice } = useDeckChoice();
   const favouriteIds = useFavouriteIds();
+  const customDecks = useCustomDecks();
 
   // A stored value is tidied the way a typed one is, so it can never exceed what the screen allows.
   const [names, setNames] = useState<PlayerNames>([
@@ -86,20 +91,28 @@ export function RoundSetupScreen() {
 
   const levelCategories = categoriesForLevel(level);
   const isLastCategoryOn = enabledCategories.length === 1;
-  // Start waits for the dares to be read, so a round never starts without the dares it should mix,
-  // and for the favourites only when they are the deck. The starter deck never needs them.
+  // Start waits for the dares to be read, so a round never starts without the dares it should mix.
+  // It waits for the favourites only when they are the deck, and for the custom decks only when one
+  // of them is. The starter deck never needs them.
   const isDeckReady =
-    !isOwnCardsLoading && (deckChoice === 'starter' || favouriteIds !== undefined);
+    !isOwnCardsLoading &&
+    (deckChoice === 'starter' ||
+      (deckChoice === 'favourites'
+        ? favouriteIds !== undefined
+        : customDeckIdOf(deckChoice) === undefined || customDecks !== undefined));
   const deck = buildRoundDeck({
     choice: deckChoice,
     starterDeck: getStarterDeck(),
     ownCards,
     mixInOwnCards: mixOn,
     favouriteIds: favouriteIds ?? noFavouriteIds,
+    customDecks: customDecks ?? noCustomDecks,
   });
   const cardsInPlay = countCardsInPlay(deck, enabledCategories);
   const hasNoCardsInPlay = isDeckReady && cardsInPlay === 0;
   const canStart = isDeckReady && cardsInPlay > 0 && names.every((name) => tidyName(name) !== '');
+  // A custom deck has no name until the decks have been read.
+  const deckName = deckNameOf(deckChoice, customDecks);
   const myDaresValue = isOwnCardsLoading
     ? undefined
     : ownCards.length === 0
@@ -194,11 +207,15 @@ export function RoundSetupScreen() {
 
       <SetupRow
         caption={copy.roundSetup.deckLabel}
-        value={deckNames[deckChoice]}
-        name={fillCopy(copy.roundSetup.deckRowName, {
-          label: copy.roundSetup.deckLabel,
-          value: deckNames[deckChoice],
-        })}
+        value={deckName}
+        name={
+          deckName === undefined
+            ? copy.roundSetup.deckLabel
+            : fillCopy(copy.roundSetup.deckRowName, {
+                label: copy.roundSetup.deckLabel,
+                value: deckName,
+              })
+        }
         onPress={() => router.push(deckPickerRoute)}
       />
 
