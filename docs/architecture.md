@@ -971,8 +971,12 @@ opens it (`entryRoute` is `/games/questions`).
   and one `Card` button for each item in `homeEntries`. An entry
   with a `route` is on. An entry whose `route` is null shows as coming soon, disabled and named
   "title, Coming soon", so a ticket switches its entry on by giving it a route. An entry with
-  `countOf` also shows its count as a chip at the end and in its name ("Your questions, 3 written"),
-  once the count has been read.
+  `countOf` (`'discoveries'` or `'ownQuestions'`) also shows its count as an outlined `Chip` at the
+  end of its row and in its name, such as "Discoveries, 12 saved" or "Your questions, 3 written".
+  The lines come from one hook, `useHomeEntryCounts`, which returns a line for each `countOf`: it
+  reads `useDiscoveries` and `useOwnQuestions`, says "Nothing yet" or "{n} saved" for discoveries
+  and "None yet" or "{n} written" for questions, and gives undefined until its source has been
+  read, so a row never says "none" by mistake. The screen only reads `counts[countOf]`.
 - `features/questionsSetup` is the Freak or Drink setup with two more groups: four format switches
   and six topic switches, each in one `Card` with `grouped={false}` of `Toggle` rows. The last format
   and the last topic left on are locked. The categories come from the level, as for dares. Only the
@@ -1074,7 +1078,8 @@ starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them
   (`useSaveMatches`), and says "Saved to discoveries" when saving is on, or that matches go when
   they leave when it is off. It says nothing while the save is under way and nothing if it failed.
   The "dares for you two" card shows only when the Discoveries entry on the home has a route, and
-  opens that screen. Until then it is hidden.
+  opens that screen. It is shown now that Discoveries exists, and opens it until the dares section
+  has a screen of its own.
 - Stop, the system back button and the iOS swipe open the kit `Dialog` while a pass or the handoff
   is showing, through `usePreventRemove`. Confirming sends `stop`, which wipes both passes, and the
   screen goes back to the home, or replaces itself with it when it was opened by a deep link. The
@@ -1109,13 +1114,54 @@ starts), `players`, `matchesToSave`, `start` and `dispatch`. It never gives them
   that mounts again for the same round never saves twice, and a failed save is not retried.
   Whether saving is on is the hook's to decide. A round with no discoveries writes nothing.
 - When saving is on and the round made discoveries, a card shows "{n} new discoveries". It is a link
-  to the Discoveries screen once `discoveriesRoute` in the feature holds a route, and a plain count
-  until then. When saving is off nothing about discoveries shows. A failed save replaces the card
-  with a short message in a bordered box, and nothing else on the screen is blocked.
+  to the Discoveries screen, because `discoveriesRoute` in the feature holds its route (a null there
+  would show a plain count instead). When saving is off nothing about discoveries shows. A failed
+  save replaces the card with a short message in a bordered box, and nothing else on the screen is
+  blocked.
 - Play again starts a round from `lastStart` (the setup and the questions) with a new seed from
   `randomSeed`, then replaces the summary with the play route. Settings goes back to setup, which is
   still mounted under the summary. Home goes to the Drink If home with `dismissTo`. The back gesture
   goes to setup.
+
+### Discoveries screen
+
+`app/games/questions/discoveries.tsx` renders `DiscoveriesScreen` from `features/discoveries`. The
+Discoveries entry of `homeEntries`, the summary card and the secret match "dares for you two" card
+open it. The route is the one constant in `features/discoveries/routes.ts`. Nothing on the screen is
+logged, because every line is personal.
+
+- The list, the removal, the clear and the switch come from `useDiscoveries`, so there is no second
+  storage path. The screen shows only the header while the store opens, so the switch never flashes
+  its default.
+- `buildDiscoveryGroups` (`discoveryRows.ts`) turns the stored discoveries into display rows. It
+  looks the question up in the shipped questions (`questionDecks`) and the player's own
+  (`useCustomQuestions`), takes the item or question text and the picked option text, and holds no
+  copy. A discovery whose question is missing, whose option is not offered or whose question has
+  another format is left out. The store already leaves most of these out, so this is a second guard.
+- The groups are matches, things you both would rather, and one group for each partner's answers.
+  Each is newest first, because the store lists oldest first and the groups read from the end. The
+  partner groups are in the order of each partner's newest answer.
+- `DiscoveryEntryCard` is a `Card` with `grouped={false}` holding a topic `Chip`, the question, the
+  answer and a pressable "Remove" `Chip`. The chip's name is "Remove, {text}" through the new
+  `accessibilityLabel` of `Chip`, and the text includes the answer for an agreement or a partner's
+  answer, so two entries are never named the same. The card is memoised, and the remove handler is
+  stable, because a phone can hold hundreds of entries and a switch change should not draw them all
+  again. The list is not virtualised: the screen is one `Screen scroll`, as the design draws it.
+- The saving switch is a `Toggle` with a caption in a plain `Card`. It stores the choice at once
+  through `setSaveDiscoveries`. Turning it off then opens `ClearDiscoveriesDialog`, which asks
+  whether to clear what is saved, when something is. "Keep it" closes it. With saving off a line says
+  new discoveries are not kept, and what is saved stays.
+- Clear all (a secondary `Button`, shown only when there are entries) opens the same dialog. Both
+  dialogs use the kit `Dialog` with the `danger` confirm and are mounted only while open. While the
+  clear runs, the confirm reads "Clearing", and a failure shows the Clear everything failure line
+  and "Try again". Clearing removes every stored discovery, including any whose question is missing
+  now, which the list does not show.
+- With nothing to show the screen has Theo at rest, a line, "Nothing here yet", and two buttons:
+  Play a round (`/games/questions/setup`) and Secret match (`/games/questions/match`). The switch
+  still shows.
+- The dares for you two section goes between the switch (and its line) and the groups, where the
+  screen marks its place. Its ticket adds it, so the frame's room is kept and nothing is drawn.
+- The copy is in `copy.discoveries`, and the home count lines are in `copy.questionsHome`.
 
 ### Entry guard
 

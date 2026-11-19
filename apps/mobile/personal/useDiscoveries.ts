@@ -76,6 +76,8 @@ export function useDiscoveries(storage: Storage = defaultStorage): Discoveries {
     async (isSaving: boolean) => {
       // Set before the write, so a failed write cannot leave saving on after the player turned it off.
       sessionSwitch.current = isSaving;
+      // The switch shows the new value at once, before the write is done.
+      setSaveDiscoveriesState(isSaving);
       try {
         await storage.set('questionPreferences', { saveDiscoveries: isSaving });
         // Stored, so storage is the truth again and another screen's change counts.
@@ -83,7 +85,6 @@ export function useDiscoveries(storage: Storage = defaultStorage): Discoveries {
       } catch {
         // Deliberately ignored, see above.
       }
-      setSaveDiscoveriesState(isSaving);
     },
     [storage],
   );

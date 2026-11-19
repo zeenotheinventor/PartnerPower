@@ -10,6 +10,8 @@ export type ChipProps = {
   accent?: boolean;
   /** Makes the chip a button. */
   onPress?: () => void;
+  /** The sound and haptic of a press. A chip that destroys something uses `tap`, as Button does. */
+  feedback?: 'select' | 'tap';
   /** For a pressable chip. A category chip is filled when selected and outlined when it is not. */
   selected?: boolean;
 };
