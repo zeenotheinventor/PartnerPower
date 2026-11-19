@@ -12,6 +12,13 @@ described as such anywhere in this repository.
   the code.
 - Branch names are the ticket id plus a short slug, for example `FRK-12/turn-screen`.
 
+## Architecture decisions
+
+Record a decision the ticket did not cover as one list entry, `- **<decision>** (<ticket>): <reason>`,
+at the end of its area's file in `docs/decisions/`. Never use a table there, and never edit
+another entry. `docs/architecture.md` lists the areas. If no area fits, add a new file and link it
+from the Decisions section of `docs/architecture.md`.
+
 ## Development decisions
 
 Decisions the owner has made about how work moves. The orchestrating agent follows them without
