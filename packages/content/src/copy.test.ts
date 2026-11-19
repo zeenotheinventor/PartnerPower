@@ -1,6 +1,7 @@
 import { limits, surpriseIds } from '@getfreak/core';
 
 import { copy } from './copy';
+import { fillCopy } from './fillCopy';
 import { hasDashOrSemicolon } from './textRules';
 
 function expectEveryValueToBeText(group: Record<string, string>) {
@@ -26,14 +27,69 @@ describe('copy', () => {
     expect(Object.keys(copy.settings).sort()).toEqual(
       [
         'backLabel',
+        'clearCaption',
+        'clearLabel',
+        'clearSection',
+        'playSection',
+        'privacyLabel',
+        'privacySection',
         'soundsCaption',
         'soundsLabel',
         'title',
+        'version',
+        'versionWithoutBuild',
         'vibrationCaption',
         'vibrationLabel',
       ].sort(),
     );
     expectEveryValueToBeText(copy.settings);
+  });
+
+  it('should give the privacy policy screen its back label', () => {
+    expect(Object.keys(copy.privacy)).toEqual(['backLabel']);
+    expectEveryValueToBeText(copy.privacy);
+  });
+
+  describe('clear everything', () => {
+    it('should give the dialog every line as non-empty text', () => {
+      const { removed, kept, ...lines } = copy.clear;
+      expect(Object.keys(lines).sort()).toEqual(
+        [
+          'body',
+          'cancel',
+          'clearing',
+          'confirm',
+          'failed',
+          'keptLabel',
+          'removedLabel',
+          'retry',
+          'title',
+        ].sort(),
+      );
+      expectEveryValueToBeText(lines);
+      [...removed, ...kept].forEach((line) => expect(line.trim()).not.toBe(''));
+    });
+
+    it('should list what goes and what stays', () => {
+      expect(copy.clear.removed.length).toBeGreaterThan(0);
+      expect(copy.clear.kept.length).toBeGreaterThan(0);
+    });
+
+    it('should keep every line free of dashes and semicolons', () => {
+      const { removed, kept, ...lines } = copy.clear;
+      [...Object.values(lines), ...removed, ...kept].forEach((line) =>
+        expect(hasDashOrSemicolon(line)).toBe(false),
+      );
+    });
+
+    it('should show the version with its build number, and without when there is none', () => {
+      expect(fillCopy(copy.settings.version, { version: '1.0.0', build: '12' })).toBe(
+        'Version 1.0.0 (12)',
+      );
+      expect(fillCopy(copy.settings.versionWithoutBuild, { version: '1.0.0' })).toBe(
+        'Version 1.0.0',
+      );
+    });
   });
 
   it('should give the round setup screen every line as non-empty text', () => {

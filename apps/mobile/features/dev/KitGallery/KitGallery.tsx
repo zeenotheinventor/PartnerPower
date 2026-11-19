@@ -15,6 +15,7 @@ import {
   Header,
   Screen,
   SegmentedControl,
+  SettingsRow,
   TextField,
   Toast,
   Toggle,
@@ -50,6 +51,7 @@ export function KitGallery() {
   const [name, setName] = useState('');
   const [note, setNote] = useState('');
   const [isDialogShowing, setIsDialogShowing] = useState(false);
+  const [isDangerDialogShowing, setIsDangerDialogShowing] = useState(false);
   const [option, setOption] = useState('b');
   const [categoryOn, setCategoryOn] = useState(true);
   const [categoryOff, setCategoryOff] = useState(false);
@@ -87,6 +89,32 @@ export function KitGallery() {
           <Button label="Secondary, full width" variant="secondary" fullWidth onPress={() => {}} />
           <Button label="Primary, disabled" disabled onPress={() => {}} />
           <Button label="Secondary, disabled" variant="secondary" disabled onPress={() => {}} />
+          <Button label="Danger button" variant="danger" onPress={() => {}} />
+          <Button label="Danger button, disabled" variant="danger" disabled onPress={() => {}} />
+        </Section>
+
+        <Section title="Settings rows">
+          {/* Not grouped, so each row is read on its own. */}
+          <Card grouped={false}>
+            <View className="gap-8">
+              <SettingsRow label="Row with a value" value="On, PIN" onPress={() => {}} />
+              <View className="border-t-2 border-border" />
+              <SettingsRow
+                label="Row with a caption"
+                caption="A line under the label."
+                onPress={() => {}}
+              />
+              <View className="border-t-2 border-border" />
+              <SettingsRow label="Disabled row" disabled onPress={() => {}} />
+              <View className="border-t-2 border-border" />
+              <SettingsRow
+                label="Danger row"
+                tone="danger"
+                showChevron={false}
+                onPress={() => {}}
+              />
+            </View>
+          </Card>
         </Section>
 
         <Section title="Cards">
@@ -257,6 +285,11 @@ export function KitGallery() {
             variant="secondary"
             onPress={() => setIsDialogShowing(true)}
           />
+          <Button
+            label="Show danger dialog"
+            variant="secondary"
+            onPress={() => setIsDangerDialogShowing(true)}
+          />
         </Section>
 
         <Section title="Toast">
@@ -272,6 +305,19 @@ export function KitGallery() {
         onConfirm={() => setIsDialogShowing(false)}
         onCancel={() => setIsDialogShowing(false)}
       />
+      <Dialog
+        visible={isDangerDialogShowing}
+        title="Danger dialog title"
+        body="A line that says what the choice destroys."
+        confirmLabel="Danger confirm"
+        cancelLabel="Danger cancel"
+        confirmVariant="danger"
+        error="An error line, in the danger colour."
+        onConfirm={() => setIsDangerDialogShowing(false)}
+        onCancel={() => setIsDangerDialogShowing(false)}
+      >
+        <Text className="type-body text-foreground">Content under the line.</Text>
+      </Dialog>
       {isToastShowing ? (
         <Toast
           message="Toast message"
