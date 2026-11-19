@@ -27,6 +27,7 @@ describe('limits', () => {
     expect(limits).toEqual({
       cardTextLength: 140,
       playerCards: 300,
+      playerQuestions: 300,
       customDecks: 20,
       cardsPerCustomDeck: 200,
       deckNameLength: 30,

@@ -4,24 +4,30 @@ import { createNodeDatabase } from './testing/nodeSqlite';
 import {
   describePersonalRepository,
   makeShippedCardsForTests,
+  makeShippedQuestionsForTests,
 } from './testing/describePersonalRepository';
 import type {
   PersonalRepository,
   PersonalRepositoryOptions,
   ShippedCard,
+  ShippedQuestion,
   SqlDatabase,
 } from './types';
 
 type TestOptions = Omit<PersonalRepositoryOptions, 'recoveredFromUnreadable'> & {
   shippedCards: ShippedCard[];
+  shippedQuestions: ShippedQuestion[];
 };
 
 function makeOptions(): TestOptions {
   let nextUuid = 0;
   const shippedCards = makeShippedCardsForTests();
+  const shippedQuestions = makeShippedQuestionsForTests();
   return {
     shippedCards,
+    shippedQuestions,
     getShippedCards: () => shippedCards,
+    getShippedQuestions: () => shippedQuestions,
     randomUUID: () => `00000000-0000-4000-8000-${String((nextUuid += 1)).padStart(12, '0')}`,
     now: () => 1,
   };
@@ -52,7 +58,11 @@ describePersonalRepository('SQLite', async (extra) => {
     ...options,
     ...extra,
   });
-  return { repository, shippedCards: options.shippedCards };
+  return {
+    repository,
+    shippedCards: options.shippedCards,
+    shippedQuestions: options.shippedQuestions,
+  };
 });
 
 describe('SQLite personal repository storage', () => {
@@ -131,5 +141,139 @@ describe('SQLite personal repository storage', () => {
     expect(await repository.listDecks()).toEqual([
       { id: deckId, name: 'Deck 1', cardIds: ['starter-c1-01'] },
     ]);
+  });
+});
+
+describe('SQLite personal repository question and discovery storage', () => {
+  const insertQuestionRow = (database: SqlDatabase, id: string, options: string | null) =>
+    database.run(
+      'INSERT INTO player_question (id, format, category, topic, text, options, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [id, 'guess', 'c1', 't1', 'Question 1', options, 1, 1],
+    );
+
+  it('should skip a stored question whose id fails the core schema, and not throw', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    await insertQuestionRow(
+      database,
+      'not-a-player-id',
+      '[{"id":"o1","text":"A"},{"id":"o2","text":"B"}]',
+    );
+    await insertQuestionRow(
+      database,
+      'pq-00000000-0000-4000-8000-000000000002',
+      '[{"id":"o1","text":"A"},{"id":"o2","text":"B"}]',
+    );
+
+    const questions = await repository.listPlayerQuestions();
+
+    expect(questions.map((question) => question.id)).toEqual([
+      'pq-00000000-0000-4000-8000-000000000002',
+    ]);
+  });
+
+  it('should skip a stored question whose options are not valid JSON or fail the schema', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    await insertQuestionRow(database, 'pq-00000000-0000-4000-8000-000000000001', '{broken');
+    await insertQuestionRow(database, 'pq-00000000-0000-4000-8000-000000000002', '[{"id":"o1"}]');
+
+    expect(await repository.listPlayerQuestions()).toEqual([]);
+  });
+
+  it('should skip a discovery row that fails the core schema, and not throw', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    await repository.addDiscoveries([{ kind: 'agree', questionId: 'q-either-01', optionId: 'o1' }]);
+    await database.run(
+      'INSERT INTO discovery (kind, question_id, player, option_id, strength, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      ['match', 'q-match-01', '', null, 'yes', 1e20],
+    );
+
+    const discoveries = await repository.listDiscoveries();
+
+    expect(discoveries.map((discovery) => discovery.kind)).toEqual(['agree']);
+  });
+
+  it('should keep a discovery for a missing question in storage', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    await repository.addDiscoveries([{ kind: 'agree', questionId: 'q-either-99', optionId: 'o1' }]);
+
+    expect(await repository.listDiscoveries()).toEqual([]);
+    expect(await database.all('SELECT question_id FROM discovery')).toEqual([
+      { question_id: 'q-either-99' },
+    ]);
+  });
+
+  it('should store a discovery with an empty player for a match and an agree', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+
+    await repository.addDiscoveries([
+      { kind: 'match', questionId: 'q-match-01', strength: 'maybe' },
+      { kind: 'agree', questionId: 'q-either-01', optionId: 'o2' },
+    ]);
+
+    expect(await database.all('SELECT kind, player, option_id, strength FROM discovery')).toEqual([
+      { kind: 'match', player: '', option_id: null, strength: 'maybe' },
+      { kind: 'agree', player: '', option_id: 'o2', strength: null },
+    ]);
+  });
+
+  it('should remove the discoveries of a deleted question from storage, not only hide them', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    const saved = await repository.savePlayerQuestion({
+      format: 'ifYou',
+      category: 'c1',
+      topic: 't1',
+      text: 'Question 1',
+    });
+    const questionId = saved.ok ? saved.saved.id : 'missing';
+    await repository.addDiscoveries([{ kind: 'match', questionId, strength: 'yes' }]);
+
+    await repository.deletePlayerQuestion(questionId);
+
+    expect(await database.all('SELECT * FROM discovery')).toEqual([]);
+    expect(await database.all('SELECT * FROM player_question')).toEqual([]);
+  });
+
+  it('should keep both the question and its discoveries when a delete fails part way', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    const saved = await repository.savePlayerQuestion({
+      format: 'ifYou',
+      category: 'c1',
+      topic: 't1',
+      text: 'Question 1',
+    });
+    const questionId = saved.ok ? saved.saved.id : 'missing';
+    await repository.addDiscoveries([{ kind: 'match', questionId, strength: 'yes' }]);
+    await database.exec(
+      'CREATE TRIGGER block_delete BEFORE DELETE ON player_question BEGIN SELECT RAISE(ABORT, "blocked"); END',
+    );
+
+    await expect(repository.deletePlayerQuestion(questionId)).rejects.toThrow();
+
+    expect(await repository.listDiscoveries()).toHaveLength(1);
+    expect(await repository.listPlayerQuestions()).toHaveLength(1);
+  });
+
+  it('should add none of a batch of discoveries when one write fails', async () => {
+    const database = await makeDatabase();
+    const repository = createPersonalRepository({ database, ...makeOptions() });
+    await database.exec(
+      'CREATE TRIGGER block_insert BEFORE INSERT ON discovery WHEN NEW.kind = \'agree\' BEGIN SELECT RAISE(ABORT, "blocked"); END',
+    );
+
+    await expect(
+      repository.addDiscoveries([
+        { kind: 'match', questionId: 'q-match-01', strength: 'yes' },
+        { kind: 'agree', questionId: 'q-either-01', optionId: 'o1' },
+      ]),
+    ).rejects.toThrow();
+
+    expect(await database.all('SELECT * FROM discovery')).toEqual([]);
   });
 });
