@@ -88,6 +88,42 @@ describe('storage', () => {
   });
 });
 
+describe('storage clearAll with a personal store', () => {
+  it('should clear the personal store as well as the key-value entries', async () => {
+    const backend = createInMemoryBackend();
+    const clearPersonalStore = jest.fn(() => Promise.resolve());
+    const storage = createStorage(backend, clearPersonalStore);
+    await storage.set('entryConfirmation', true);
+
+    await storage.clearAll();
+
+    expect(clearPersonalStore).toHaveBeenCalledTimes(1);
+    expect(backend.entries.size).toBe(0);
+  });
+
+  it('should still clear the key-value entries when the personal store fails, and report it', async () => {
+    const backend = createInMemoryBackend();
+    const storage = createStorage(backend, () => Promise.reject(new Error('The delete failed')));
+    await storage.set('entryConfirmation', true);
+
+    await expect(storage.clearAll()).rejects.toThrow('The delete failed');
+
+    expect(backend.entries.size).toBe(0);
+  });
+
+  it('should still clear the personal store when the key-value store fails, and report it', async () => {
+    const clearPersonalStore = jest.fn(() => Promise.resolve());
+    const storage = createStorage(
+      { ...createInMemoryBackend(), clear: () => Promise.reject(new Error('The clear failed')) },
+      clearPersonalStore,
+    );
+
+    await expect(storage.clearAll()).rejects.toThrow('The clear failed');
+
+    expect(clearPersonalStore).toHaveBeenCalledTimes(1);
+  });
+});
+
 describe('storage privacy', () => {
   const secretName = 'SECRET-NAME-VALUE';
   const consoleMethods = ['log', 'info', 'warn', 'error', 'debug', 'trace'] as const;
