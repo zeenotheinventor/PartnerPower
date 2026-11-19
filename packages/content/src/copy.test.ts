@@ -1,3 +1,5 @@
+import { surpriseIds } from '@getfreak/core';
+
 import { copy } from './copy';
 
 function expectEveryValueToBeText(group: Record<string, string>) {
@@ -43,6 +45,7 @@ describe('copy', () => {
         'playerTwoLabel',
         'start',
         'surprises',
+        'surprisesCaption',
         'title',
       ].sort(),
     );
@@ -54,6 +57,25 @@ describe('copy', () => {
       [
         'backLabel',
         'bothOfYou',
+        'choicePrompt',
+        'countdownLabel',
+        'countdownSecondsMany',
+        'countdownSecondsOne',
+        'faceDownLabel',
+        'faceDownMark',
+        'flip',
+        'flippedPenalty',
+        'freePassMarker',
+        'freePassUsed',
+        'surpriseButton',
+        'surpriseRule',
+        'surpriseTitle',
+        'timerDone',
+        'timerRunning',
+        'useFreePass',
+        'vibrationBlocked',
+        'vibrationGo',
+        'vibrationStop',
         'cardCount',
         'cardCountEndless',
         'done',
@@ -88,7 +110,17 @@ describe('copy', () => {
         'turnOf',
       ].sort(),
     );
-    expectEveryValueToBeText(copy.roundPlay);
+    const { surpriseRule, ...lines } = copy.roundPlay;
+    expectEveryValueToBeText(lines);
+    expectEveryValueToBeText(surpriseRule);
+  });
+
+  it('should give every surprise a rule line', () => {
+    expect(Object.keys(copy.roundPlay.surpriseRule).sort()).toEqual([...surpriseIds].sort());
+  });
+
+  it("should keep the free pass rule to one of the player's own cards", () => {
+    expect(copy.roundPlay.surpriseRule.freePass).toContain('skip one of your cards');
   });
 
   it('should give the summary screen every line as non-empty text', () => {
