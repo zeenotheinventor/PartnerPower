@@ -30,14 +30,23 @@ const openSettings = jest.spyOn(Linking, 'openSettings').mockResolvedValue();
 
 type Setup = Parameters<typeof createTestReminder>[0];
 
-async function renderScreen(setup?: Setup, wrap?: (reminder: ReminderService) => ReminderService) {
+// The screen reads the reminder after it first renders and shows its switch once that has landed,
+// so the test waits for the switch, as a player would. A screen that cannot read never shows it.
+const waitForSwitch = () => screen.findByRole('switch', { name: copy.reminder.toggle });
+
+async function renderScreen(
+  setup?: Setup,
+  wrap?: (reminder: ReminderService) => ReminderService,
+  { isReadable = true } = {},
+) {
   const test = createTestReminder(setup);
   await renderThemed(
     <ReminderServiceContext.Provider value={wrap ? wrap(test.reminder) : test.reminder}>
       <ReminderScreen />
     </ReminderServiceContext.Provider>,
   );
-  await act(async () => {});
+  if (isReadable) await waitForSwitch();
+  else await act(async () => {});
   return test;
 }
 
@@ -120,7 +129,7 @@ describe('ReminderScreen', () => {
           <ReminderScreen />
         </ReminderServiceContext.Provider>,
       );
-      await act(async () => {});
+      await waitForSwitch();
 
       expect(toggle()).toBeChecked();
       expect(chip('Tuesday')).toBeSelected();
@@ -138,7 +147,7 @@ describe('ReminderScreen', () => {
           <ReminderScreen />
         </ReminderServiceContext.Provider>,
       );
-      await act(async () => {});
+      await waitForSwitch();
 
       expect(scheduled).toEqual([{ day: 2, hour: 22 }]);
     });
@@ -152,7 +161,7 @@ describe('ReminderScreen', () => {
           <ReminderScreen />
         </ReminderServiceContext.Provider>,
       );
-      await act(async () => {});
+      await waitForSwitch();
 
       expect(toggle()).not.toBeChecked();
     });
@@ -191,7 +200,7 @@ describe('ReminderScreen', () => {
           <ReminderScreen />
         </ReminderServiceContext.Provider>,
       );
-      await act(async () => {});
+      await waitForSwitch();
 
       expect(toggle()).not.toBeChecked();
       expect(screen.getByText(copy.reminder.deniedTitle)).toBeOnTheScreen();
@@ -320,10 +329,11 @@ describe('ReminderScreen', () => {
     });
 
     it('should show only the header when the first read fails, so the player can go back', async () => {
-      await renderScreen(undefined, (reminder) => ({
-        ...reminder,
-        read: () => Promise.reject(new Error('Out of reach')),
-      }));
+      await renderScreen(
+        undefined,
+        (reminder) => ({ ...reminder, read: () => Promise.reject(new Error('Out of reach')) }),
+        { isReadable: false },
+      );
 
       expect(screen.getByRole('header', { name: copy.reminder.title })).toBeOnTheScreen();
       expect(screen.queryByRole('switch')).not.toBeOnTheScreen();

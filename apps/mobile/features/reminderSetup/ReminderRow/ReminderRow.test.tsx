@@ -22,13 +22,16 @@ jest.mock('expo-router', () => {
   };
 });
 
-async function renderRowWith(reminder: ReminderService) {
+// The row reads the reminder after it first renders, so the test waits for the value to land, as a
+// player would see it. A row that cannot read has no value to wait for.
+async function renderRowWith(reminder: ReminderService, { hasValue = true } = {}) {
   await renderThemed(
     <ReminderServiceContext.Provider value={reminder}>
       <ReminderRow />
     </ReminderServiceContext.Provider>,
   );
-  await act(async () => {});
+  if (hasValue) await screen.findByRole('button', { name: /^Reminder, / });
+  else await act(async () => {});
 }
 
 const friday: ReminderSchedule = { day: 5, hour: 20 };
@@ -88,7 +91,10 @@ describe('ReminderRow', () => {
 
   it('should show no value when the phone cannot be read, and still open the screen', async () => {
     const { reminder } = createTestReminder();
-    await renderRowWith({ ...reminder, read: () => Promise.reject(new Error('Out of reach')) });
+    await renderRowWith(
+      { ...reminder, read: () => Promise.reject(new Error('Out of reach')) },
+      { hasValue: false },
+    );
 
     fireEvent.press(screen.getByRole('button', { name: copy.settings.reminderLabel }));
 

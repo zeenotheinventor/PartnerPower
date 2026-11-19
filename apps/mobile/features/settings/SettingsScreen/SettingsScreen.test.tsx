@@ -47,10 +47,13 @@ function AfterSettingsLoad({ children }: { children: ReactNode }) {
   return useSettings().isLoading ? null : children;
 }
 
-async function renderScreen(backend = createInMemoryBackend()) {
+async function renderScreen(
+  backend = createInMemoryBackend(),
+  reminder = createTestReminder().reminder,
+) {
   await renderThemed(
     <LockServiceContext.Provider value={createTestLock().lock}>
-      <ReminderServiceContext.Provider value={createTestReminder().reminder}>
+      <ReminderServiceContext.Provider value={reminder}>
         <SettingsProvider storage={createStorage(backend)}>
           <AfterSettingsLoad>
             <SettingsScreen />
@@ -218,16 +221,39 @@ describe('SettingsScreen', () => {
       expect(reminderPosition).toBeLessThan(labels.indexOf(copy.settings.privacyLabel));
     });
 
-    it('should say Off, and open the Reminder screen', async () => {
+    it('should say Off once the reminder has been read, and open the Reminder screen', async () => {
       await renderScreen();
 
       fireEvent.press(
-        screen.getByRole('button', {
+        await screen.findByRole('button', {
           name: `${copy.settings.reminderLabel}, ${copy.settings.reminderOff}`,
         }),
       );
 
       expect(mockPush).toHaveBeenCalledWith('/reminder');
+    });
+
+    it('should say Off even when the reminder is read late', async () => {
+      let finishRead: () => void = () => {};
+      const { reminder } = createTestReminder();
+      const lateReminder = {
+        ...reminder,
+        read: () =>
+          new Promise<{ status: 'off' }>((resolve) => {
+            finishRead = () => resolve({ status: 'off' });
+          }),
+      };
+      await renderScreen(createInMemoryBackend(), lateReminder);
+
+      // Before the read finishes the row has no value, so its name is the label alone.
+      expect(screen.getByRole('button', { name: copy.settings.reminderLabel })).toBeOnTheScreen();
+      await act(async () => finishRead());
+
+      expect(
+        await screen.findByRole('button', {
+          name: `${copy.settings.reminderLabel}, ${copy.settings.reminderOff}`,
+        }),
+      ).toBeOnTheScreen();
     });
   });
 
