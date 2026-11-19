@@ -395,6 +395,56 @@ exactly as it did for the same seed and actions. An unknown type or a repeated o
   already given is kept. `end` and `disableCategory` always apply, including to a face down mystery
   and an open choice.
 
+## Secret match
+
+The secret match engine is `secretMatch.ts` in `core`. It is a pure reducer, separate from the round
+engine, and has no drinks. Two partners rate the same items in private on one phone, and only the
+items both rated yes or maybe are revealed. The engine keeps the privacy promise, so the screens
+cannot leak what they are never given.
+
+```ts
+startSecretMatch(setup, questions): SecretMatchState; // throws on a bad setup or "too few items"
+reduceSecretMatch(state, action): SecretMatchState;
+viewSecretMatch(state): SecretMatchView; // the only thing screens read
+secretMatchDiscoveries(state): NewDiscovery[]; // `match` entries, no dates, mild to bold
+availableItemCount(setup, questions): number; // at most 12, for the intro's "too few items" state
+```
+
+The setup is two player names, a level, the enabled categories and topics, a seed and `avoidIds`,
+the ids of items already matched. The session deals 12 items from the `secretMatch` questions in
+the enabled categories and topics, or fewer when there are fewer. Fewer than 3 is an error whose
+message starts "too few items". The 12 are split across the enabled categories as a 12 card dares
+round is, with the extras going to the bolder ones, and the items are ordered mild to bold. Items
+not on the avoid list are taken first, by the seeded generator. A short category is made up from
+the others, fresh items before avoided ones. Avoided items still count in `availableItemCount`,
+because they are the fallback.
+
+Phases are `rating` (first pass), `handoff`, `rating` (second pass), `revealed`, and `stopped`.
+Both passes see the same items in the same order. Actions are `rate` (`yes`, `maybe` or `no`, then
+on to the next item), `back`, `startSecondPass` and `stop`. `back` steps to the previous item in
+the current pass only. It does nothing on the first item, so it never reaches into the other
+player's pass. `stop` works in a pass or at the handoff and wipes everything. An action that does
+not apply to the phase returns the same state, including every action once the session is revealed
+or stopped.
+
+### Privacy rules
+
+- Screens read only `viewSecretMatch`. In `rating` it gives the pass, the player's name, the
+  current item, its position (from 1), the total, whether back is possible, and the current
+  player's own rating for the item, which is set only after going back to it. It never holds
+  the other player's ratings. Tests walk every phase and check that the views are identical
+  whatever the first player rated.
+- At the reveal the engine works out the matches and drops every individual rating. The revealed
+  state is `{ phase, matches, total }` and nothing else. It holds no names and no ratings.
+- A match is an item both rated yes or maybe. Its strength is `yes` when both said yes and `maybe`
+  otherwise. Nothing says which partner said maybe. Swapping who said maybe gives an identical
+  revealed state.
+- An item with a no from either partner is not in the revealed state at all, so it is not
+  mentioned.
+- A partner can still infer that if they said yes and an item is not revealed, the other said no.
+  That is the nature of the format, and the intro screen says so.
+- `stop` keeps nothing. The session is in memory only, so leaving it discards it.
+
 ## Question round engine
 
 A round of the `questions` game is a reducer in `core`, in `questionRound.ts`. It follows the dares
@@ -1095,6 +1145,11 @@ and pnpm 9.11.0, and the README has the steps.
 | Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
 | Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
 | The app icon is discreet                             | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                          | FRK-19 |
+| Secret match is its own reducer                      | Secret match is a reducer in `secretMatch.ts`, not part of the round engine. It has its own state, setup and actions, and takes the questions as an argument.                                                                                                                                                                                     | FRK-37 |
+| Revealed state holds matches only                    | The revealed state is the phase, the matches and the item count. It holds no names and no ratings, so nothing is left to leak.                                                                                                                                                                                                                    | FRK-37 |
+| Stop at the reveal does nothing                      | `stop` applies in a pass and at the handoff. Once the session is revealed it returns the same state, because the reveal is the end of the session and the screens leave it by navigating.                                                                                                                                                         | FRK-37 |
+| Short categories in a session                        | When a category has too few items for its share, the others make it up, mild to bold, fresh items first, then avoided ones. The session only gets shorter when the whole pool is short.                                                                                                                                                           | FRK-37 |
+| Player names in the view                             | The view gives the current player's name, and the handoff view names both players, so screens hold no state to look names up.                                                                                                                                                                                                                     | FRK-37 |
 | Press effects library                                | `react-native-reanimated`, already installed, with plain views for every shape. No svg library, Rive or other native dependency.                                                                                                                                                                                                                  | FRK-27 |
 | Where press effects are drawn                        | A layer in `RoundPlayScreen`, not in the button, because answering replaces the buttons. The button is measured before the answer is sent, and the answer never waits for it.                                                                                                                                                                     | FRK-27 |
 | Style prop for animated styles                       | `Animated.View style={animatedStyle}` is the one allowed `style`. It holds transform, opacity and the measured origin and ring size. Colours, sizes and radii stay in token classes.                                                                                                                                                              | FRK-27 |
