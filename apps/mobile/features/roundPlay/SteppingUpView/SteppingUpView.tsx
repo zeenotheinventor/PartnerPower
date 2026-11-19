@@ -4,7 +4,9 @@ import { Text, View } from 'react-native';
 
 import { Button, Character, Screen, SpeechBubble } from '../../../components/ui';
 import { categoryFillClasses, categoryLabelClasses } from '../categoryClasses';
-import type { SteppingUpViewProps } from './types';
+import type { SteppingUpCharacter, SteppingUpViewProps } from './types';
+
+const defaultCharacter: SteppingUpCharacter = { character: 'gatekeeper', mood: 'flirty' };
 
 // The markers show how far up the categories the round has climbed. They repeat what the category
 // name says, so a screen reader skips them.
@@ -12,6 +14,9 @@ export function SteppingUpView({
   category,
   categoryName,
   penalty,
+  line = copy.roundPlay.stepUpLine,
+  costLine = fillCopy(copy.roundPlay.stepUpCost, { penalty }),
+  character = defaultCharacter,
   onContinue,
 }: SteppingUpViewProps) {
   const reachedCount = categoryIds.indexOf(category) + 1;
@@ -19,8 +24,8 @@ export function SteppingUpView({
   return (
     <Screen scroll>
       <View className="flex-1 items-center justify-center gap-16">
-        <SpeechBubble text={copy.roundPlay.stepUpLine} tail="center" />
-        <Character character="gatekeeper" mood="flirty" size="hero" />
+        <SpeechBubble text={line} tail="center" />
+        <Character {...character} size="hero" />
         <Text accessibilityRole="header" className="type-body-bold text-muted">
           {copy.roundPlay.stepUpTitle}
         </Text>
@@ -39,9 +44,7 @@ export function SteppingUpView({
             />
           ))}
         </View>
-        <Text className="type-body-bold text-muted">
-          {fillCopy(copy.roundPlay.stepUpCost, { penalty })}
-        </Text>
+        <Text className="type-body-bold text-muted">{costLine}</Text>
       </View>
       <Button label={copy.roundPlay.stepUpButton} fullWidth onPress={onContinue} />
     </Screen>

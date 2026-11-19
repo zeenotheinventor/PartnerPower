@@ -4,7 +4,7 @@ import { Text, View } from 'react-native';
 import { Button, Screen } from '../../../components/ui';
 import type { HandoffViewProps } from './types';
 
-export function HandoffView({ name, previousName, onContinue }: HandoffViewProps) {
+export function HandoffView({ name, previousName, line, onContinue }: HandoffViewProps) {
   return (
     <Screen>
       <View className="flex-1 items-center justify-center gap-24">
@@ -18,6 +18,7 @@ export function HandoffView({ name, previousName, onContinue }: HandoffViewProps
         <Text accessibilityRole="header" className="type-title text-center text-foreground">
           {fillCopy(copy.roundPlay.handoffTitle, { name })}
         </Text>
+        {line ? <Text className="type-body-bold text-center text-muted">{line}</Text> : null}
       </View>
       <Button label={copy.roundPlay.handoffButton} fullWidth onPress={onContinue} />
     </Screen>
