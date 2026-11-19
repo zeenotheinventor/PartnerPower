@@ -7,6 +7,7 @@ import {
   type PlayerCard,
 } from '@getfreak/core';
 
+import { isVibrationSupported } from '../vibration/vibration';
 import { buildRoundDeck } from './buildRoundDeck';
 import { customDeckChoice } from './customDeckChoice';
 
@@ -232,5 +233,51 @@ describe('buildRoundDeck', () => {
         't-3',
       ]);
     });
+  });
+
+  describe('for a phone that cannot vibrate', () => {
+    const vibrationCard: Card = {
+      ...shippedCard('card-v', 'c2'),
+      effect: { type: 'vibrate', seconds: 10 },
+    };
+    const deckWithVibration: Deck = {
+      ...starterDeck,
+      cards: [...starterDeck.cards, vibrationCard],
+    };
+    const build = (choice: Parameters<typeof buildRoundDeck>[0]['choice']) =>
+      buildRoundDeck({
+        choice,
+        starterDeck: deckWithVibration,
+        ownCards: [],
+        mixInOwnCards: false,
+        favouriteIds: new Set(['card-1', 'card-v']),
+        customDecks: [{ id: 'one', name: 'One', cardIds: ['card-1', 'card-v'] }],
+        matchedItems: [],
+      });
+    const idsOf = (deck: Deck) => deck.cards.map((card) => card.id);
+    const choices = [
+      ['the starter deck', 'starter'],
+      ['the favourites', 'favourites'],
+      ['a custom deck', customDeckChoice('one')],
+    ] as const;
+
+    afterEach(() => {
+      jest.mocked(isVibrationSupported).mockReturnValue(false);
+    });
+
+    it.each(choices)('should leave the vibration card out of %s', (_name, choice) => {
+      jest.mocked(isVibrationSupported).mockReturnValue(false);
+
+      expect(idsOf(build(choice))).not.toContain('card-v');
+    });
+
+    it.each(choices)(
+      'should keep the vibration card in %s on a phone that can',
+      (_name, choice) => {
+        jest.mocked(isVibrationSupported).mockReturnValue(true);
+
+        expect(idsOf(build(choice))).toContain('card-v');
+      },
+    );
   });
 });

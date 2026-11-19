@@ -26,6 +26,11 @@ type TurnViewBaseProps = {
    * it reaches zero. Pass and Not this one stay open at any time.
    */
   timer?: { seconds: number };
+  /**
+   * Set for a vibration card. A countdown and Go sit above the answers. While the phone vibrates
+   * everything but Stop is disabled, because the phone is held against a body.
+   */
+  vibration?: { seconds: number };
   onDone: () => void;
   onPass: () => void;
   onEndRound: () => void;

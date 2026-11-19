@@ -4,9 +4,11 @@ import {
   type Deck,
   type MatchedItem,
   type PlayerCard,
+  withoutUnsupportedEffects,
 } from '@getfreak/core';
 
 import { withOwnCards } from '../ownCards/withOwnCards';
+import { isVibrationSupported } from '../vibration/vibration';
 import { customDeckIdOf } from './customDeckChoice';
 import { favouriteCards } from './favouriteCards';
 import { matchSuggestions } from './matchSuggestions';
@@ -27,9 +29,17 @@ type RoundDeckInput = {
 
 /**
  * The deck a round is dealt from. Every deck setup can deal comes from here, so a rule about which
- * cards a phone may deal, such as leaving out vibration cards, is added in this one place.
+ * cards a phone may deal is applied in this one place: a phone that cannot vibrate is never dealt
+ * a vibration card, whichever deck is chosen.
  */
-export function buildRoundDeck({
+export function buildRoundDeck(input: RoundDeckInput): Deck {
+  const deck = deckOfChoice(input);
+  const playableDeck = withoutUnsupportedEffects(deck, { vibrate: isVibrationSupported() });
+  // The same deck when nothing was left out, so what depends on its identity is not disturbed.
+  return playableDeck.cards.length === deck.cards.length ? deck : playableDeck;
+}
+
+function deckOfChoice({
   choice,
   starterDeck,
   ownCards,

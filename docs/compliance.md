@@ -198,6 +198,11 @@ FRK-29 adds one card that makes the phone vibrate for 10 seconds while held agai
   is higher than on Apple. Google Play has no dedicated reviewer notes for content, only App access
   instructions and appeals (**Unconfirmed**: not checked against Play Console).
 
+Built in FRK-29 as card `starter-c2-37` in the Foreplay category, using React Native's own
+`Vibration` (no native code). It is a data card: `effect: { type: 'vibrate', seconds: 10 }` in
+`packages/content/src/decks/starter.json`. **Removing that card from the deck switches the effect
+off.** No code change is needed, so an app store objection is answered with a content update.
+
 Decision (tech lead, 2026-11-19, from the ticket): describe the card in the App Review notes, keep it
 out of the listing and the screenshots, and if review objects, take the card out of the deck (a data
 change, no code) and resubmit. Hiding it from review is not an option. Apple 2.3.1(a) requires new

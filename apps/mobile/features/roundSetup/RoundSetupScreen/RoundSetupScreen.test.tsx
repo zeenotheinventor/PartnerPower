@@ -1,5 +1,5 @@
 import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
-import { startRound, type Deck, type QuestionDeck } from '@getfreak/core';
+import { startRound, type Card, type Deck, type QuestionDeck } from '@getfreak/core';
 import { act, waitFor } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo, KeyboardAvoidingView } from 'react-native';
@@ -21,6 +21,7 @@ import { useOwnCards, type OwnCards } from '../../ownCards/OwnCardsProvider';
 import { makeOwnCardsFixture } from '../../ownCards/testing/ownCardsFixture';
 import { RoundProvider } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
+import { isVibrationSupported } from '../../vibration/vibration';
 import { RoundSetupScreen } from './RoundSetupScreen';
 
 const mockFocusSetters = new Set<(isFocused: boolean) => void>();
@@ -1595,6 +1596,43 @@ describe('RoundSetupScreen', () => {
       await pressStart();
 
       expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
+    });
+
+    describe('with a vibration card in the deck', () => {
+      const vibrationCard: Card = {
+        id: 'card-vibration',
+        category: 'c1',
+        kind: 'solo',
+        text: 'Card vibration',
+        source: 'shipped',
+        effect: { type: 'vibrate', seconds: 10 },
+      };
+      const startedCardIds = async () => {
+        mockDecks.splice(0, mockDecks.length, {
+          ...testDeck,
+          cards: [...testDeck.cards, vibrationCard],
+        });
+        await renderSetup();
+        enterNames('Player A', 'Player B');
+        await pressStart();
+        return jest.mocked(startRound).mock.calls[0]?.[1].cards.map((card) => card.id);
+      };
+
+      afterEach(() => {
+        jest.mocked(isVibrationSupported).mockReturnValue(false);
+      });
+
+      it('should not deal it on a phone that cannot vibrate', async () => {
+        jest.mocked(isVibrationSupported).mockReturnValue(false);
+
+        expect(await startedCardIds()).toEqual(['card-1', 'card-2']);
+      });
+
+      it('should deal it on a phone that can vibrate', async () => {
+        jest.mocked(isVibrationSupported).mockReturnValue(true);
+
+        expect(await startedCardIds()).toEqual(['card-1', 'card-2', 'card-vibration']);
+      });
     });
 
     it('should not start, and say why, while no deck ships', async () => {
