@@ -64,25 +64,24 @@ development client made before the change does not have the module, so make a ne
 ## Publishing an update
 
 Once a phone has a build made with `expo-updates`, JavaScript and content changes reach it without a
-new build. The `preview` build listens to the `preview` channel. From `apps/mobile`:
+new build. The `preview` build listens to the `preview` channel. Every merge to `main` that touches
+`apps/mobile` or `packages` publishes an update there from CI, and uploads its source maps when
+`SENTRY_AUTH_TOKEN` is set. `docs/runbooks/updates.md` says how it reaches the phone, when a new
+build is needed and the one-time setup.
+
+The manual command is the fallback for when the workflow is not set up or fails. From `apps/mobile`:
 
 ```
 EXPO_PUBLIC_COMMIT_SHA=$(git rev-parse HEAD) npx eas-cli update --channel preview --environment preview --message "What changed"
 ```
 
 `--environment preview` gives the update the preview environment's variables, such as the Sentry
-DSN, and the commit names the release on an error report.
-
-After publishing, upload the update's source maps so its error reports show readable stacks. This
-needs `SENTRY_AUTH_TOKEN` in your shell, and the update still works without it:
+DSN, and the commit names the release on an error report. To upload the update's source maps by
+hand, with `SENTRY_AUTH_TOKEN` in your shell (the update still works without it):
 
 ```
 pnpm exec sentry-expo-upload-sourcemaps dist
 ```
-
-The app checks at launch and downloads the update in the background. It runs from the next time the
-app is opened from closed, never in the middle of a round, and a short toast says it has updated.
-CI never publishes.
 
 An update only reaches builds whose native fingerprint matches. The fingerprint is the runtime
 version, and it is computed automatically from the native parts of the project, so a new native
