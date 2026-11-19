@@ -26,6 +26,10 @@ export const copy = {
     vibrationLabel: 'Vibration',
     vibrationCaption: 'A buzz when you press, and when a round ends.',
   },
+  updateToast: {
+    message: "Updated. You're on the latest version.",
+    dismissHint: 'Tap to dismiss',
+  },
   roundSetup: {
     title: 'Set the round',
     backLabel: 'Back',

@@ -707,17 +707,18 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                             |
-| ------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                    |
-| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                          |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.   |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                    |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options. |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                              |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                 |
-| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                     |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                 |
+| ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading.                                                                        |
+| `Button`           | Role `button`, named by its label. Primary and secondary variants. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                              |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`.       |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint.                                                                                                                                                        |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.     |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                  |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                     |
+| `TextField`        | A labelled text input. React Native has no role for a text field, so it is found by its label.                                                                                                                                                                                                                                                    |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                         |
+| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches. |
 
 - Player-facing text is passed in as props by the caller, from `content`. Components hold no copy.
 - Buttons and cards have a solid depth edge, built from a layered view in a token colour, not a
@@ -837,6 +838,30 @@ stored at once through the settings context. The hub has a secondary Settings bu
 tiles, pushed to the bottom by a flexible spacer. The dev kit link stays below it, in development builds only. The route is in the second protected group of `EntryStack`, so it is closed until the player
 has confirmed. Back goes to the hub, and a deep link with nothing behind it replaces the screen with
 the hub. All its text is in `content`.
+
+## Updates
+
+JavaScript and content changes reach installed phones over the air, through EAS Update.
+
+- `expo-updates` is configured in `apps/mobile/app.json`. `updates.url` points at the EAS project,
+  `checkAutomatically` is `ON_LOAD` and `fallbackToCacheTimeout` is 0. At launch the app checks for
+  an update and downloads it in the background without waiting for it, and the update runs from the
+  next cold start. Nothing calls `reloadAsync`, so the app never restarts in the middle of a round.
+- `runtimeVersion` uses the `fingerprint` policy, a hash of the project's native parts. A new native
+  module, plugin, permission or native config moves the hash by itself, and a JavaScript-only change
+  does not. An update only reaches builds with the same runtime version, so one built from a
+  different lockfile or config just does not reach the phone. Any native change needs a new build.
+- Each EAS build profile has a channel: `preview` and `development` for now, and `production` gets
+  its own when the store profile exists. An update is published to a channel from `apps/mobile`
+  with `eas update`, see the README. CI never publishes.
+- A failed check or download is silent. The app keeps the version it has, and nothing is logged.
+- `apps/mobile/updates` holds the toast logic. `announceUpdateOnce` takes an `UpdatesDevice`, which
+  is the only thing that touches `expo-updates` (`nativeUpdatesDevice`), and the storage. It returns
+  true once for each update id that differs from the stored `lastShownUpdateId`, and records it. An
+  embedded launch (a fresh install or the installed build), no update id, or a device that cannot be
+  read gives false. `UpdateToastHost` sits in the root layout and shows the kit `Toast` with the
+  line from `content` when that is true. Under Jest `expo-updates` is replaced by an embedded
+  launch, so no test announces an update by accident.
 
 ## Storage
 
@@ -1033,8 +1058,16 @@ and pnpm 9.11.0, and the README has the steps.
 
 - No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
   data comes only from what Apple and Google collect from players who opt in on their phones.
-- The app makes no network calls and collects no data, so both store privacy answers are "no data
-  collected". `docs/compliance.md` checks every library against that answer.
+- The app makes one network call, the check for an update. It goes to Expo's update service
+  (`u.expo.dev`) and sends the platform, the runtime version, the channel, the ids of the update the
+  app is running and of the embedded build, a random install id that `expo-updates` makes (not tied
+  to a person or a device), the update protocol versions, and the text of a crash from the previous
+  launch if there was one. It sends no player names, card text, settings or anything typed. The
+  request also reveals the phone's IP address to Expo, as any network request does. The crash text
+  (`Expo-Fatal-Error`) holds whatever a thrown error's message holds. Because of the install id and
+  the crash text, the store privacy answers probably become crash data and a device id, not linked
+  to the user, which is an owner decision in FRK-79. `docs/compliance.md` checks every library
+  against the answers, and it and the privacy policy now describe the update check.
 - The privacy policy is one export, `privacyPolicy`, in `packages/content`. The settings screen
   shows it, and the owner hosts the same words at the URL given to the stores.
 - The policy describes the launch build. `docs/compliance.md` lists what must be true before it is
@@ -1044,7 +1077,8 @@ and pnpm 9.11.0, and the README has the steps.
   data updates `docs/compliance.md` and `privacyPolicy` in the same pull request.
 - Never log player names, card text or anything a player typed. That includes deck names, the
   database key and anything read from the personal store. The storage and provider tests spy on the
-  console to check it.
+  console to check it. The same goes for the message of a thrown error, because a crash is reported
+  to Expo. Never put player text in an `Error` message.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
 - Test fixtures contain placeholder text only.
@@ -1145,6 +1179,13 @@ and pnpm 9.11.0, and the README has the steps.
 | Screens read a turn view                             | `questionTurnView` leaves the holder's first pick out and adds `pickLocked`, so a pick screen cannot show a private pick by reading state it should not. The pick appears only in the reveal.                                                                                                                                                     | FRK-35 |
 | Pacing is shared                                     | `round.ts` imports the pacing helpers and the player share draw from `pacing.ts`, with the dares deal baseline unchanged.                                                                                                                                                                                                                         | FRK-35 |
 | The app icon is discreet                             | Two fanned cards, a heart and a sparkle in the token colours, with no words and no explicit imagery. It suits a 4+ audience under Apple guideline 2.3.8.                                                                                                                                                                                          | FRK-19 |
+| Runtime version policy                               | `fingerprint`, a hash of the native parts of the project that EAS computes, so a native change moves it with no manual step and an update never reaches a build with different native code. `appVersion` was rejected, because a forgotten `version` bump would ship JavaScript to phones with different native code and crash them.              | FRK-80 |
+| When an update applies                               | Check on launch, download in the background, run from the next cold start (`ON_LOAD`, timeout 0). The app never reloads while in use, so a round is never cut off.                                                                                                                                                                                | FRK-80 |
+| Update failures                                      | Silent. The app keeps its version and nothing is logged.                                                                                                                                                                                                                                                                                          | FRK-80 |
+| When the update toast shows                          | On a launch that is not embedded, when the running update id differs from the stored `lastShownUpdateId`. Never on a fresh install or the installed build. The id is stored when the toast is decided, so a launch that is closed early still counts as told.                                                                                     | FRK-80 |
+| Toast placement and dismissal                        | A kit component at the bottom, over every screen, from the root layout. About 3 seconds, tap to dismiss, polite live region, announced on iOS, no fade with reduce motion.                                                                                                                                                                        | FRK-80 |
+| Over-the-air network call                            | The update check is the app's first network call. See Privacy.                                                                                                                                                                                                                                                                                    | FRK-80 |
+| Toast fade style                                     | The Toast's Animated `{ opacity }` is the one non-test `style=` outside Reanimated animated styles. An `Animated.Value` is a runtime value that a class cannot express, and it is not a CSS value from a token.                                                                                                                                   | FRK-80 |
 | Secret match is its own reducer                      | Secret match is a reducer in `secretMatch.ts`, not part of the round engine. It has its own state, setup and actions, and takes the questions as an argument.                                                                                                                                                                                     | FRK-37 |
 | Revealed state holds matches only                    | The revealed state is the phase, the matches and the item count. It holds no names and no ratings, so nothing is left to leak.                                                                                                                                                                                                                    | FRK-37 |
 | Stop at the reveal does nothing                      | `stop` applies in a pass and at the handoff. Once the session is revealed it returns the same state, because the reveal is the end of the session and the screens leave it by navigating.                                                                                                                                                         | FRK-37 |

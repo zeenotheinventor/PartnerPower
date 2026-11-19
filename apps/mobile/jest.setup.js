@@ -36,3 +36,7 @@ jest.mock('expo-splash-screen', () => ({
 jest.mock('expo-system-ui', () => ({
   setBackgroundColorAsync: jest.fn(() => Promise.resolve()),
 }));
+
+// There is no update system under Jest. Every test gets an app that launched from its installed
+// build, so no update is announced. A test that needs another launch replaces this with its own mock.
+jest.mock('expo-updates', () => ({ isEmbeddedLaunch: true, updateId: null }));
