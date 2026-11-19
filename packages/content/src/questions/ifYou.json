@@ -6,8 +6,8 @@
       "id": "ifYou-c1-01",
       "format": "ifYou",
       "category": "c1",
-      "topic": "t5",
-      "text": "you have ever sent your partner a message just to say you were thinking of them",
+      "topic": "t1",
+      "text": "you still get butterflies when your partner walks into the room",
       "source": "shipped"
     },
     {
@@ -15,11 +15,131 @@
       "format": "ifYou",
       "category": "c1",
       "topic": "t1",
-      "text": "you still get butterflies when your partner walks into the room",
+      "text": "you have a favourite way to be kissed hello",
       "source": "shipped"
     },
     {
       "id": "ifYou-c1-03",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t1",
+      "text": "you could happily spend a whole day in bed cuddling",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-04",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t1",
+      "text": "you have a song that always makes you think of your partner",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-05",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t2",
+      "text": "you find confidence more attractive than a perfect outfit",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-06",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t2",
+      "text": "you are turned on by someone who makes you laugh",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-07",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t2",
+      "text": "you love being complimented on your looks out loud",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-08",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t2",
+      "text": "you find a lingering look across a crowded room irresistible",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-09",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t3",
+      "text": "you have daydreamed about a weekend away with nothing planned",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-10",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t3",
+      "text": "you have imagined an unexpected kiss somewhere very romantic",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-11",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t3",
+      "text": "you have pictured a candlelit evening that ends in a slow dance",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-12",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t3",
+      "text": "you have fantasised about your partner chatting you up as if you had just met",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-13",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t4",
+      "text": "you like being teased with a smile instead of getting what you want straight away",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-14",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t4",
+      "text": "you enjoy it when your partner takes charge of a date",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-15",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t4",
+      "text": "you get a thrill from a secret flirtation going on in front of friends",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-16",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t4",
+      "text": "you enjoy being given playful orders by your partner",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-17",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t5",
+      "text": "you have ever sent your partner a message just to say you were thinking of them",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-18",
       "format": "ifYou",
       "category": "c1",
       "topic": "t5",
@@ -27,59 +147,443 @@
       "source": "shipped"
     },
     {
+      "id": "ifYou-c1-19",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t5",
+      "text": "you have ever sent a flirty message and instantly regretted it",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-20",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t5",
+      "text": "you have ever kept a keepsake from a first love",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-21",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t6",
+      "text": "you want your partner to plan a surprise date just for you",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-22",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t6",
+      "text": "you would love a whole evening of nothing but kissing",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-23",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t6",
+      "text": "you want to be kissed somewhere unexpected this week",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c1-24",
+      "format": "ifYou",
+      "category": "c1",
+      "topic": "t6",
+      "text": "you would like your partner to leave you a flirty note to find",
+      "source": "shipped"
+    },
+    {
       "id": "ifYou-c2-01",
       "format": "ifYou",
       "category": "c2",
-      "topic": "t2",
-      "text": "you love being kissed slowly on the neck",
+      "topic": "t1",
+      "text": "you have a favourite spot to be kissed that you have never mentioned",
       "source": "shipped"
     },
     {
       "id": "ifYou-c2-02",
       "format": "ifYou",
       "category": "c2",
-      "topic": "t5",
-      "text": "you have ever sent a flirty message at completely the wrong moment",
+      "topic": "t1",
+      "text": "you love the feeling of your partner's bare skin against yours",
       "source": "shipped"
     },
     {
       "id": "ifYou-c2-03",
       "format": "ifYou",
       "category": "c2",
+      "topic": "t1",
+      "text": "you love the moment just before the first layer of clothes comes off",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-04",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t1",
+      "text": "you like waking up with your partner's hands already on you",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-05",
+      "format": "ifYou",
+      "category": "c2",
       "topic": "t2",
-      "text": "you would pick a long massage over a film on a quiet night in",
+      "text": "you are turned on by being kissed slowly on the neck",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-06",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t2",
+      "text": "you find being undressed slowly more exciting than being rushed",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-07",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t2",
+      "text": "you are turned on by hearing your partner's breathing get faster",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-08",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t2",
+      "text": "you lose interest when things rush straight past the kissing",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-09",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t3",
+      "text": "you have fantasised about a long, slow undressing with the lights on",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-10",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t3",
+      "text": "you have imagined being pulled against a wall and kissed hard",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-11",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t3",
+      "text": "you have imagined your partner coming home to find you waiting in just your underwear",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-12",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t3",
+      "text": "you have daydreamed about being stroked for a whole hour with no rush",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-13",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t4",
+      "text": "you like being touched over your underwear for a long time before anything else",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-14",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t4",
+      "text": "you enjoy being told to keep still while you are touched",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-15",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t4",
+      "text": "you like the idea of a blindfold while you are undressed slowly",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-16",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t4",
+      "text": "you get turned on by being teased and then made to wait",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-17",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t5",
+      "text": "you have ever paused a film to make out and never gone back to it",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-18",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t5",
+      "text": "you have ever fooled around somewhere you had to stay quiet",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-19",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t5",
+      "text": "you have ever planned an early night that turned into a very late one",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-20",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t5",
+      "text": "you have ever kept your partner waiting on purpose after a very flirty message",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-21",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t6",
+      "text": "you want your partner to undress you slowly tonight",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-22",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t6",
+      "text": "you would like a full body massage that ends somewhere interesting",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-23",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t6",
+      "text": "you want to be touched below the waist for longer before anything else happens",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c2-24",
+      "format": "ifYou",
+      "category": "c2",
+      "topic": "t6",
+      "text": "you want an evening of taking turns to touch and tease each other",
       "source": "shipped"
     },
     {
       "id": "ifYou-c3-01",
       "format": "ifYou",
       "category": "c3",
-      "topic": "t2",
-      "text": "you can spend a whole evening on kissing and nothing else",
+      "topic": "t1",
+      "text": "you have a favourite way to be licked or sucked",
       "source": "shipped"
     },
     {
       "id": "ifYou-c3-02",
       "format": "ifYou",
       "category": "c3",
-      "topic": "t2",
-      "text": "you have a favourite spot to be kissed that you have never mentioned",
+      "topic": "t1",
+      "text": "you love the sounds your partner makes when you go down on them",
       "source": "shipped"
     },
     {
       "id": "ifYou-c3-03",
       "format": "ifYou",
       "category": "c3",
+      "topic": "t1",
+      "text": "you have a favourite move with your mouth that you wish your partner used more often",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-04",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t1",
+      "text": "you love being the one who goes down on your partner",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-05",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you are turned on by eye contact during oral",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-06",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you are turned on when your partner takes their time with their mouth",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-07",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you are put off by oral that feels rushed",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-08",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t2",
+      "text": "you love being asked what feels best while you are being licked or sucked",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-09",
+      "format": "ifYou",
+      "category": "c3",
       "topic": "t3",
-      "text": "you have ever daydreamed about a night that started in the kitchen",
+      "text": "you have fantasised about being teased with a mouth for an hour before anything else",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-10",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t3",
+      "text": "you have imagined a sixty-nine with no rush and no clock",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-11",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t3",
+      "text": "you have daydreamed about being woken up with your partner going down on you",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-12",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t3",
+      "text": "you have imagined going down on your partner until they beg you not to stop",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-13",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t4",
+      "text": "you like being told exactly how to use your mouth",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-14",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t4",
+      "text": "you like being taken right to the edge with a mouth and then left waiting",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-15",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t4",
+      "text": "you enjoy being blindfolded while someone goes down on you",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-16",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t4",
+      "text": "you like being asked to say out loud what you want your partner's mouth to do",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-17",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t5",
+      "text": "you have ever stayed quiet about what you like during oral and later wished you had spoken up",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-18",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t5",
+      "text": "you have ever lost track of time while going down on your partner",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-19",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t5",
+      "text": "you have ever come from oral alone and wanted more straight away",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-20",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t5",
+      "text": "you have ever tried oral in an awkward position and ended up laughing",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-21",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t6",
+      "text": "you want to try going down on your partner somewhere other than the bed",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-22",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t6",
+      "text": "you would like your partner to show you exactly how they like to be licked or sucked",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-23",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t6",
+      "text": "you want an evening where oral is the whole plan",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c3-24",
+      "format": "ifYou",
+      "category": "c3",
+      "topic": "t6",
+      "text": "you would like to learn a new technique with your mouth",
       "source": "shipped"
     },
     {
       "id": "ifYou-c4-01",
       "format": "ifYou",
       "category": "c4",
-      "topic": "t3",
-      "text": "you have ever thought about trying something new in the bedroom and never said so",
+      "topic": "t1",
+      "text": "you have a favourite position that works every time",
       "source": "shipped"
     },
     {
@@ -87,15 +591,183 @@
       "format": "ifYou",
       "category": "c4",
       "topic": "t1",
-      "text": "you have a favourite place at home that is not the bedroom",
+      "text": "you love the moment just after sex when you are still tangled together",
       "source": "shipped"
     },
     {
       "id": "ifYou-c4-03",
       "format": "ifYou",
       "category": "c4",
+      "topic": "t1",
+      "text": "you have a favourite time of day for sex",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-04",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t1",
+      "text": "you love having your partner's full weight on you",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-05",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t2",
+      "text": "you are turned on by dirty talk during sex",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-06",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t2",
+      "text": "you are turned on by watching your partner's face change as they get close",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-07",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t2",
+      "text": "you find it hot when your partner takes control in bed",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-08",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t2",
+      "text": "you are put off by silence during sex and want to hear your partner",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-09",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t3",
+      "text": "you have fantasised about having sex somewhere in your home you have never tried",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-10",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t3",
+      "text": "you have imagined a hotel room, a locked door and no plans for a whole weekend",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-11",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t3",
+      "text": "you have fantasised about watching the two of you in a mirror",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-12",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t3",
+      "text": "you have imagined being pulled into the bedroom the second you both get home",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-13",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t4",
+      "text": "you like being pinned down, knowing you can say stop at any moment",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-14",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t4",
+      "text": "you like using toys during sex",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-15",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t4",
+      "text": "you enjoy taking turns being in charge and being told what to do",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-16",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t4",
+      "text": "you like watching your partner touch themselves during sex",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-17",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t5",
+      "text": "you have ever had sex somewhere that made you laugh afterwards",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-18",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t5",
+      "text": "you have ever tried a position that went wrong and made you both giggle",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-19",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t5",
+      "text": "you have ever asked your partner for something new in bed and been glad you did",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-20",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t5",
+      "text": "you have ever talked openly with your partner about how often you want sex",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-21",
+      "format": "ifYou",
+      "category": "c4",
       "topic": "t6",
-      "text": "you have ever wished a night together could last until sunrise",
+      "text": "you want to try a position you have never tried",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-22",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t6",
+      "text": "you want your partner to tell you exactly what they want from you tonight",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-23",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t6",
+      "text": "you would like to take much longer over sex than usual",
+      "source": "shipped"
+    },
+    {
+      "id": "ifYou-c4-24",
+      "format": "ifYou",
+      "category": "c4",
+      "topic": "t6",
+      "text": "you want to have sex somewhere new this month",
       "source": "shipped"
     }
   ]
