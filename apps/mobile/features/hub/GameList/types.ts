@@ -1,4 +1,5 @@
 import type { GameStatus } from '@getfreak/core';
+import type { ReactNode } from 'react';
 
 /** A game as the hub shows it: its registry entry together with the words that name it. */
 export type ListedGame = {
@@ -7,6 +8,8 @@ export type ListedGame = {
   description: string;
   status: GameStatus;
   setupRoute: string;
+  /** Decorative art for the tile, such as a character. */
+  decoration?: ReactNode;
 };
 
 export type GameListProps = {

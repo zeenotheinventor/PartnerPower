@@ -38,6 +38,15 @@ versions this repository uses.
   It runs on its own, with no computer nearby. Use this to play.
 - `development`: the development client as an `.apk`. It needs Metro running on your machine
   (`pnpm --filter @getfreak/mobile start`) and on the same network.
+- `production`: the store build. It makes an Android app bundle (`.aab`) for Google Play and an
+  iPhone build for the App Store, with a build number that rises on every build, and it listens to
+  the `production` update channel. It cannot be installed straight onto a phone, so use `preview`
+  to play. Store builds need the developer accounts and app records from FRK-52, and iPhone builds
+  need the paid Apple Developer Program. The store submission settings in `eas.json` name two key
+  files, which the owner keeps outside git in `apps/mobile/secrets/`: the Apple API key
+  (`apple-api-key.p8`) and the Google service account key (`google-service-account.json`). Git
+  ignores that folder and every `.p8` file. A build made after a native config change needs a fresh
+  install, because the change alters the native fingerprint.
 
 To make an Android build, from `apps/mobile`:
 
@@ -78,7 +87,8 @@ current value, from `apps/mobile`:
 env -u NODE_PATH node node_modules/expo-updates/bin/cli.js fingerprint:generate --platform android
 ```
 
-iPhone builds need a paid Apple Developer account and are not set up yet.
+iPhone builds are made only by the `production` profile, and need the paid Apple Developer Program
+(see above).
 
 ## Everyday commands
 

@@ -25,6 +25,25 @@
       "android": {
         "buildType": "apk"
       }
+    },
+    "production": {
+      "extends": "base",
+      "distribution": "store",
+      "channel": "production",
+      "autoIncrement": true,
+      "android": {
+        "buildType": "app-bundle"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "ascApiKeyPath": "./secrets/apple-api-key.p8"
+      },
+      "android": {
+        "serviceAccountKeyPath": "./secrets/google-service-account.json"
+      }
     }
   }
 }

@@ -10,6 +10,7 @@ import { createStorage } from '../../../storage/createStorage';
 import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
+import { drawnCharacters } from '../../../testing/drawnCharacters';
 import { RoundProvider } from '../../round/RoundProvider';
 import { playableSurprises } from '../../roundPlay/playableSurprises';
 import { RoundSetupScreen } from './RoundSetupScreen';
@@ -289,6 +290,40 @@ describe('RoundSetupScreen', () => {
       expect(
         screen.getByRole('switch', { name: categoryNames.c2, checked: true }),
       ).toBeOnTheScreen();
+    });
+  });
+
+  describe('the character in the header', () => {
+    const mei = {
+      props: { character: 'dealer', mood: 'flirty', size: 'tile', crop: 'head' },
+      isHiddenFromScreenReaders: true,
+    };
+    const nyx = {
+      props: { character: 'gatekeeper', mood: 'happy', size: 'tile', crop: 'head' },
+      isHiddenFromScreenReaders: true,
+    };
+
+    it('should show Mei while more than one category is on', async () => {
+      await renderSetup();
+
+      expect(drawnCharacters()).toEqual([mei]);
+    });
+
+    it('should give the spot to Nyx when one category is left on', async () => {
+      await renderSetup();
+
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      expect(drawnCharacters()).toEqual([nyx]);
+    });
+
+    it('should give the spot back to Mei when another category is switched on', async () => {
+      await renderSetup();
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+      expect(drawnCharacters()).toEqual([mei]);
     });
   });
 

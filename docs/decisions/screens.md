@@ -1,0 +1,22 @@
+# Screens
+
+- **Entry guard mechanism** (FRK-6): Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.
+- **Declining the entry confirmation** (FRK-6): Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.
+- **A failed write when confirming** (FRK-6): The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.
+- **Built-in sitemap route** (FRK-6): Turned off in `app.json`, because it sits outside the entry guard.
+- **Game tiles on the hub** (FRK-7): Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.
+- **Round setup before its ticket** (FRK-7): The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.
+- **Sheet frame, skip row** (FRK-14): The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.
+- **Sheet frame, shape and spacing** (FRK-14): The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.
+- **Sheet frame, quiet control** (FRK-14): The design's 13px link text uses the 12px caption style, with a 48px touch area around it.
+- **Sheet frame, last category hint** (FRK-14): The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.
+- **Surprises switch default** (FRK-49): On each time setup opens, not remembered, like the level and the length. Start passes `playableSurprises` when it is on and an empty list when it is off.
+- **Which surprises the play screen shows** (FRK-49): `playableSurprises` in `features/roundPlay` lists `mystery`, `jump`, `swap` and `freePass`. A card with another type plays as a plain card until the screen can show it, so the next ticket adds `choice` and `timer` there.
+- **Reveal before pass the phone** (FRK-49): The order is step up, reveal, pass the phone, card, so a role swap can say who takes the phone. A category jump's reveal replaces the step up screen. The design's order is used as drawn.
+- **Mystery dare skips the step up screen** (FRK-49): A mystery dare that is still face down has its reveal in place of the step up screen, as a category jump does. The design draws the step up first, but that screen names the category the card hides and shows a cost one short of what passing costs. A product decision by the owner's delegate. It departs from the design.
+- **Mystery penalty is category plus one** (FRK-49): The play screen adds one to the category's penalty for the line after the flip. This repeats the engine's pass cost. A test checks that the line and what `summarise` charges agree.
+- **Card flip** (FRK-49): Reanimated, 120 ms out and 160 ms back, with the swap at the half-way point from the animation's finish callback. Reduce motion fades 80 ms out and 120 ms in. The constants are in `useCardFlip.ts`, as there are no motion tokens.
+- **Screen reader focus after the flip** (FRK-49): `AccessibilityInfo.sendAccessibilityEvent` with the card text's ref and `focus`, not `setAccessibilityFocus` with `findNodeHandle` as the design names. The effect is the same and it needs no node handle.
+- **Notice on the next screen** (FRK-49): The free pass confirmation is a `NoticeBox` on the first screen of the next card, a live region that iOS also announces. It is dropped when the player moves on, or when the round ends on that card.
+- **Turn line is always a row** (FRK-49): `TurnView` draws the turn line in a row so the free pass marker can sit at its end. With no marker the row holds only the turn line.
+- **Route tests and surprises** (FRK-49): Surprises are on by default, so route test helpers that start a plain round switch them off, and one route test plays with them on.

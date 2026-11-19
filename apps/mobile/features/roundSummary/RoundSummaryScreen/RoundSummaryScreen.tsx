@@ -4,7 +4,7 @@ import { useRouter } from 'expo-router';
 import { useEffect, useRef } from 'react';
 import { Text, View } from 'react-native';
 
-import { Button, Screen } from '../../../components/ui';
+import { Button, Character, Screen, SpeechBubble } from '../../../components/ui';
 import { useFeedback } from '../../../feedback/FeedbackProvider';
 import { useRound } from '../../round/RoundProvider';
 import { randomSeed } from '../../roundSetup/randomSeed';
@@ -90,6 +90,25 @@ export function RoundSummaryScreen() {
 
       {summary ? (
         <>
+          <View className="items-center gap-16">
+            <View accessibilityLiveRegion="polite">
+              <SpeechBubble
+                text={
+                  summary.boldest === 'tie'
+                    ? copy.roundSummary.tieLine
+                    : fillCopy(copy.roundSummary.boldestLine, {
+                        name: summary.players[summary.boldest].name,
+                      })
+                }
+                tail="center"
+              />
+            </View>
+            <Character
+              character="hype"
+              mood={summary.boldest === 'tie' ? 'shocked' : 'celebrate'}
+              size="hero"
+            />
+          </View>
           <View className="flex-row gap-12 pt-12">
             {summary.players.map((player, index) => (
               <View key={index} className="flex-1">
@@ -101,18 +120,6 @@ export function RoundSummaryScreen() {
                 />
               </View>
             ))}
-          </View>
-          <View
-            accessibilityLiveRegion="polite"
-            className="rounded-lg border-2 border-border bg-surface p-12"
-          >
-            <Text className="type-body-bold text-foreground">
-              {summary.boldest === 'tie'
-                ? copy.roundSummary.tieLine
-                : fillCopy(copy.roundSummary.boldestLine, {
-                    name: summary.players[summary.boldest].name,
-                  })}
-            </Text>
           </View>
         </>
       ) : null}

@@ -1,7 +1,7 @@
 import { copy, fillCopy } from '@getfreak/content';
 import { Text, View } from 'react-native';
 
-import { Button, Screen } from '../../../components/ui';
+import { Button, Character, Screen, SpeechBubble } from '../../../components/ui';
 import { categoryFillClasses, categoryLabelClasses } from '../categoryClasses';
 import { CategoryMarkers } from '../CategoryMarkers';
 import { NoticeBox } from '../NoticeBox';
@@ -15,12 +15,11 @@ export function SteppingUpView({
   onContinue,
 }: SteppingUpViewProps) {
   return (
-    <Screen>
+    <Screen scroll>
       <View className="flex-1 items-center justify-center gap-16">
         {notice ? <NoticeBox message={notice} /> : null}
-        <View className="rounded-lg border-2 border-border bg-surface p-12">
-          <Text className="type-body-bold text-foreground">{copy.roundPlay.stepUpLine}</Text>
-        </View>
+        <SpeechBubble text={copy.roundPlay.stepUpLine} tail="center" />
+        <Character character="gatekeeper" mood="flirty" size="hero" />
         <Text accessibilityRole="header" className="type-body-bold text-muted">
           {copy.roundPlay.stepUpTitle}
         </Text>

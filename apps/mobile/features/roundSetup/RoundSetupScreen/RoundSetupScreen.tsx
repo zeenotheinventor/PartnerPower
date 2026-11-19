@@ -15,6 +15,7 @@ import { Text, View } from 'react-native';
 import {
   Button,
   CategoryToggle,
+  Character,
   Header,
   Screen,
   SegmentedControl,
@@ -114,7 +115,19 @@ export function RoundSetupScreen() {
 
   return (
     <Screen scroll avoidKeyboard>
-      <Header title={copy.roundSetup.title} backLabel={copy.roundSetup.backLabel} onBack={goBack} />
+      <Header
+        title={copy.roundSetup.title}
+        backLabel={copy.roundSetup.backLabel}
+        onBack={goBack}
+        trailing={
+          // Mei deals the cards. With one category left on, Nyx takes her place.
+          isLastCategoryOn ? (
+            <Character character="gatekeeper" mood="happy" size="tile" crop="head" />
+          ) : (
+            <Character character="dealer" mood="flirty" size="tile" crop="head" />
+          )
+        }
+      />
 
       <View className="flex-row gap-8">
         <View className="flex-1">

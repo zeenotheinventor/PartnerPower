@@ -22,6 +22,7 @@ jest.mock('../../../storage/personal/nativePersonalStore', () => {
   const createEmpty = () =>
     createInMemoryPersonalRepository({
       getShippedCards: () => [],
+      getShippedQuestions: () => [],
       randomUUID: () => '00000000-0000-4000-8000-000000000001',
       now: () => 1,
     });
@@ -30,13 +31,6 @@ jest.mock('../../../storage/personal/nativePersonalStore', () => {
     personalStore: { load: () => Promise.resolve(createEmpty()), clear: () => Promise.resolve() },
     personalDataSource: { load: () => Promise.resolve(createEmpty()), createEmpty },
   };
-});
-
-// Importing the Expo Router test library replaces Reanimated's Jest mock with one that has no
-// `useReducedMotion`, which the card flip reads. The screens that use it get a phone with reduced
-// motion off.
-Object.assign(jest.requireMock<object>('react-native-reanimated'), {
-  useReducedMotion: jest.fn(() => false),
 });
 
 // Jest does not run Expo's config plugins, so the router options the plugin would put in the
