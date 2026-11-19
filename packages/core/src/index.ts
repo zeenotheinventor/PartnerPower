@@ -3,6 +3,9 @@ export type { CharacterId } from './characters';
 export { gameEntries, gameIds, isGameId } from './games';
 export type { GameEntry, GameId, GameStatus } from './games';
 export {
+  appearanceChoices,
+  appearanceSchema,
+  defaultAppearance,
   defaultSaveDiscoveries,
   entryConfirmationSchema,
   hapticsOnSchema,
@@ -11,7 +14,7 @@ export {
   questionPreferencesSchema,
   soundOnSchema,
 } from './settings';
-export type { EntryConfirmation, PlayerNames, QuestionPreferences } from './settings';
+export type { Appearance, EntryConfirmation, PlayerNames, QuestionPreferences } from './settings';
 export {
   backgroundLockDelayMilliseconds,
   biometricsChoiceSchema,

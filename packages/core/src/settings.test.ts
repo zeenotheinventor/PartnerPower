@@ -1,4 +1,7 @@
 import {
+  appearanceChoices,
+  appearanceSchema,
+  defaultAppearance,
   entryConfirmationSchema,
   hapticsOnSchema,
   defaultSaveDiscoveries,
@@ -81,5 +84,27 @@ describe('lastShownUpdateIdSchema', () => {
 
   it.each([1, null, true, {}])('should reject %p', (value) => {
     expect(lastShownUpdateIdSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('appearanceSchema', () => {
+  it.each(['system', 'light', 'dark'])('should accept %p', (value) => {
+    expect(appearanceSchema.parse(value)).toBe(value);
+  });
+
+  it.each(['auto', 'Dark', '', 1, null, true, {}])('should reject %p', (value) => {
+    expect(appearanceSchema.safeParse(value).success).toBe(false);
+  });
+});
+
+describe('appearanceChoices', () => {
+  it('should list match phone first, then light and dark', () => {
+    expect(appearanceChoices).toEqual(['system', 'light', 'dark']);
+  });
+});
+
+describe('defaultAppearance', () => {
+  it('should match the phone until the player picks one (FRK-89)', () => {
+    expect(defaultAppearance).toBe('system');
   });
 });

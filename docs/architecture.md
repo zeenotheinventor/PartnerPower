@@ -692,6 +692,11 @@ apps/mobile/
 - The sound and vibration switches, `soundOn` and `hapticsOn`, are settings too. Both are on until the
   player turns one off, and a missing or invalid stored value counts as on. `setSoundOn` and
   `setHapticsOn` never reject, and a failed write still holds for that session.
+- The appearance choice, `appearance` (`system`, `light` or `dark`, FRK-89), is a setting too. It is
+  `system` (Match phone) until the player picks one, and a missing or invalid stored value counts
+  as `system`. `setAppearance` applies the choice, then stores it, and never rejects. The provider
+  applies the stored choice as soon as it is read and before it reports that it has loaded, which
+  is before `EntryStack` renders anything, so the splash screen hides onto the chosen theme.
 - There is no global store. If a later milestone needs state shared across games, add it then and
   record the choice here.
 
@@ -1435,9 +1440,10 @@ Pressing Done or Pass on the turn screen plays a short effect from the button. T
 and the title, then sections, each a `SettingsSection`: a caption over a static `Card` that is not
 grouped, so each row is read on its own, with a divider between rows. The order is:
 
-1. **While you play**: the Sounds and Vibration `Toggle` rows. Each caption is the toggle's
-   `description`, so it is also the switch's hint. A change is stored at once through the settings
-   context.
+1. **While you play**: the Appearance `SegmentedControl` (Match phone, Light, Dark), then the Sounds
+   and Vibration `Toggle` rows. Each caption is the toggle's `description`, so it is also the
+   switch's hint. A change is stored at once through the settings context, and a new Appearance
+   choice is applied at once too (see Theming).
 2. **Privacy**: the App lock row (`AppLockRow`, from `features/lockSetup`), which opens
    `/app-lock`, then the Reminder row (`ReminderRow`, from `features/reminderSetup`), which opens
    `/reminder`, then the Privacy policy `SettingsRow`, which opens `/privacy`.
@@ -1957,10 +1963,24 @@ push token. The rules and the stored value are in `packages/core/src/reminder.ts
   at the root, reads the current theme's background token and gives it to the navigation theme
   (`background` and `card`), so every stack, nested ones included, inherits it, and to
   `expo-system-ui` for the native window. A gap between screens never shows the wrong theme.
-- There are two themes, light and dark, and the app follows the device's colour scheme. The Tailwind
-  config writes each theme as CSS variables, the light values by default and the dark values under
+- There are two themes, light and dark. By default the app follows the device's colour scheme, and
+  the Appearance setting in Settings can pin it to light or dark (FRK-89). The Tailwind config
+  writes each theme as CSS variables, the light values by default and the dark values under
   `prefers-color-scheme: dark`. A colour class is semantic and reads a variable, so a screen writes
   one class, such as `bg-background` or `text-foreground`, and needs no `dark:` variant.
+- The override is applied in JavaScript by `settings/applyAppearance`, so it ships over the air and
+  `userInterfaceStyle` stays `automatic`. On a phone, NativeWind's `colorScheme.set` calls React
+  Native's `Appearance.setColorScheme` itself (with `unspecified` for Match phone). The scheme has
+  one source, but NativeWind reads it back through Appearance's change event, so there is one native
+  event of delay. React Native's `useColorScheme` (`ThemedNavigation`, `useBackgroundColor`) is
+  right at once, because `Appearance` caches the value when it is set. The class variables and
+  NativeWind's `useColorScheme` (`Character`) follow one native event later. With no override they
+  follow the phone again, including a change made while the app is open. Jest cannot cover this
+  path, because under test NativeWind sets its own observable instead (and holds Match phone as
+  light). A test checks the call made to `Appearance`, and the rest is a device check: a cold start
+  with a stored override, and Match phone following a live phone change.
+- Clear everything needs no step of its own for the appearance. The root remounts, the settings
+  provider reads empty storage, and it applies Match phone.
 - Each category id has a fill colour, `category-c1` to `category-c4`, and a label colour for text on
   that fill, `on-category-c1` to `on-category-c4`. In the dark theme a category colour is readable
   on the background by itself. On the dark surface colour its contrast drops as low as 4.33, so
