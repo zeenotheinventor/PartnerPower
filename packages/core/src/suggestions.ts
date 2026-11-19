@@ -65,7 +65,7 @@ export function suggestDares(
         categoryRank(first.card.category) - categoryRank(second.card.category) ||
         compareText(first.card.id, second.card.id),
     )
-    .slice(0, limit)
+    .slice(0, Math.max(0, limit))
     .map(({ card }) => card);
 }
 

@@ -68,9 +68,19 @@ describe('suggestDares', () => {
   });
 
   it('should count a tag once when a dare repeats it', () => {
-    const cards = [card('a', 'c1', ['tag-one', 'tag-one']), card('b', 'c1', ['tag-two'])];
+    const cards = [
+      card('a', 'c1', ['tag-one', 'tag-one']),
+      card('b', 'c1', ['tag-two', 'tag-three']),
+    ];
+    const yesThree: MatchedItem = { strength: 'yes', tags: ['tag-three'] };
 
-    expect(ids(suggestDares([yesOne, yesTwo], cards))).toEqual(['a', 'b']);
+    expect(ids(suggestDares([yesOne, yesTwo, yesThree], cards))).toEqual(['b', 'a']);
+  });
+
+  it('should return nothing for a negative limit', () => {
+    const cards = [card('a', 'c1', ['tag-one']), card('b', 'c1', ['tag-one'])];
+
+    expect(suggestDares([yesOne], cards, { limit: -1 })).toEqual([]);
   });
 
   it('should rank equal scores by category from mild to bold, then by id', () => {
