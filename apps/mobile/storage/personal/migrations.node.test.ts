@@ -1,4 +1,4 @@
-import { categoryIds, cardKinds } from '@getfreak/core';
+import { categoryIds, cardKinds, playableFormats, topicIds } from '@getfreak/core';
 
 import { migrate, personalMigrations } from './migrations';
 import { createNodeDatabase } from './testing/nodeSqlite';
@@ -29,7 +29,14 @@ describe('personal database migrations', () => {
 
     await migrate(database);
 
-    expect(await tableNames(database)).toEqual(['deck', 'deck_card', 'favourite', 'player_card']);
+    expect(await tableNames(database)).toEqual([
+      'deck',
+      'deck_card',
+      'discovery',
+      'favourite',
+      'player_card',
+      'player_question',
+    ]);
     expect(await readVersion(database)).toBe(personalMigrations.length);
   });
 
@@ -193,5 +200,160 @@ describe('personal database schema', () => {
     await insert();
 
     await expect(insert()).rejects.toThrow();
+  });
+});
+
+describe('question and discovery tables', () => {
+  let database: SqlDatabase;
+
+  beforeEach(async () => {
+    database = createNodeDatabase();
+    await migrate(database);
+  });
+
+  const insertQuestion = (
+    overrides: Partial<{
+      id: string;
+      format: string;
+      category: string;
+      topic: string;
+      text: string | null;
+      options: string | null;
+    }> = {},
+  ) => {
+    const row = {
+      id: 'pq-1',
+      format: 'ifYou',
+      category: 'c1',
+      topic: 't1',
+      text: 'Question 1',
+      options: null,
+      ...overrides,
+    };
+    return database.run(
+      'INSERT INTO player_question (id, format, category, topic, text, options, created_at, updated_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
+      [row.id, row.format, row.category, row.topic, row.text, row.options, 1, 1],
+    );
+  };
+
+  const insertDiscovery = (row: {
+    kind: string;
+    questionId?: string;
+    player?: string;
+    optionId?: string | null;
+    strength?: string | null;
+  }) =>
+    database.run(
+      'INSERT INTO discovery (kind, question_id, player, option_id, strength, created_at) VALUES (?, ?, ?, ?, ?, ?)',
+      [
+        row.kind,
+        row.questionId ?? 'q-1',
+        row.player ?? '',
+        row.optionId ?? null,
+        row.strength ?? null,
+        1,
+      ],
+    );
+
+  it.each(playableFormats)('should accept the core format %s', async (format) => {
+    const options = format === 'ifYou' || format === 'neverHave' ? null : '[]';
+    await expect(insertQuestion({ format, options })).resolves.toBeUndefined();
+  });
+
+  it('should reject a format that is not a round format', async () => {
+    await expect(insertQuestion({ format: 'secretMatch' })).rejects.toThrow();
+  });
+
+  it.each(categoryIds)('should accept the core category %s', async (category) => {
+    await expect(insertQuestion({ category })).resolves.toBeUndefined();
+  });
+
+  it('should reject a category that is not a core id', async () => {
+    await expect(insertQuestion({ category: 'c5' })).rejects.toThrow();
+  });
+
+  it.each(topicIds)('should accept the core topic %s', async (topic) => {
+    await expect(insertQuestion({ topic })).resolves.toBeUndefined();
+  });
+
+  it('should reject a topic that is not a core id', async () => {
+    await expect(insertQuestion({ topic: 't7' })).rejects.toThrow();
+  });
+
+  it('should accept question text of 1 and of 140 characters and reject 0 and 141', async () => {
+    await expect(insertQuestion({ id: 'pq-1', text: 'a' })).resolves.toBeUndefined();
+    await expect(insertQuestion({ id: 'pq-2', text: 'a'.repeat(140) })).resolves.toBeUndefined();
+    await expect(insertQuestion({ id: 'pq-3', text: '' })).rejects.toThrow();
+    await expect(insertQuestion({ id: 'pq-4', text: 'a'.repeat(141) })).rejects.toThrow();
+  });
+
+  it('should require text except for either-or questions', async () => {
+    await expect(insertQuestion({ text: null })).rejects.toThrow();
+    await expect(
+      insertQuestion({ format: 'eitherOr', text: null, options: '[]' }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('should hold options for the option formats only', async () => {
+    await expect(insertQuestion({ format: 'ifYou', options: '[]' })).rejects.toThrow();
+    await expect(insertQuestion({ format: 'guess', options: null })).rejects.toThrow();
+  });
+
+  it('should reject the same question id twice', async () => {
+    await insertQuestion();
+
+    await expect(insertQuestion()).rejects.toThrow();
+  });
+
+  it('should accept one discovery of each kind', async () => {
+    await expect(insertDiscovery({ kind: 'match', strength: 'yes' })).resolves.toBeUndefined();
+    await expect(insertDiscovery({ kind: 'agree', optionId: 'o1' })).resolves.toBeUndefined();
+    await expect(
+      insertDiscovery({ kind: 'answer', player: 'Name 1', optionId: 'o1' }),
+    ).resolves.toBeUndefined();
+  });
+
+  it('should reject a kind that is not a discovery kind', async () => {
+    await expect(insertDiscovery({ kind: 'guess', optionId: 'o1' })).rejects.toThrow();
+  });
+
+  it('should reject a match without a strength or with an option', async () => {
+    await expect(insertDiscovery({ kind: 'match' })).rejects.toThrow();
+    await expect(insertDiscovery({ kind: 'match', strength: 'sure' })).rejects.toThrow();
+    await expect(
+      insertDiscovery({ kind: 'match', strength: 'yes', optionId: 'o1' }),
+    ).rejects.toThrow();
+  });
+
+  it('should reject an agree or answer without an option, or with a strength', async () => {
+    await expect(insertDiscovery({ kind: 'agree' })).rejects.toThrow();
+    await expect(
+      insertDiscovery({ kind: 'agree', optionId: 'o1', strength: 'yes' }),
+    ).rejects.toThrow();
+    await expect(insertDiscovery({ kind: 'answer', player: 'Name 1' })).rejects.toThrow();
+  });
+
+  it('should require a player for an answer and none for a match or agree', async () => {
+    await expect(insertDiscovery({ kind: 'answer', optionId: 'o1' })).rejects.toThrow();
+    await expect(
+      insertDiscovery({ kind: 'agree', player: 'Name 1', optionId: 'o1' }),
+    ).rejects.toThrow();
+    await expect(
+      insertDiscovery({ kind: 'match', player: 'Name 1', strength: 'yes' }),
+    ).rejects.toThrow();
+  });
+
+  it('should reject a second discovery with the same kind, question and player', async () => {
+    await insertDiscovery({ kind: 'agree', optionId: 'o1' });
+
+    await expect(insertDiscovery({ kind: 'agree', optionId: 'o2' })).rejects.toThrow();
+  });
+
+  it('should keep a discovery of each partner for one question', async () => {
+    await insertDiscovery({ kind: 'answer', player: 'Name 1', optionId: 'o1' });
+
+    await expect(
+      insertDiscovery({ kind: 'answer', player: 'Name 2', optionId: 'o2' }),
+    ).resolves.toBeUndefined();
   });
 });

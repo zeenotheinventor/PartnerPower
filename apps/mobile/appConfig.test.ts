@@ -3,6 +3,7 @@ import { colorThemes } from '@getfreak/tokens';
 import { z } from 'zod';
 
 import appConfig from './app.json';
+import easConfig from './eas.json';
 
 // The few colours that must sit in app.json are an exception to "no raw colour values outside the
 // token package". Native code reads them before any JavaScript runs, so this test keeps them equal
@@ -69,5 +70,100 @@ describe('app.json updates', () => {
   // follows the native code on its own, so a revert to another policy must fail here.
   it('should follow the native fingerprint for the runtime version', () => {
     expect(appConfig.expo.runtimeVersion.policy).toBe('fingerprint');
+  });
+});
+
+describe('app.json native settings', () => {
+  it('should not offer an iPad build', () => {
+    expect(appConfig.expo.ios.supportsTablet).toBe(false);
+  });
+
+  it('should declare that the app uses non-exempt encryption, since the database is encrypted', () => {
+    expect(appConfig.expo.ios.infoPlist.ITSAppUsesNonExemptEncryption).toBe(true);
+  });
+
+  it('should keep app data out of Android backups', () => {
+    expect(appConfig.expo.android.allowBackup).toBe(false);
+  });
+
+  it('should declare every required reason API with its exact reasons', () => {
+    expect(appConfig.expo.ios.privacyManifests.NSPrivacyAccessedAPITypes).toEqual([
+      {
+        NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryUserDefaults',
+        NSPrivacyAccessedAPITypeReasons: ['CA92.1'],
+      },
+      {
+        NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryFileTimestamp',
+        NSPrivacyAccessedAPITypeReasons: ['C617.1', '0A2A.1', '3B52.1'],
+      },
+      {
+        NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategorySystemBootTime',
+        NSPrivacyAccessedAPITypeReasons: ['35F9.1'],
+      },
+      {
+        NSPrivacyAccessedAPIType: 'NSPrivacyAccessedAPICategoryDiskSpace',
+        NSPrivacyAccessedAPITypeReasons: ['E174.1', '85F4.1'],
+      },
+    ]);
+  });
+
+  // The lock, reminder and vibration tickets add libraries that declare these. A blocked entry
+  // would strip them from the merged manifest, so the lock or the reminder would silently fail.
+  it.each([
+    'android.permission.INTERNET',
+    'android.permission.VIBRATE',
+    'android.permission.POST_NOTIFICATIONS',
+    'android.permission.RECEIVE_BOOT_COMPLETED',
+    'android.permission.USE_BIOMETRIC',
+    'android.permission.USE_FINGERPRINT',
+    'android.permission.ACCESS_NETWORK_STATE',
+    'android.permission.MODIFY_AUDIO_SETTINGS',
+  ])('should not block %s', (permission) => {
+    expect(appConfig.expo.android.blockedPermissions).not.toContain(permission);
+  });
+
+  it('should block the permissions the app never uses', () => {
+    expect(appConfig.expo.android.blockedPermissions).toEqual(
+      expect.arrayContaining([
+        'android.permission.READ_EXTERNAL_STORAGE',
+        'android.permission.WRITE_EXTERNAL_STORAGE',
+        'android.permission.SYSTEM_ALERT_WINDOW',
+      ]),
+    );
+  });
+});
+
+describe('eas.json production profile', () => {
+  const production = easConfig.build.production;
+
+  it('should build from the shared base profile', () => {
+    expect(production.extends).toBe('base');
+  });
+
+  it('should make an Android app bundle for the Play Store', () => {
+    expect(production.android.buildType).toBe('app-bundle');
+  });
+
+  it('should use store distribution', () => {
+    expect(production.distribution).toBe('store');
+  });
+
+  it('should raise the build number on every build', () => {
+    expect(production.autoIncrement).toBe(true);
+  });
+
+  it('should listen to the production update channel', () => {
+    expect(production.channel).toBe('production');
+  });
+
+  it('should not be a development client', () => {
+    expect(production).not.toHaveProperty('developmentClient');
+  });
+
+  it('should name the store key files by path, without holding a key', () => {
+    expect(easConfig.submit.production).toEqual({
+      ios: { ascApiKeyPath: expect.stringMatching(/^\.\/secrets\/.+\.p8$/) },
+      android: { serviceAccountKeyPath: expect.stringMatching(/^\.\/secrets\/.+\.json$/) },
+    });
   });
 });

@@ -12,6 +12,7 @@ const shippedCards = [{ id: 'starter-c1-01', text: 'Shipped card 1' }];
 function makeRepository(recoveredFromUnreadable = false): PersonalRepository {
   return createInMemoryPersonalRepository({
     getShippedCards: () => shippedCards,
+    getShippedQuestions: () => [],
     randomUUID: () => '00000000-0000-4000-8000-000000000001',
     now: () => 1,
     recoveredFromUnreadable,

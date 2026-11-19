@@ -1,0 +1,16 @@
+# Screens
+
+- **Entry guard mechanism** (FRK-6): Protected groups on a navigator that stays mounted, plus a test over the real route files. A redirect in place of the navigator was tried and rejected: it looped on a deep link with the app open and re-read the settings on every flip.
+- **Declining the entry confirmation** (FRK-6): Not stored, so the question is asked again at the next launch. The closing screen has a way back to the question.
+- **A failed write when confirming** (FRK-6): The player is let in for that session and asked again at the next launch, so a storage fault does not lock them out.
+- **Built-in sitemap route** (FRK-6): Turned off in `app.json`, because it sits outside the entry guard.
+- **Game tiles on the hub** (FRK-7): Both tiles are surface-coloured cards. The design fills the available game's tile with the accent colour and puts small text on it, which fails the rule that text on the accent is large and bold.
+- **Round setup before its ticket** (FRK-7): The available game's tile opens a stand-in round setup screen, so the hub works end to end. The real screen replaces it in FRK-11.
+- **Sheet frame, skip row** (FRK-14): The design gives the skip row a 3px hard shadow and a 16px title. There is no shadow token, so the row has a plain border, and the title uses the 20px heading style, the nearest on the type scale.
+- **Sheet frame, shape and spacing** (FRK-14): The design's 26, 14, 5 and 9px values use the nearest scale values: 24, 16, 4 and 12px. Its scrim is a fixed dark colour, and the build uses the background at 80%, as the end round dialog does.
+- **Sheet frame, quiet control** (FRK-14): The design's 13px link text uses the 12px caption style, with a 48px touch area around it.
+- **Sheet frame, last category hint** (FRK-14): The design's sheet has no hint line. The sheet shows the setup hint when one category is left on, so the lock has a visible reason as well as a spoken one.
+- **Favourite writes are optimistic** (FRK-55): The summary flips a favourite control at once, writes it through the repository and, on failure, puts it back and shows the message under that card. One message shows at a time and it clears when that control next changes. The design's engineering notes set this.
+- **Favourites are ignored while the store loads** (FRK-55): The control does nothing until the personal store has loaded and the favourites are read, because a write to the placeholder store is lost when the real one arrives. It has no disabled look, since the design has none and the load finishes at launch, long before a round ends. A load that failed still allows writes, which last for the session.
+- **The summary list stays in the scrolling Screen** (FRK-55): FRK-36 asks long lists to use a list component. The design's notes say a `Screen` that scrolls is fine for the summary, a round being short, and reserve the list component for the deck editor and My dares. The summary keeps `Screen scroll`, so this screen is not rebuilt around a list while the characters ticket edits it. An endless round is the one case that could grow it.
+- **The save failed line is built in the feature** (FRK-55): The design has no error colour and no kit error line, only an accent "!" badge with foreground text. The summary draws it inline from kit tokens, with the alert role, until a TextField error line is built.

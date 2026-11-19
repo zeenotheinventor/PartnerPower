@@ -47,6 +47,7 @@ function createFakes() {
       keyStore,
       generateKey: () => String((keyCount += 1)).padStart(64, '0'),
       getShippedCards: () => [{ id: 'starter-c1-01', text: 'Shipped card 1' }],
+      getShippedQuestions: () => [{ id: 'q-match-01', text: 'Shipped question 1' }],
       randomUUID: () => '00000000-0000-4000-8000-000000000001',
       now: () => 1,
     });
@@ -110,6 +111,29 @@ describe('createPersonalStore', () => {
       expect(state.closedCount).toBe(1);
       expect(state.file).toBeUndefined();
       expect(state.storedKey).toBeUndefined();
+    });
+
+    it('should delete the player questions and discoveries with the database', async () => {
+      const { makeStore } = createFakes();
+      const store = makeStore();
+      const repository = await store.load();
+      const saved = await repository.savePlayerQuestion({
+        format: 'ifYou',
+        category: 'c1',
+        topic: 't1',
+        text: 'Question 1',
+      });
+      const questionId = saved.ok ? saved.saved.id : 'missing';
+      await repository.addDiscoveries([
+        { kind: 'match', questionId, strength: 'yes' },
+        { kind: 'match', questionId: 'q-match-01', strength: 'maybe' },
+      ]);
+
+      await store.clear();
+      const reloaded = await store.load();
+
+      expect(await reloaded.listPlayerQuestions()).toEqual([]);
+      expect(await reloaded.listDiscoveries()).toEqual([]);
     });
 
     it('should leave an empty store with a new key for the next load', async () => {
