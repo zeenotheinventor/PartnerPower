@@ -11,6 +11,7 @@ type StaticCardProps = {
    * card whose children should be read separately, such as one that holds a heading.
    */
   grouped?: boolean;
+  selected?: undefined;
 };
 
 type PressableCardProps = {
@@ -19,6 +20,11 @@ type PressableCardProps = {
   label: string;
   disabled?: boolean;
   grouped?: undefined;
+  /**
+   * Makes the card a choice. A card with a mark that is filled when it is true and empty when it is
+   * false, announced as selected or not. Left out, the card is not a choice.
+   */
+  selected?: boolean;
 };
 
 export type ShownCardProps = {
@@ -49,6 +55,7 @@ export type FaceDownCardProps = {
   onPress?: undefined;
   disabled?: undefined;
   grouped?: undefined;
+  selected?: undefined;
 };
 
 export type CardProps = ShownCardProps | FaceDownCardProps;

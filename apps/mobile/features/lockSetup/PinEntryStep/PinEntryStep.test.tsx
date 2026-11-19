@@ -3,6 +3,7 @@ import { act } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo, Text } from 'react-native';
 
+import { changeAppState, fakeAppState } from '../../../lock/testing/fakeAppState';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { PinEntryStep } from './PinEntryStep';
 import type { PinEntryStepProps } from './types';
@@ -29,6 +30,7 @@ async function advance(milliseconds: number) {
 describe('PinEntryStep', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    fakeAppState();
     jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockClear()
@@ -162,5 +164,53 @@ describe('PinEntryStep', () => {
     await advance(500);
 
     expect(onSubmit).not.toHaveBeenCalled();
+  });
+
+  describe('leaving the app', () => {
+    it('should forget the numbers typed so far', async () => {
+      await renderStep();
+      typeDigits('12');
+
+      await changeAppState('background');
+
+      expect(screen.getByRole('text', { name: dotsName(0) })).toBeOnTheScreen();
+    });
+
+    it('should drop the held last number, so nothing is submitted', async () => {
+      const { onSubmit } = await renderStep();
+      typeDigits('1234');
+
+      await changeAppState('inactive');
+      await advance(500);
+
+      expect(onSubmit).not.toHaveBeenCalled();
+      expect(screen.getByRole('text', { name: dotsName(0) })).toBeOnTheScreen();
+    });
+
+    it('should take a new PIN after coming back', async () => {
+      const { onSubmit } = await renderStep();
+      typeDigits('1234');
+      await changeAppState('background');
+
+      typeDigits('5678');
+      await advance(200);
+
+      expect(onSubmit).toHaveBeenCalledTimes(1);
+      expect(onSubmit).toHaveBeenCalledWith('5678');
+    });
+  });
+
+  it('should submit once when the last number is pressed twice in one frame', async () => {
+    const { onSubmit } = await renderStep();
+    typeDigits('123');
+
+    // Both presses see the same three numbers, as two touches in one frame would.
+    act(() => {
+      fireEvent.press(screen.getByRole('button', { name: '4' }));
+      fireEvent.press(screen.getByRole('button', { name: '4' }));
+    });
+    await advance(500);
+
+    expect(onSubmit).toHaveBeenCalledTimes(1);
   });
 });

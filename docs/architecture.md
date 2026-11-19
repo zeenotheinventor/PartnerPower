@@ -9,8 +9,9 @@ for how. Change it in the same pull request as any change that departs from it.
 
 ## Principles
 
-1. **One phone, no server.** There are no accounts and no backend. The app makes no network calls
-   in the first two milestones.
+1. **One phone, no server.** There are no accounts and no backend. The app makes two kinds of
+   network call and no others: the check for an update, and an error report with no player text
+   in it. See Privacy.
 2. **Rules are pure.** Everything with a branch lives in a core package with no React, React Native
    or Expo imports. The app renders state and sends actions.
 3. **Content is data.** Card text, question text and every display name live in a content package,
@@ -33,6 +34,7 @@ for how. Change it in the same pull request as any change that departs from it.
 | Styling        | NativeWind utilities over design tokens, in a light and a dark theme                                                         |
 | Fonts          | Baloo 2 and Nunito, bundled with the app through `expo-font`                                                                 |
 | Storage        | `expo-sqlite` (SQLCipher build) for what players write, its key-value store for settings, `expo-secure-store` for the key    |
+| Errors         | Sentry, through `@sentry/react-native` (native), behind `apps/mobile/monitoring`. See Error reporting below                  |
 | Validation     | Zod, in the core package                                                                                                     |
 | Tests          | Jest with `jest-expo` and React Native Testing Library for the app, Jest with `@swc/jest` for `core`, `content` and `tokens` |
 | Checks         | ESLint flat config, Prettier, `tsc --noEmit`                                                                                 |
@@ -57,6 +59,7 @@ docs/
   architecture.md      this file
   compliance.md        the store review: rules, ratings, privacy answers, listing and review notes
   decisions/           one file per area for decisions a ticket made
+  runbooks/            how to operate the app, such as error monitoring
 ```
 
 ### Import rules
@@ -622,7 +625,8 @@ apps/mobile/
   features/hub/          the hub: the first screen, with a tile for each game and a Settings button
   features/settings/     the settings screen, its sections, the clear everything dialog and the privacy policy screen
   features/round/        the round context for the dares route group
-  features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on
+  features/roundSetup/   the round setup screen, with Mei in the header, or Nyx when one category is left on, and the setup row
+  features/decks/        the deck picker, the Favourites view, the deck choice and the one function that builds the deck of a round
   features/ownCards/     the player's own dares: the provider, the list screen, the editor and the dialog that confirms a delete
   features/roundPlay/    the play screen: the card, the step up, surprise reveal and pass the phone screens, the end round dialog, the press effects
   features/roundSummary/ the end of round summary screen, the player score block and the list of cards played
@@ -636,6 +640,7 @@ apps/mobile/
   features/welcome/      the entry confirmation screens
   features/dev/          development-only screens, such as the UI kit gallery
   storage/               the storage module: settings, secure storage, the install marker, clear everything
+  monitoring/            error reporting: the start-up, the scrubbing, the route trail and the crash screen
   lock/                  the lock service: the PIN, wrong PINs and their wait, and biometrics
 ```
 
@@ -655,6 +660,9 @@ apps/mobile/
   `usePersonalData`, and a save or a delete goes through the repository and then reads the list again,
   so setup, the list and the editor always agree. `save` returns the repository's result, so a
   screen maps the problem codes to messages. Nothing in it logs.
+- **The deck choice** is held once for the `games/dares` route group by `DeckChoiceProvider`
+  (`features/decks`). `useDeckChoice` gives `choice` (`'starter'` or `'favourites'`) and
+  `chooseDeck`. It is the starter deck each time the route group is entered, and is not remembered.
 - **Question round state** works the same way for `questions`. The layout renders
   `QuestionRoundProvider` (`features/questionRound`), and `useQuestionRound` gives `round`,
   `startNewRound(setup, questions)`, which calls `startQuestionRound`, `lastStart` and `dispatch`
@@ -699,6 +707,46 @@ screen's. The screens map the problem codes to the messages in `content`, in `ca
   the form, which asks with the kit `Dialog`, then deletes through the repository, which also takes
   the dare out of the favourites and the decks, and goes back.
 - **Not logged.** No dare text is logged or sent anywhere.
+
+### Round setup and decks
+
+`RoundSetupScreen` builds the deck of the round from the choice at setup. Two rows sit under the
+names: `Deck` (a pressable card named "Deck, Starter deck") that opens the picker, then `My dares`.
+Both are `SetupRow`s.
+
+- **One function builds the deck.** `buildRoundDeck` (`features/decks`) takes the choice, the starter
+  deck, the player's dares, whether they are mixed in and the favourite ids, and gives the `Deck`
+  that Start passes to `startRound`. A rule about which cards a phone may deal, such as leaving out
+  vibration cards on a phone that cannot vibrate, goes in this one place.
+- **Starter deck.** It is the deck the app ships, with the player's dares dealt in when `Mix in my
+dares` is on. The switch shows only for the starter deck. The My dares row stays for every deck,
+  because it is the way into the list.
+- **Favourites.** A deck the app builds from the favourite list each time, not a stored deck, so it
+  never goes stale. It holds the favourite cards that still exist, the shipped ones and the player's
+  dares, with or without the mix switch. Every deal rule applies to it as to any deck: the level,
+  the categories, the together cards and the surprises. `useFavouriteIds` reads the ids from the
+  repository each time a screen gains focus, so a change made on another screen shows when the
+  setup is back.
+- **Cards in play.** `countCardsInPlay` counts the cards of the built deck in the categories that
+  are on, leaving out timer cards, which only the timer surprise deals (`isDealable` in `core`).
+  Setup says "{count} cards at this level" above Start. With none, a hint replaces it, as a polite
+  live region that is also announced, and Start is disabled. Start also waits until the dares have
+  been read, and the favourites too when they are the deck. The starter deck never waits for them.
+  A deck of timer cards only has none in play, so Start is disabled until the timer surprise can be
+  dealt (see the decision on timer cards).
+- **Picker** (`decks`). The starter deck and Favourites, each a pressable `Card` with `selected`,
+  holding the name and a count chip. A tap chooses the deck and goes back to setup. Favourites has a
+  `View` button beside it that opens the Favourites view without choosing it. Favourites can be
+  chosen with no cards. Custom decks join this list.
+- **Play again** on the summary rebuilds a Favourites round from the favourites as they are when it
+  is pressed, through `buildRoundDeck`, so a card turned on or off on the summary counts. A starter
+  deck round replays the deck it started with, which keeps the mix switch as it was.
+- **Favourites view** (`decks/favourites`). The count in the header, then the cards grouped by
+  category in rank order, each a static card in its category colour with a `FavouriteToggle`. A card
+  turned off stays in place, off, until the player leaves, so a tap by mistake can be undone, and
+  the count updates at once. A failed write puts the switch back and shows the error line under the
+  card. With no favourites it shows the empty message.
+- **Not logged.** No favourite or dare text is logged or sent anywhere.
 
 ### Summary screen
 
@@ -1038,25 +1086,25 @@ player to confirm they are 18 or over, and its wording is in `content`.
 `components/ui` holds the shared components, one folder each, imported from the barrel
 `components/ui`.
 
-| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading. An optional `footer` is pinned under the content, outside a scroll view, above the keyboard.                                                                                                                                                                                                                                                                                                                                              |
-| `Button`           | Role `button`, named by its label. Primary, secondary and danger variants. Danger is only for an action that destroys data. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children.                                                                                                                                                                                                          |
-| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                                                                                                                                                                                                                                     |
-| `SettingsRow`      | One `button` named by its label and value, "App lock, On, PIN". The optional caption is its hint. `tone="danger"` colours the label. `showChevron={false}` drops the chevron for a row that opens a dialog. It sits in a static card that is not grouped.                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `PinPad`           | Four dots and a keypad for a PIN. Each key is a `button` named by its digit, and Delete is a `button` named "Delete", disabled with nothing to delete. The dots are one live region, role `text`, named "2 of 4 digits entered", and the digits are in no name or text. It is controlled: the screen holds `value` and passes `onChange` and `onComplete` (called with the whole PIN on the fourth digit). `error` shows a danger line, turns the dots to the danger border, shakes them (none with reduce motion) and is announced. `message` is a neutral line, such as a countdown, and is not announced. `disabled` dims and disables every key. It has no text field, so the phone keyboard never sees the PIN. |
-| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                                                                                                                                                                                                                                       |
-| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                                                                                                                                                                                                                                        |
-| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `Countdown`        | One `timer` element named by its `label`, whose value is the time left (`secondsText`), with the digits as m:ss and a bar that empties from the right. It runs on real time from `startedAt`. See Countdown below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing. It also takes `children`, an `error` line, `confirmVariant` and `busy`, which stops Android back.                                                                                                                                                                                                                                                        |
-| `TextField`        | A labelled text input, found by its label. `multiline` makes it three lines high. `count` with `maxCount` draws "count/maxCount" under it, and `error` draws a message. An error or a count over the maximum takes the accent border, and focus the foreground border. The error and count under the box are hidden from a screen reader, and its hint is the error, then `countHint`.                                                                                                                                                                                                                                                                                                                               |
-| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                                                                                                                                                                                                                                    |
-| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          |
-| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| Component          | What it is, and its role and name                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `Screen`           | The screen shell: safe area, themed background, padding, optional scrolling and optional keyboard avoidance (`avoidKeyboard`, which wraps the content in a `KeyboardAvoidingView` with padding). A layout container with no role. A screen's name is its `Header` heading. An optional `footer` is pinned under the content, outside a scroll view, above the keyboard.                                                                                                                                                                                                                                                                                                                                                      |
+| `Button`           | Role `button`, named by its label. Primary, secondary and danger variants. Danger is only for an action that destroys data. A press gives feedback, see Press feedback below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `Card`             | A static card is one accessible group named by its text, so it must not contain controls. With `grouped={false}` its children are read separately, which a card holding a heading needs. With `onPress` it is a `button` named by its `label`. `accent` edges it in the accent colour with the accent depth edge, and wins over `category`. `faceDown` (with `mark`, `title` and `label`) is the back of a card: static, an accent back with a dashed inner frame, one `img` named by `label`, no children. With `selected` (on a pressable card) it lays the face out as a row with a 24 px mark after the children, is announced as selected or not, and the selected card takes the accent tone, with a tick in the mark. |
+| `Toggle`           | Role `switch`, named by its label, with a checked and a disabled state. An optional `description` is drawn under the label in the muted body style and is the switch's accessibility hint. `locked` keeps it on, announces it as disabled and picks its track out with a foreground border instead of dimming the row. `lockedHint` is then its accessibility hint, in place of the description.                                                                                                                                                                                                                                                                                                                             |
+| `SettingsRow`      | One `button` named by its label and value, "App lock, On, PIN". The optional caption is its hint. `tone="danger"` colours the label. `showChevron={false}` drops the chevron for a row that opens a dialog. It sits in a static card that is not grouped.                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `PinPad`           | Four dots and a keypad for a PIN. Each key is a `button` named by its digit, and Delete is a `button` named "Delete", disabled with nothing to delete. The dots are one live region, role `text`, named "2 of 4 digits entered", and the digits are in no name or text. It is controlled: the screen holds `value` and passes `onChange` and `onComplete` (called with the whole PIN on the fourth digit). `error` shows a danger line, turns the dots to the danger border, shakes them (none with reduce motion) and is announced. `message` is a neutral line, such as a countdown, and is not announced. `disabled` dims and disables every key. It has no text field, so the phone keyboard never sees the PIN.         |
+| `FavouriteToggle`  | A 48 by 48 `switch` named by its `label` prop, with a heart that is filled in the accent colour when on and drawn in the muted colour on a plain surface when off. The optional `context` is the card text and is the switch's accessibility hint. Props are `label`, `value`, `onValueChange` and `context`. It has no pressed or error look.                                                                                                                                                                                                                                                                                                                                                                               |
+| `SegmentedControl` | A group of radios with a visible label. Each option is a `radio` named by its label, with a checked state. The group carries the radio group role and the label as its name, but is not an accessibility element, because that would hide its radios. The visible label is left readable so a screen reader reads it once before the options.                                                                                                                                                                                                                                                                                                                                                                                |
+| `CategoryToggle`   | A `switch` named by its label, filled with its category colour when on and dashed when off. `locked` keeps it on, announces it as disabled and picks it out with a foreground border instead of dimming it. `lockedHint` is its accessibility hint, so a screen reader says why it does nothing.                                                                                                                                                                                                                                                                                                                                                                                                                             |
+| `Countdown`        | One `timer` element named by its `label`, whose value is the time left (`secondsText`), with the digits as m:ss and a bar that empties from the right. It runs on real time from `startedAt`. See Countdown below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `Chip`             | A pressable chip is a `button` with a selected state. A static chip is plain text. `accent` fills it with the accent colour and sets its text in `on-accent-small`, and wins over `category`.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
+| `Dialog`           | A modal confirm dialog with the end round dialog's look: a scrim, and a panel with a heading title, a line, a confirm and a secondary cancel button. The panel has role `alertdialog`, is labelled by its title and is modal, but is not one accessibility element, so a test finds it by its label. Android back cancels. A tap on the scrim does nothing. It also takes `children`, an `error` line, `confirmVariant` and `busy`, which stops Android back.                                                                                                                                                                                                                                                                |
+| `TextField`        | A labelled text input, found by its label. `multiline` makes it three lines high. `count` with `maxCount` draws "count/maxCount" under it, and `error` draws a message. An error or a count over the maximum takes the accent border, and focus the foreground border. The error and count under the box are hidden from a screen reader, and its hint is the error, then `countHint`.                                                                                                                                                                                                                                                                                                                                       |
+| `Header`           | The title has role `header`. The optional back control is a `button` named by the caller.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    |
+| `Toast`            | A short line at the bottom of the screen, inside the safe area and 16 from the edges. One `button` named by its message, with the dismiss hint, a polite live region, and announced on iOS. It fades in, stays about 3 seconds, fades out, or is tapped away. With reduce motion on it just appears and disappears. Only the toast takes touches.                                                                                                                                                                                                                                                                                                                                                                            |
+| `Character`        | One of the cast, drawn in code and animated. Decorative, so it is hidden from screen readers and has no role or name. See Characters below.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
+| `SpeechBubble`     | A bubble with a tail, holding the text the caller passes in. The text is read like any other text and the tail is decoration. `popIn` animates it in, and reduced motion shows it at once.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 
 - **Countdown.** Props are `seconds`, `startedAt` (a wall clock time in milliseconds, or null before
   it starts), `label`, `secondsText`, `endText` and `onEnd`. It holds no copy and no haptic. The
@@ -1339,6 +1387,63 @@ JavaScript and content changes reach installed phones over the air, through EAS 
   read gives false. `UpdateToastHost` sits in the root layout and shows the kit `Toast` with the
   line from `content` when that is true. Under Jest `expo-updates` is replaced by an embedded
   launch, so no test announces an update by accident.
+
+## Error reporting
+
+Errors from installed phones go to Sentry, so a bug is found from a report and not from a player's
+description. `docs/runbooks/error-monitoring.md` says how to read a report and where the secrets
+live.
+
+- `apps/mobile/monitoring` is the only code that imports `@sentry/react-native`. Screens and
+  features never do.
+- `initMonitoring` runs once, when the root layout module loads. It starts the SDK only in a release
+  build that has `EXPO_PUBLIC_SENTRY_DSN`. In development, under Jest, or in a build with no DSN it
+  does nothing, and the app runs the same.
+- A report is tagged so it can be traced. The release is the commit the JavaScript was built from
+  (`EXPO_PUBLIC_COMMIT_SHA`), or the runtime version when the build was given no commit. The dist is
+  the id of the running update. The environment is the update channel.
+- `scrubEvent` and `scrubBreadcrumb` are the SDK's `beforeSend` and `beforeBreadcrumb`. Every level
+  is an allowlist: the event, each context, the tags and each breadcrumb. A report keeps the error
+  type and the stack. It loses every message, the user, the request, extra data and any tag the app
+  did not set. On a phone the SDK merges in what the native side holds, which includes an id made
+  once for each install, as the user and as the device id. The device context keeps only what
+  describes the kind of phone, such as the model, so that id is not sent.
+- Breadcrumbs are a trail of route names and the app going to the background or coming back.
+  `RouteTrail` records the route from Expo Router's segments, so a dynamic part stays as its
+  placeholder, such as `[deckId]`, and no id or typed value is recorded. Tap and console breadcrumbs
+  are dropped, because both are worded from what is on screen.
+- Sessions, client reports, traces, screenshots, the view hierarchy and session replay are all off.
+- `app/dev/test-error` throws `TestReportError` on purpose in an installed build, so the owner can
+  check that a report arrives. It works on the channels that report, `production` and, until
+  FRK-84 retires it, `preview`. A development build, which never reports, is sent to the first
+  screen.
+- Each build profile in `eas.json` names its environment, so the DSN reaches only the builds whose
+  environment has it.
+- Every screen of the root navigator sits inside a `ScreenCrashBoundary`, through the navigator's
+  `screenLayout`. When a screen throws while rendering, it reports the error and shows the crash
+  screen, and the navigator stays mounted. "Start again" leaves the failed screen for the first
+  one, also when the failed screen is the one the app was opened at. On the first screen or the
+  welcome screen there is nowhere better to go, so it tries that screen again. What the player
+  saved is untouched.
+- A second `CrashBoundary` wraps everything below the fonts in the root layout, for a failure
+  outside any screen, such as in a provider. Starting again there mounts everything below afresh.
+- The crash screen takes the splash screen down, so a failure during start-up can be seen.
+- Reports the native side sends by itself do not pass through `scrubEvent`. These are a crash in
+  native code, an Android "app not responding" report and an iOS app hang. They hold no text from
+  the app's screens, since that lives in JavaScript, but they keep the native error's own message.
+  Three things limit what they hold:
+  - `initMonitoring` sets the same fixed user, `player`, on every phone. With no user set, the
+    native SDKs on both platforms fill in the install id, and with one set they do not.
+  - `plugins/withQuietSentryBreadcrumbs` turns off the native tap breadcrumbs on Android, which
+    hold the class and id of the view pressed.
+  - On Android a native report still holds the install id as the device id, and the app cannot
+    remove it. The runbook gives the scrubbing rule to add in Sentry that removes it on arrival.
+- Source maps are uploaded by the Sentry build step in a `production` build, which needs
+  `SENTRY_AUTH_TOKEN` in the build service. The `development` and `preview` profiles set
+  `SENTRY_DISABLE_AUTO_UPLOAD`, so they build without the token. For an update, the README gives the
+  upload command to run after `eas update`.
+- Under Jest the SDK is replaced by a stand-in in `jest.setup.js`. `envelope.test.ts` takes the real
+  SDK and reads the text it would send, to check that a name, a card and a typed dare never appear.
 
 ## Storage
 
@@ -1769,9 +1874,14 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
 
 ## Privacy
 
-- No analytics and no error reporting, at launch or before. The app has no SDK for either. Crash
-  data comes only from what Apple and Google collect from players who opt in on their phones.
-- The app makes one network call, the check for an update. It goes to Expo's update service
+- No analytics. The app has no SDK for it.
+- Error reports go to Sentry (FRK-83). A report holds the error type, the stack, the route names
+  the player moved through, the release, and the phone's model and system version. It holds no
+  message, no user, no player names, no card text and nothing typed. See Error reporting. The
+  request reveals the phone's IP address to Sentry, and the organisation is set not to store it.
+  Apple and Google also collect crash data from players who opt in on their phones.
+- The app makes two kinds of network call, the error report above and the check for an update. The
+  check goes to Expo's update service
   (`u.expo.dev`) and sends the platform, the runtime version, the channel, the ids of the update the
   app is running and of the embedded build, a random install id that `expo-updates` makes (not tied
   to a person or a device), the update protocol versions, and the text of a crash from the previous
@@ -1791,7 +1901,8 @@ fingerprint, so the next build is a reinstall and updates made before it do not 
 - Never log player names, card text or anything a player typed. That includes deck names, the
   database key and anything read from the personal store. The storage and provider tests spy on the
   console to check it. The same goes for the message of a thrown error, because a crash is reported
-  to Expo. Never put player text in an `Error` message.
+  to Expo. Never put player text in an `Error` message. Sentry reports drop every message, but the
+  crash text Expo receives does not.
 - What players write is stored in an encrypted database. The key is in the device secure store, on
   this device only, and clearing everything deletes both. See Storage.
 - The PIN is never stored. Only a salted SHA-256 hash is, in the secure store, readable only while

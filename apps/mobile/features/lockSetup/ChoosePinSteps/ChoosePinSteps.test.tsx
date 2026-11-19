@@ -3,6 +3,7 @@ import { act } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
 import { AccessibilityInfo } from 'react-native';
 
+import { changeAppState, fakeAppState } from '../../../lock/testing/fakeAppState';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { ChoosePinSteps } from './ChoosePinSteps';
 import type { ChoosePinStepsProps } from './types';
@@ -35,6 +36,7 @@ const heading = (name: string) => screen.getByRole('header', { name });
 describe('ChoosePinSteps', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    fakeAppState();
     jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
       .mockClear()
@@ -158,5 +160,22 @@ describe('ChoosePinSteps', () => {
 
     expect(heading(copy.lockSetup.confirmTitle)).toBeOnTheScreen();
     expect(screen.getByText(copy.lock.saveFailed)).toBeOnTheScreen();
+  });
+
+  describe('leaving the app', () => {
+    it('should go back to the first step and forget the first PIN', async () => {
+      const { onChosen } = await renderSteps();
+      await typePin('4821');
+      expect(heading(copy.lockSetup.confirmTitle)).toBeOnTheScreen();
+
+      await changeAppState('background');
+
+      expect(heading(copy.lockSetup.enterTitle)).toBeOnTheScreen();
+      expect(screen.getByRole('text', { name: '0 of 4 digits entered' })).toBeOnTheScreen();
+      // The old first PIN is no longer waiting, so typing it twice starts a new pair.
+      await typePin('4821');
+      expect(onChosen).not.toHaveBeenCalled();
+      expect(heading(copy.lockSetup.confirmTitle)).toBeOnTheScreen();
+    });
   });
 });

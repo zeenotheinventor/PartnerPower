@@ -1,10 +1,11 @@
 import { copy } from '@getfreak/content';
-import { useEffect } from 'react';
+import { useEffect, useRef } from 'react';
 import { Text } from 'react-native';
 
 import { FeedbackPressable } from '../../../components/ui';
 import { useLockService } from '../../../lock';
 import { PinEntryStep } from '../PinEntryStep';
+import { whileBiometricsPromptIsOpen } from '../useClearOnBackground';
 import { useWaitCountdown } from '../useWaitCountdown';
 import type { VerifyPinStepProps } from './types';
 
@@ -54,8 +55,19 @@ export function VerifyPinStep({
     }
   };
 
+  // One prompt at a time, so a second press while the phone is asking does nothing.
+  const isAsking = useRef(false);
   const unlockWithBiometrics = async () => {
-    if (await lock.askForBiometrics(copy.lock.promptMessage)) onVerified();
+    if (isAsking.current) return;
+    isAsking.current = true;
+    try {
+      const isPassed = await whileBiometricsPromptIsOpen(() =>
+        lock.askForBiometrics(copy.lock.promptMessage),
+      );
+      if (isPassed) onVerified();
+    } finally {
+      isAsking.current = false;
+    }
   };
 
   return (

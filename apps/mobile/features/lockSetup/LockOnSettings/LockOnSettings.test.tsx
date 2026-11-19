@@ -5,6 +5,7 @@ import { AccessibilityInfo, Platform } from 'react-native';
 
 import { LockServiceContext, type BiometricsAvailability } from '../../../lock';
 import { createTestLock, type TestLockSetup } from '../../../lock/testing/createTestLock';
+import { changeAppState, fakeAppState } from '../../../lock/testing/fakeAppState';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { LockOnSettings } from './LockOnSettings';
 
@@ -64,6 +65,7 @@ const announced = () =>
 describe('LockOnSettings', () => {
   beforeEach(() => {
     jest.useFakeTimers();
+    fakeAppState();
     jest.setSystemTime(Date.UTC(2026, 10, 19, 9, 0, 0));
     jest
       .spyOn(AccessibilityInfo, 'announceForAccessibility')
@@ -438,6 +440,93 @@ describe('LockOnSettings', () => {
       expect(screen.getByText(copy.lockSettings.statusOn)).toBeOnTheScreen();
       expect(onExit).not.toHaveBeenCalled();
       expect(await lock.isLockOn()).toBe(true);
+    });
+  });
+
+  describe('leaving the app', () => {
+    it('should forget that the current PIN was typed, so Change PIN asks again', async () => {
+      await renderSettings();
+      press(copy.lockSettings.changePin);
+      await typePin(pin);
+      expect(heading(copy.lockSettings.newTitle)).toBeOnTheScreen();
+
+      await changeAppState('background');
+
+      expect(screen.getByText(copy.lockSettings.statusOn)).toBeOnTheScreen();
+      press(copy.lockSettings.changePin);
+      expect(heading(copy.lockSettings.currentTitle)).toBeOnTheScreen();
+    });
+
+    it('should go back to the status from the current PIN step', async () => {
+      await renderSettings();
+      press(copy.lockSettings.changePin);
+
+      await changeAppState('inactive');
+
+      expect(screen.getByText(copy.lockSettings.statusOn)).toBeOnTheScreen();
+    });
+
+    it('should not count the phone biometrics prompt as leaving the app', async () => {
+      const { authenticate } = await renderSettings({ isBiometricsOn: true });
+      press(copy.lockSettings.changePin);
+      authenticate.mockImplementationOnce(async () => {
+        // The press has finished before the app state changes, as it does on a phone.
+        await Promise.resolve();
+        await changeAppState('inactive');
+        return true;
+      });
+
+      press(faceIdKind.tryAgain);
+      await settle();
+
+      expect(heading(copy.lockSettings.newTitle)).toBeOnTheScreen();
+    });
+  });
+
+  describe('two answers at once', () => {
+    it('should press the biometrics link twice and ask the phone once, turn off once and leave once', async () => {
+      const { lock, authenticate, onExit } = await renderSettings({ isBiometricsOn: true });
+      const clearPin = jest.spyOn(lock, 'clearPin');
+      press(copy.lockSettings.turnOff);
+
+      act(() => {
+        press(faceIdKind.tryAgain);
+        press(faceIdKind.tryAgain);
+      });
+      await settle();
+
+      expect(authenticate).toHaveBeenCalledTimes(1);
+      expect(clearPin).toHaveBeenCalledTimes(1);
+      expect(onExit).toHaveBeenCalledTimes(1);
+    });
+
+    it('should run Turn off once when the PIN and the biometrics both answer', async () => {
+      const { lock, authenticate, onExit } = await renderSettings({ isBiometricsOn: true });
+      const clearPin = jest.spyOn(lock, 'clearPin');
+      let passPrompt: (isPassed: boolean) => void = () => {};
+      authenticate.mockImplementationOnce(
+        () => new Promise<boolean>((resolve) => (passPrompt = resolve)),
+      );
+      press(copy.lockSettings.turnOff);
+      press(faceIdKind.tryAgain);
+
+      await typePin(pin);
+      passPrompt(true);
+      await settle();
+
+      expect(clearPin).toHaveBeenCalledTimes(1);
+      expect(onExit).toHaveBeenCalledTimes(1);
+    });
+
+    it('should leave once when back is pressed twice', async () => {
+      const { onExit } = await renderSettings();
+
+      act(() => {
+        press(copy.lockSetup.backLabel);
+        press(copy.lockSetup.backLabel);
+      });
+
+      expect(onExit).toHaveBeenCalledTimes(1);
     });
   });
 });

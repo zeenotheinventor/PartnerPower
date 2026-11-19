@@ -91,11 +91,11 @@ export function createLockService({
     },
 
     async clearPin() {
-      await Promise.all([
-        secureStorage.remove('lockPinHash'),
-        secureStorage.remove('lockAttempts'),
-        secureStorage.remove('lockBiometricsChoice'),
-      ]);
+      // One after another, with the hash last. If a remove fails, the hash is still there, so the
+      // lock stays on and nothing is half turned off with the PIN gone.
+      await secureStorage.remove('lockBiometricsChoice');
+      await secureStorage.remove('lockAttempts');
+      await secureStorage.remove('lockPinHash');
     },
 
     async getBiometricsAvailability() {

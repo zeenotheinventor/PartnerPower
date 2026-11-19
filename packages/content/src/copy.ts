@@ -17,6 +17,12 @@ export const copy = {
     body: 'Get Freak is for adults only.',
     backLabel: 'Go back',
   },
+  // Shown in place of a screen that failed.
+  crash: {
+    title: 'Well, that was not meant to happen',
+    body: 'Something went wrong on our side. Nothing you saved has been lost.',
+    restartLabel: 'Start again',
+  },
   hub: {
     greeting: 'Welcome back, you two. What are we feeling?',
     comingSoon: 'Coming soon',
@@ -206,7 +212,26 @@ export const copy = {
     myDaresNone: 'None written yet',
     myDaresRowName: '{label}, {value}',
     mixInMyDares: 'Mix in my dares',
+    deckLabel: 'Deck',
+    deckRowName: '{label}, {value}',
+    inPlay: '{count} cards at this level',
+    inPlayOne: '{count} card at this level',
+    noCardsInPlay: 'No cards in this deck at this level. Try another level or deck.',
     start: 'Start',
+  },
+  // The deck picker and the Favourites view. The names of the decks are shown wherever a deck is.
+  decks: {
+    pickerTitle: 'Pick a deck',
+    backLabel: 'Back',
+    starter: 'Starter deck',
+    favourites: 'Favourites',
+    count: '{count} cards',
+    countOne: '{count} card',
+    deckCardName: '{name}, {count}',
+    viewFavourites: 'View',
+    viewFavouritesName: 'View Favourites',
+    favouritesEmpty: 'No favourites yet. Favourite a dare at the end of a round.',
+    groupHeading: '{category}, {count}',
   },
   // The My dares list and the dare editor. The messages for the text problems are named by the
   // codes that core returns.

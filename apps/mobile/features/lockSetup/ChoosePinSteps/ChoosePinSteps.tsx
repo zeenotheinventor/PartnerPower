@@ -2,6 +2,7 @@ import { copy } from '@getfreak/content';
 import { useState } from 'react';
 
 import { PinEntryStep } from '../PinEntryStep';
+import { useClearOnBackground } from '../useClearOnBackground';
 import type { ChoosePinStepsProps } from './types';
 
 // The first PIN is held here only until the second one is typed, and is never logged or stored.
@@ -17,6 +18,11 @@ type Stage =
  */
 export function ChoosePinSteps({ enterTitle, onBack, onChosen }: ChoosePinStepsProps) {
   const [stage, setStage] = useState<Stage>({ name: 'enter', showNumber: 0 });
+
+  // Leaving the app forgets the first PIN, and the player starts again at the first step.
+  useClearOnBackground(() =>
+    setStage((current) => ({ name: 'enter', showNumber: current.showNumber + 1 })),
+  );
 
   if (stage.name === 'enter') {
     return (

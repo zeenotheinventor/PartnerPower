@@ -3,6 +3,7 @@ import { useEffect, useRef, useState } from 'react';
 import { View } from 'react-native';
 
 import { Header, PinPad, Screen } from '../../../components/ui';
+import { useClearOnBackground } from '../useClearOnBackground';
 import type { PinEntryStepProps } from './types';
 
 // The fourth dot fills and is seen before the step moves on.
@@ -25,26 +26,43 @@ export function PinEntryStep({
 }: PinEntryStepProps) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(initialError);
-  const [isChecking, setIsChecking] = useState(false);
   const holdTimer = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
+  // Set the moment the last number is typed, before any render, so two presses in one frame cannot
+  // both submit. It stays set until the submit has answered.
+  const isSubmitting = useRef(false);
 
   useEffect(() => () => clearTimeout(holdTimer.current), []);
 
+  // Leaving the app forgets what was typed. A submit that is already running finishes and clears
+  // the dots itself.
+  useClearOnBackground(() => {
+    if (holdTimer.current !== undefined) {
+      clearTimeout(holdTimer.current);
+      holdTimer.current = undefined;
+      isSubmitting.current = false;
+    } else if (isSubmitting.current) {
+      return;
+    }
+    setValue('');
+  });
+
   const change = (next: string) => {
-    // The keypad stays as it is while the last digit is held and checked.
-    if (isChecking) return;
+    // The keypad stays as it is while the last number is held and checked.
+    if (isSubmitting.current) return;
     setError(undefined);
     setValue(next);
   };
 
   const submit = (pin: string) => {
-    setIsChecking(true);
+    if (isSubmitting.current) return;
+    isSubmitting.current = true;
     holdTimer.current = setTimeout(async () => {
+      holdTimer.current = undefined;
       // A step that fails to answer must not leave the player stuck with full dots.
       const answer = await onSubmit(pin).catch(() => copy.lock.saveFailed);
       setError(answer);
       setValue('');
-      setIsChecking(false);
+      isSubmitting.current = false;
     }, fullDotsHoldMilliseconds);
   };
 

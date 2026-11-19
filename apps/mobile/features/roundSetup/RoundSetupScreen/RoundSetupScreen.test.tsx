@@ -2,7 +2,7 @@ import { categoryNames, copy, fillCopy, levelNames } from '@getfreak/content';
 import { startRound, type Deck } from '@getfreak/core';
 import { act, waitFor } from '@testing-library/react-native';
 import { fireEvent, screen } from 'nativewind/test';
-import { KeyboardAvoidingView } from 'react-native';
+import { AccessibilityInfo, KeyboardAvoidingView } from 'react-native';
 import { useEffect, type ReactElement, type ReactNode } from 'react';
 
 import { createInMemoryBackend } from '../../../storage/createInMemoryBackend';
@@ -11,6 +11,11 @@ import type { Storage } from '../../../storage';
 import { SettingsProvider, useSettings } from '../../../settings';
 import { renderThemed } from '../../../tailwind/renderThemed';
 import { drawnCharacters } from '../../../testing/drawnCharacters';
+import {
+  DeckChoiceProvider,
+  useDeckChoice,
+  type DeckChoiceValue,
+} from '../../decks/DeckChoiceProvider';
 import { useOwnCards, type OwnCards } from '../../ownCards/OwnCardsProvider';
 import { makeOwnCardsFixture } from '../../ownCards/testing/ownCardsFixture';
 import { RoundProvider } from '../../round/RoundProvider';
@@ -73,10 +78,12 @@ async function renderSetup(
     <SettingsProvider storage={storage}>
       <AfterSettingsLoad>
         <ownCards.Providers>
-          <RoundProvider>
-            <RoundSetupScreen />
-          </RoundProvider>
-          {probe}
+          <DeckChoiceProvider>
+            <RoundProvider>
+              <RoundSetupScreen />
+            </RoundProvider>
+            {probe}
+          </DeckChoiceProvider>
         </ownCards.Providers>
       </AfterSettingsLoad>
     </SettingsProvider>,
@@ -102,6 +109,19 @@ function makeProbe() {
     return null;
   }
   return { Probe, held };
+}
+
+// Gives a test the deck choice of the providers around the screen, to choose a deck as the picker does.
+function makeChoiceProbe() {
+  const held: { current: DeckChoiceValue | undefined } = { current: undefined };
+  function ChoiceProbe() {
+    const deckChoice = useDeckChoice();
+    useEffect(() => {
+      held.current = deckChoice;
+    });
+    return null;
+  }
+  return { ChoiceProbe, held };
 }
 
 const startButton = () => screen.getByRole('button', { name: copy.roundSetup.start });
@@ -574,9 +594,11 @@ describe('RoundSetupScreen', () => {
         <SettingsProvider storage={createStorage(createInMemoryBackend())}>
           <AfterSettingsLoad>
             <fixture.Providers>
-              <RoundProvider>
-                <RoundSetupScreen />
-              </RoundProvider>
+              <DeckChoiceProvider>
+                <RoundProvider>
+                  <RoundSetupScreen />
+                </RoundProvider>
+              </DeckChoiceProvider>
             </fixture.Providers>
           </AfterSettingsLoad>
         </SettingsProvider>,
@@ -649,6 +671,355 @@ describe('RoundSetupScreen', () => {
       await pressStart();
 
       expect(testDeck.cards).toHaveLength(2);
+    });
+  });
+
+  describe('the deck', () => {
+    const deckRow = (value: string) =>
+      screen.getByRole('button', {
+        name: fillCopy(copy.roundSetup.deckRowName, { label: copy.roundSetup.deckLabel, value }),
+      });
+    const mixSwitch = () => screen.queryByRole('switch', { name: copy.roundSetup.mixInMyDares });
+
+    // Favourites are read from the store, so they are set before the screen shows. The cards of
+    // the test deck have the ids card-1 and card-2 in the store, and each dare has an id of its own.
+    async function renderWithFavourites({
+      favouriteCardIds = [],
+      dareCount = 0,
+      favouriteDareCount = 0,
+    }: { favouriteCardIds?: string[]; dareCount?: number; favouriteDareCount?: number } = {}) {
+      const fixture = makeOwnCardsFixture({
+        shippedTexts: testDeck.cards.map((card) => card.text),
+      });
+      for (const cardId of favouriteCardIds) await fixture.repository.setFavourite(cardId, true);
+      for (let number = 1; number <= dareCount; number += 1) {
+        const saved = await fixture.repository.savePlayerCard({
+          category: 'c2',
+          kind: 'solo',
+          text: `Placeholder dare ${number}`,
+        });
+        if (saved.ok && number <= favouriteDareCount) {
+          await fixture.repository.setFavourite(saved.saved.id, true);
+        }
+      }
+      const { ChoiceProbe, held } = makeChoiceProbe();
+      await renderSetup(undefined, fixture, <ChoiceProbe />);
+      if (dareCount > 0) await screen.findByRole('switch', { name: copy.roundSetup.mixInMyDares });
+      return held;
+    }
+
+    it('should show the Deck row with the starter deck chosen', async () => {
+      await renderSetup();
+
+      expect(deckRow(copy.decks.starter)).toBeOnTheScreen();
+    });
+
+    it('should open the picker from the row', async () => {
+      await renderSetup();
+
+      fireEvent.press(deckRow(copy.decks.starter));
+
+      expect(mockPush).toHaveBeenCalledWith('/games/dares/decks');
+    });
+
+    it('should show the row above the My dares row', async () => {
+      await renderSetup();
+
+      const labels = screen.getAllByRole('button').map((button) => button.props.accessibilityLabel);
+      const deckIndex = labels.indexOf(
+        fillCopy(copy.roundSetup.deckRowName, {
+          label: copy.roundSetup.deckLabel,
+          value: copy.decks.starter,
+        }),
+      );
+      const daresIndex = labels.findIndex((label) =>
+        String(label).startsWith(`${copy.roundSetup.myDaresLabel}, `),
+      );
+      expect(deckIndex).toBeGreaterThanOrEqual(0);
+      expect(deckIndex).toBeLessThan(daresIndex);
+    });
+
+    it('should show the name of the deck that is chosen in the picker', async () => {
+      const held = await renderWithFavourites();
+
+      act(() => held.current?.chooseDeck('favourites'));
+
+      expect(deckRow(copy.decks.favourites)).toBeOnTheScreen();
+    });
+
+    it('should show the mix switch for the starter deck only', async () => {
+      const held = await renderWithFavourites({ dareCount: 1 });
+      expect(mixSwitch()).toBeOnTheScreen();
+
+      act(() => held.current?.chooseDeck('favourites'));
+      expect(mixSwitch()).not.toBeOnTheScreen();
+
+      act(() => held.current?.chooseDeck('starter'));
+      expect(mixSwitch()).toBeOnTheScreen();
+    });
+
+    it('should keep the My dares row when Favourites is chosen', async () => {
+      const held = await renderWithFavourites({ dareCount: 1 });
+
+      act(() => held.current?.chooseDeck('favourites'));
+
+      expect(
+        screen.getByRole('button', { name: new RegExp(`^${copy.roundSetup.myDaresLabel}, `) }),
+      ).toBeOnTheScreen();
+    });
+
+    it('should keep the mix switch where it was when the starter deck is chosen again', async () => {
+      const held = await renderWithFavourites({ dareCount: 1 });
+      fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+
+      act(() => held.current?.chooseDeck('favourites'));
+      act(() => held.current?.chooseDeck('starter'));
+
+      expect(
+        screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares, checked: false }),
+      ).toBeOnTheScreen();
+    });
+
+    describe('starting from Favourites', () => {
+      it('should deal only the cards that are favourites', async () => {
+        const held = await renderWithFavourites({ favouriteCardIds: ['card-2'] });
+        act(() => held.current?.chooseDeck('favourites'));
+        enterNames('Player A', 'Player B');
+
+        await pressStart();
+
+        const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(deck?.cards.map((card) => card.text)).toEqual(['Card 2']);
+      });
+
+      it('should deal the favourite dares of the player with them, mixed in or not', async () => {
+        const held = await renderWithFavourites({
+          favouriteCardIds: ['card-1'],
+          dareCount: 2,
+          favouriteDareCount: 1,
+        });
+        act(() => held.current?.chooseDeck('favourites'));
+        enterNames('Player A', 'Player B');
+
+        await pressStart();
+
+        const [, deck] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(deck?.cards.map((card) => card.text)).toEqual(['Card 1', 'Placeholder dare 1']);
+      });
+
+      it('should start with the categories that are on, so the round deals only from them', async () => {
+        const held = await renderWithFavourites({ favouriteCardIds: ['card-1', 'card-2'] });
+        act(() => held.current?.chooseDeck('favourites'));
+        fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+        enterNames('Player A', 'Player B');
+
+        await pressStart();
+
+        const [setup] = jest.mocked(startRound).mock.calls[0] ?? [];
+        expect(setup?.enabledCategories).toEqual(['c1']);
+        expect(jest.mocked(startRound).mock.results[0]?.value.current?.card.id).toBe('card-1');
+      });
+
+      it('should start with the surprises the round has, as it does for the starter deck', async () => {
+        const held = await renderWithFavourites({ favouriteCardIds: ['card-1', 'card-2'] });
+        act(() => held.current?.chooseDeck('favourites'));
+        enterNames('Player A', 'Player B');
+
+        await pressStart();
+
+        expect(jest.mocked(startRound).mock.calls[0]?.[0].surprises).toEqual(playableSurprises);
+      });
+    });
+
+    describe('the cards in play', () => {
+      const countLine = (count: number) =>
+        fillCopy(count === 1 ? copy.roundSetup.inPlayOne : copy.roundSetup.inPlay, { count });
+
+      it('should say how many cards the deck has at the level', async () => {
+        await renderSetup();
+
+        expect(screen.getByText(countLine(2))).toBeOnTheScreen();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+
+      it('should count only the categories that are on', async () => {
+        await renderSetup();
+
+        fireEvent.press(screen.getByRole('switch', { name: categoryNames.c2 }));
+
+        expect(screen.getByText(countLine(1))).toBeOnTheScreen();
+      });
+
+      it('should follow the level', async () => {
+        await renderSetup();
+
+        fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+
+        expect(screen.getByText(countLine(1))).toBeOnTheScreen();
+      });
+
+      it('should count the dares that are mixed in, and not the ones that are not', async () => {
+        await renderWithFavourites({ dareCount: 3 });
+        expect(screen.getByText(countLine(5))).toBeOnTheScreen();
+
+        fireEvent.press(screen.getByRole('switch', { name: copy.roundSetup.mixInMyDares }));
+
+        expect(screen.getByText(countLine(2))).toBeOnTheScreen();
+      });
+
+      it('should count the favourites for Favourites', async () => {
+        const held = await renderWithFavourites({ favouriteCardIds: ['card-2'] });
+
+        act(() => held.current?.chooseDeck('favourites'));
+
+        expect(screen.getByText(countLine(1))).toBeOnTheScreen();
+      });
+
+      it('should leave out timer cards, which only the timer surprise deals', async () => {
+        mockDecks.splice(0, mockDecks.length, {
+          ...testDeck,
+          cards: [
+            ...testDeck.cards,
+            {
+              id: 'card-3',
+              category: 'c1',
+              kind: 'solo',
+              text: 'Card 3',
+              source: 'shipped',
+              effect: { type: 'timer', seconds: 15 },
+            },
+          ],
+        });
+
+        await renderSetup();
+
+        expect(screen.getByText(countLine(2))).toBeOnTheScreen();
+      });
+
+      it('should show no count until the dares and favourites have been read', async () => {
+        const fixture = makeOwnCardsFixture({ holdLoad: true });
+        await renderThemed(
+          <SettingsProvider storage={createStorage(createInMemoryBackend())}>
+            <AfterSettingsLoad>
+              <fixture.Providers>
+                <DeckChoiceProvider>
+                  <RoundProvider>
+                    <RoundSetupScreen />
+                  </RoundProvider>
+                </DeckChoiceProvider>
+              </fixture.Providers>
+            </AfterSettingsLoad>
+          </SettingsProvider>,
+        );
+        await screen.findByRole('header', { name: copy.roundSetup.title });
+
+        expect(screen.queryByText(countLine(2))).not.toBeOnTheScreen();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+
+        await act(async () => {
+          fixture.releaseLoad();
+        });
+
+        expect(screen.getByText(countLine(2))).toBeOnTheScreen();
+      });
+    });
+
+    describe('while the favourites are still being read', () => {
+      async function renderWithSlowFavourites() {
+        const fixture = makeOwnCardsFixture({
+          shippedTexts: testDeck.cards.map((card) => card.text),
+        });
+        // The favourites never arrive, as if the read had hung.
+        jest.spyOn(fixture.repository, 'listFavourites').mockReturnValue(new Promise(() => {}));
+        const { ChoiceProbe, held } = makeChoiceProbe();
+        await renderSetup(undefined, fixture, <ChoiceProbe />);
+        enterNames('Player A', 'Player B');
+        return held;
+      }
+
+      it('should let the starter deck count and start', async () => {
+        await renderWithSlowFavourites();
+
+        expect(screen.getByText(fillCopy(copy.roundSetup.inPlay, { count: 2 }))).toBeOnTheScreen();
+        expect(startButton()).not.toBeDisabled();
+
+        await pressStart();
+
+        expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
+      });
+
+      it('should hold Start, with no count and no hint, for Favourites', async () => {
+        const held = await renderWithSlowFavourites();
+
+        act(() => held.current?.chooseDeck('favourites'));
+
+        expect(startButton()).toBeDisabled();
+        expect(screen.queryByText(/cards at this level/)).not.toBeOnTheScreen();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+    });
+
+    describe('with no cards in play', () => {
+      async function renderWithNoFavourites() {
+        const held = await renderWithFavourites();
+        act(() => held.current?.chooseDeck('favourites'));
+        enterNames('Player A', 'Player B');
+        return held;
+      }
+
+      it('should say why in place of the count', async () => {
+        await renderWithNoFavourites();
+
+        expect(screen.getByText(copy.roundSetup.noCardsInPlay)).toBeOnTheScreen();
+        expect(screen.queryByText(/cards at this level/)).not.toBeOnTheScreen();
+      });
+
+      it('should announce the hint, as a polite live region, when it comes up', async () => {
+        const announce = jest.spyOn(AccessibilityInfo, 'announceForAccessibility');
+        await renderWithNoFavourites();
+
+        expect(announce).toHaveBeenCalledWith(copy.roundSetup.noCardsInPlay);
+        expect(screen.getByText(copy.roundSetup.noCardsInPlay)).toHaveProp(
+          'accessibilityLiveRegion',
+          'polite',
+        );
+      });
+
+      it('should disable Start even when both names are entered', async () => {
+        await renderWithNoFavourites();
+
+        expect(startButton()).toBeDisabled();
+      });
+
+      it('should not start a round when Start is pressed', async () => {
+        await renderWithNoFavourites();
+
+        fireEvent.press(startButton());
+
+        expect(startRound).not.toHaveBeenCalled();
+        expect(mockPush).not.toHaveBeenCalled();
+      });
+
+      it('should enable Start again when another deck with cards is chosen', async () => {
+        const held = await renderWithNoFavourites();
+
+        act(() => held.current?.chooseDeck('starter'));
+
+        expect(startButton()).not.toBeDisabled();
+        expect(screen.queryByText(copy.roundSetup.noCardsInPlay)).not.toBeOnTheScreen();
+      });
+
+      it('should enable Start again when a level brings cards back', async () => {
+        const held = await renderWithFavourites({ favouriteCardIds: ['card-2'] });
+        act(() => held.current?.chooseDeck('favourites'));
+        enterNames('Player A', 'Player B');
+        fireEvent.press(screen.getByRole('radio', { name: levelNames.l1 }));
+        expect(startButton()).toBeDisabled();
+
+        fireEvent.press(screen.getByRole('radio', { name: levelNames.l2 }));
+
+        expect(startButton()).not.toBeDisabled();
+      });
     });
   });
 
@@ -762,15 +1133,17 @@ describe('RoundSetupScreen', () => {
       expect(jest.mocked(startRound).mock.calls[0]?.[1]).toBe(testDeck);
     });
 
-    it('should still start, with a deck of no cards, while no deck ships', async () => {
+    it('should not start, and say why, while no deck ships', async () => {
       mockDecks.splice(0, mockDecks.length);
       await renderSetup();
       enterNames('Player A', 'Player B');
 
-      await pressStart();
+      fireEvent.press(startButton());
 
-      expect(jest.mocked(startRound).mock.calls[0]?.[1].cards).toEqual([]);
-      expect(mockPush).toHaveBeenCalledWith('/games/dares/play');
+      expect(startButton()).toBeDisabled();
+      expect(screen.getByText(copy.roundSetup.noCardsInPlay)).toBeOnTheScreen();
+      expect(startRound).not.toHaveBeenCalled();
+      expect(mockPush).not.toHaveBeenCalled();
     });
 
     it('should save the trimmed names for next time', async () => {

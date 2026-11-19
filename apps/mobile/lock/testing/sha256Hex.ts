@@ -54,16 +54,14 @@ export function sha256Hex(text: string): string {
       );
     }
 
-    let [a, b, c, d, e, f, g, h] = state as [
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-      number,
-    ];
+    let a = state[0] ?? 0;
+    let b = state[1] ?? 0;
+    let c = state[2] ?? 0;
+    let d = state[3] ?? 0;
+    let e = state[4] ?? 0;
+    let f = state[5] ?? 0;
+    let g = state[6] ?? 0;
+    let h = state[7] ?? 0;
     for (let index = 0; index < 64; index += 1) {
       const big1 = rotateRight(e, 6) ^ rotateRight(e, 11) ^ rotateRight(e, 25);
       const choose = (e & f) ^ (~e & g);

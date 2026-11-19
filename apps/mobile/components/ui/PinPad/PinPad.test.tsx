@@ -178,11 +178,17 @@ describe('PinPad', () => {
       expect(dotStyles(2)[3]?.borderColor).toBe(colorThemes.light.muted.toLowerCase());
     });
 
-    it('should never put the digits in a name or a text', async () => {
+    it('should name every control as one key, Delete, or a count, and never as the PIN', async () => {
       await renderPad({ value: '1357' });
 
-      expect(screen.queryByLabelText(/1357/)).toBeNull();
-      expect(screen.queryByText(/1357/)).toBeNull();
+      // Plain texts such as a key's number have no label of their own, so only named controls count.
+      const names = [...screen.getAllByRole('button'), ...screen.getAllByRole('text')]
+        .map((element) => element.props.accessibilityLabel)
+        .filter((name) => name !== undefined);
+      expect(names).toHaveLength(11 + 1);
+      names.forEach((name) => expect(name).toMatch(/^(\d|Delete|\d of 4 digits entered)$/));
+      expect(names).toContain(dotsName(4));
+      expect(JSON.stringify(screen.toJSON())).not.toContain('1357');
     });
   });
 

@@ -1,5 +1,5 @@
 import { copy } from '@getfreak/content';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { AccessibilityInfo, Platform, Text, View } from 'react-native';
 
 import { Card, Header, Screen, SettingsRow, Toggle } from '../../../components/ui';
@@ -7,6 +7,7 @@ import { useLockService } from '../../../lock';
 import { SettingsSection } from '../../settings/SettingsSection';
 import { biometricsCopyKind } from '../biometricsCopyKind';
 import { ChoosePinSteps } from '../ChoosePinSteps';
+import { useClearOnBackground, whileBiometricsPromptIsOpen } from '../useClearOnBackground';
 import { VerifyPinStep } from '../VerifyPinStep';
 import type { LockOnSettingsProps } from './types';
 
@@ -24,8 +25,24 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
   const [isBiometricsChosen, setIsBiometricsChosen] = useState(isBiometricsOn);
   const [isChecking, setIsChecking] = useState(false);
   const [problem, setProblem] = useState<string | undefined>(undefined);
+  // Each of these is set before any render, so a second call in the same frame does nothing.
+  const isVerified = useRef(false);
+  const isTurningOff = useRef(false);
+  const hasExited = useRef(false);
   const kind = biometricsCopyKind(availability, Platform.OS);
   const words = copy.biometrics.kinds[kind];
+
+  // Leaving the app forgets that the current PIN was typed, so coming back asks again.
+  useClearOnBackground(() => {
+    isVerified.current = false;
+    setStage({ name: 'status' });
+  });
+
+  const exit = () => {
+    if (hasExited.current) return;
+    hasExited.current = true;
+    onExit();
+  };
 
   const showProblem = (line: string) => {
     setProblem(line);
@@ -39,7 +56,11 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
     try {
       if (isOn) {
         // The choice is saved only after the phone has asked once and the player has passed.
-        if (!(await lock.askForBiometrics(copy.biometrics.checkReason))) {
+        if (
+          !(await whileBiometricsPromptIsOpen(() =>
+            lock.askForBiometrics(copy.biometrics.checkReason),
+          ))
+        ) {
           showProblem(copy.biometrics.toggleFailed);
           return;
         }
@@ -56,15 +77,18 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
   };
 
   const turnOff = async () => {
+    if (isTurningOff.current) return;
+    isTurningOff.current = true;
     try {
       await lock.clearPin();
     } catch {
+      isTurningOff.current = false;
       setStage({ name: 'status' });
       showProblem(copy.lock.saveFailed);
       return;
     }
     AccessibilityInfo.announceForAccessibility(copy.lockSettings.off);
-    onExit();
+    exit();
   };
 
   const savePin = async (pin: string) => {
@@ -83,6 +107,9 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
         canUseBiometrics={availability.isAvailable && isBiometricsChosen}
         onBack={() => setStage({ name: 'status' })}
         onVerified={() => {
+          // Verified once only, so two answers at once do not run the next step twice.
+          if (isVerified.current) return;
+          isVerified.current = true;
           if (stage.purpose === 'off') void turnOff();
           else setStage({ name: 'newPin' });
         }}
@@ -102,11 +129,7 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
 
   return (
     <Screen scroll>
-      <Header
-        title={copy.lockSettings.title}
-        backLabel={copy.lockSetup.backLabel}
-        onBack={onExit}
-      />
+      <Header title={copy.lockSettings.title} backLabel={copy.lockSetup.backLabel} onBack={exit} />
       <Card accent>
         <View className="gap-4">
           <Text className="type-heading text-foreground">{copy.lockSettings.statusOn}</Text>
@@ -118,6 +141,7 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
           label={copy.lockSettings.changePin}
           onPress={() => {
             setProblem(undefined);
+            isVerified.current = false;
             setStage({ name: 'verify', purpose: 'change' });
           }}
         />
@@ -133,6 +157,7 @@ export function LockOnSettings({ availability, isBiometricsOn, onExit }: LockOnS
           caption={copy.lockSettings.turnOffCaption}
           onPress={() => {
             setProblem(undefined);
+            isVerified.current = false;
             setStage({ name: 'verify', purpose: 'off' });
           }}
         />

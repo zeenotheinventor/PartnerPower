@@ -65,6 +65,7 @@ export type {
 } from './contentModel';
 export {
   endlessStepInterval,
+  isDealable,
   isRoundOver,
   reduceRound,
   startRound,
